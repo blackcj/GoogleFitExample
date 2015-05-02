@@ -1,4 +1,4 @@
-# GoogleFitExample
+# ![Screen Shot](small_icon.png) Reading Google Fit Data
 Example app using the Google Fit history API. Currently, the app summarizes duration and step count by activity type.
 
 ![Screen Shot](screen_shot.png)
