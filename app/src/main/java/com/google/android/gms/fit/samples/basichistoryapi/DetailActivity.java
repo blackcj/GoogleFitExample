@@ -82,13 +82,13 @@ public class DetailActivity extends BaseActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public static void launch(BaseActivity activity, View transitionView, int url, String title) {
+    public static void launch(BaseActivity activity, View transitionView, Workout workout) {
         ActivityOptionsCompat options =
                 ActivityOptionsCompat.makeSceneTransitionAnimation(
                         activity, transitionView, EXTRA_IMAGE);
         Intent intent = new Intent(activity, DetailActivity.class);
-        intent.putExtra(EXTRA_IMAGE, url);
-        intent.putExtra(EXTRA_TITLE, title);
+        intent.putExtra(EXTRA_IMAGE, WorkoutTypes.getImageById(workout.type));
+        intent.putExtra(EXTRA_TITLE, WorkoutTypes.getWorkOutById(workout.type));
         ActivityCompat.startActivity(activity, intent, options.toBundle());
     }
 }

@@ -77,6 +77,10 @@ abstract class ApiClientActivity extends BaseActivity {
         outState.putBoolean(AUTH_PENDING, authInProgress);
     }
 
+    public void onConnect() {
+
+    }
+
     /**
      *  Build a {@link GoogleApiClient} that will authenticate the user and allow the application
      *  to connect to Fitness APIs. The scopes included should match the scopes your app needs
@@ -97,7 +101,9 @@ abstract class ApiClientActivity extends BaseActivity {
                                 Log.i(TAG, "Connected!!!");
                                 // Now you can make calls to the Fitness APIs.  What to do?
                                 // Look at some data!!
+
                                 connected = true;
+                                onConnect();
 
                             }
 

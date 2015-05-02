@@ -30,6 +30,15 @@ public class DataQueries {
         return readRequest;
     }
 
+    public static DataReadRequest queryActivitySegmentBucket(long startTime, long endTime) {
+        DataReadRequest readRequest = new DataReadRequest.Builder()
+                .aggregate(DataType.TYPE_ACTIVITY_SEGMENT, DataType.AGGREGATE_ACTIVITY_SUMMARY)
+                .bucketByTime(1, TimeUnit.DAYS)
+                .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+                .build();
+        return readRequest;
+    }
+
     /**
      * GET total estimated STEP_COUNT
      *

@@ -16,6 +16,11 @@ public class WorkoutReport {
 
     public void addWorkoutData(Workout workout) {
 
+        if(workout.type == 3 || (workout.stepCount == 0 && workout.duration < 60000)) {
+            // Ignore "still" time
+            return;
+        }
+
         if(map.get(workout.type) == null) {
             map.put(workout.type, workout);
         }else {

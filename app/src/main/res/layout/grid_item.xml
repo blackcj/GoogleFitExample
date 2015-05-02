@@ -4,7 +4,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:layout_height="160dp"
+    tools:layout_height="155dp"
     tools:layout_width="150dp"
     xmlns:tools="http://schemas.android.com/tools"
     android:foreground="?attr/selectableItemBackground"
@@ -19,30 +19,39 @@
         android:background="#C95B5A">
 
         <ImageView
+            android:paddingTop="12dp"
             android:id="@+id/image"
             android:layout_width="match_parent"
             android:layout_height="100dp"
             android:padding="20dp"
             tools:src="@drawable/heart_icon_red"/>
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingBottom="10dp"
+            android:paddingTop="10dp"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+                android:textColor="@color/colorWhite"
+                android:padding="@dimen/spacing_large"
+                tools:text="Heart"
+                android:textSize="16sp"/>
+            <TextView
+                android:id="@+id/summary_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+                android:textColor="@color/semiWhite"
+                android:padding="@dimen/spacing_large"
+                android:textSize="12sp"
+                tools:text="20 minutes today" />
+        </LinearLayout>
 
-        <TextView
-            android:id="@+id/text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
-            android:textColor="@color/colorWhite"
-            android:padding="@dimen/spacing_large"
-            tools:text="Heart"
-            android:textSize="16sp"/>
-        <TextView
-            android:id="@+id/summary_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
-            android:textColor="@color/semiWhite"
-            android:padding="@dimen/spacing_large"
-            android:textSize="12sp"
-            tools:text="20 minutes today"/>
 
     </LinearLayout>
 </FrameLayout>

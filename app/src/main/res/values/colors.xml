@@ -8,4 +8,5 @@
     <color name="semiBlack">#aa111111</color>
     <color name="semiWhite">#CCFFFFFF</color>
     <color name="colorWhite">#FFFFFF</color>
+    <color name="lightGray">#eee</color>
 </resources>

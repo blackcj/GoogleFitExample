@@ -13,43 +13,23 @@
   See the License for the specific language governing permissions and
   limitations under the License.
   -->
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity"
-    android:background="@color/colorWhite">
+    android:background="@color/lightGray">
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recycler"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingTop="?attr/actionBarSize"
+        android:clipToPadding="false"/>
+
     <include
         android:id="@+id/toolbar"
         layout="@layout/toolbar"/>
 
-    <GridView
-        android:id="@+id/gridView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@id/toolbar"
-        android:padding="4dp"
-        android:clipToPadding="false"
-        android:columnWidth="@dimen/item_width"
-        android:numColumns="auto_fit"
-        android:horizontalSpacing="4dp"
-        android:verticalSpacing="4dp"
-        android:stretchMode="columnWidth">
-
-
-        </GridView>
-
-    <ScrollView
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_below="@+id/gridView"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent">
-        <com.google.android.gms.fit.samples.common.logger.LogView
-            android:id="@+id/sample_logview"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@android:color/black"
-            android:scrollbars="vertical" />
-    </ScrollView>
-
-</RelativeLayout>
+</FrameLayout>

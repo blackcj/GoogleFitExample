@@ -17,37 +17,20 @@ package com.google.android.gms.fit.samples.basichistoryapi;
 
 import static nl.qbusict.cupboard.CupboardFactory.cupboard;
 import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Bitmap;
-import android.graphics.Color;
-import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.graphics.Palette;
-import android.view.LayoutInflater;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.BaseAdapter;
-import android.widget.GridView;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import com.google.android.gms.fit.samples.common.logger.Log;
-import com.google.android.gms.fit.samples.common.logger.LogView;
-import com.google.android.gms.fit.samples.common.logger.LogWrapper;
-import com.google.android.gms.fit.samples.common.logger.MessageOnlyLogFilter;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.data.Bucket;
 import com.google.android.gms.fitness.data.DataPoint;
 import com.google.android.gms.fitness.data.DataSet;
-import com.google.android.gms.fitness.data.DataSource;
-import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.Field;
-import com.google.android.gms.fitness.request.DataDeleteRequest;
 import com.google.android.gms.fitness.request.DataReadRequest;
 import com.google.android.gms.fitness.result.DataReadResult;
 
@@ -55,51 +38,78 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import nl.qbusict.cupboard.QueryResultIterable;
-import java.util.Iterator;
 
 /**
  * This sample demonstrates how to use the History API of the Google Fit platform to insert data,
  * query against existing data, and remove data. It also demonstrates how to authenticate
  * a user with Google Play Services and how to properly represent data in a {@link DataSet}.
  */
-public class MainActivity extends ApiClientActivity {
+public class MainActivity extends ApiClientActivity implements RecyclerViewAdapter.OnItemClickListener {
 
 
-    private static final String DATE_FORMAT = "yyyy.MM.dd HH:mm:ss";
+    public static final String DATE_FORMAT = "MM.dd h:mm a";
 
 
     private CupboardSQLiteOpenHelper dbHelper;
     private SQLiteDatabase db;
+    private WorkoutReport report = new WorkoutReport();
+    private RecyclerViewAdapter adapter;
+    private RecyclerView recyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setActionBarIcon(R.drawable.barchart_icon);
 
-        final GridView gridView = (GridView) findViewById(R.id.gridView);
-        gridView.setAdapter(new GridViewAdapter());
-        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                Integer index = (Integer) view.getTag();
-                Integer url = GridViewAdapter.mIcons[index];
-                String title = GridViewAdapter.mTitles[index];
-                DetailActivity.launch(MainActivity.this, view.findViewById(R.id.image), url, title);
-            }
-        });
-
-        // This method sets up our custom logger, which will print all log messages to the device
-        // screen, as well as to adb logcat.
-        initializeLogging();
-
         dbHelper = new CupboardSQLiteOpenHelper(this);
         db = dbHelper.getWritableDatabase();
+        // 7 days worth of data
+
+
+        ArrayList<Workout> items = new ArrayList<>(report.map.values());
+
+        recyclerView = (RecyclerView) findViewById(R.id.recycler);
+        recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
+        adapter = new RecyclerViewAdapter(items, this);
+        adapter.setOnItemClickListener(this);
+        recyclerView.setAdapter(adapter);
 
         printActivityData();
+    }
+
+    int lastPosition = -1;
+
+    protected void populateReport() {
+
+        if(lastPosition != position) {
+            new ReadTodayDataTask().execute();
+            lastPosition = position;
+        }
+    }
+
+    @Override
+    public void onConnect() {
+        populateReport();
+        //new ReadTodayDataTask().execute();
+    }
+
+    int[] values = {1, 7, 30};
+    String[] valueDesc = {"Today","This Week","This Month"};
+    int position = 0;
+
+    @Override
+    public void onItemClick(View view, Workout viewModel) {
+        if(viewModel.type == -1) {
+            position += 1;
+            position = position % 3;
+            populateReport();
+        } else {
+            DetailActivity.launch(MainActivity.this, view.findViewById(R.id.image), viewModel);
+        }
+
     }
 
     @Override
@@ -107,7 +117,68 @@ public class MainActivity extends ApiClientActivity {
         return R.layout.activity_main;
     }
 
-    private class ReadDataTask extends AsyncTask<Void, Void, Void> {
+    private class ReadTodayDataTask extends AsyncTask<Void, Void, Void> {
+        protected Void doInBackground(Void... params) {
+
+            report.map.clear();
+            // Get data prior to today
+            Calendar cal1 = Calendar.getInstance();
+            Date now = new Date();
+            cal1.setTime(now);
+            cal1.add(Calendar.DAY_OF_YEAR, -values[position]);
+            long reportStartTime = cal1.getTimeInMillis();
+            QueryResultIterable<Workout> itr = cupboard().withDatabase(db).query(Workout.class).query();
+            for (Workout workout : itr) {
+                if(workout.start > reportStartTime) {
+                    report.addWorkoutData(workout);
+                } else {
+                    // Ignore the workout
+                }
+            }
+            itr.close();
+
+            // Setting a start and end date using a range of 1 month before this moment.
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(now);
+            long endTime = cal.getTimeInMillis();
+            cal.set(Calendar.HOUR_OF_DAY, 0);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
+            long startTime = cal.getTimeInMillis();
+
+            // Estimated steps and duration by Activity
+            DataReadRequest activitySegmentRequest = DataQueries.queryActivitySegmentBucket(startTime, endTime);
+            DataReadResult dataReadResult = Fitness.HistoryApi.readData(mClient, activitySegmentRequest).await(1, TimeUnit.MINUTES);
+            writeActivityDataToWorkout(dataReadResult);
+
+            // Estimated steps by bucket
+            DataReadRequest stepCountRequest = DataQueries.queryStepEstimate(startTime, endTime);
+            dataReadResult = Fitness.HistoryApi.readData(mClient, stepCountRequest).await(1, TimeUnit.MINUTES);
+            int stepCount = countStepData(dataReadResult);
+            Workout workout = new Workout();
+            workout.start = 0;
+            workout.duration = 0;
+            workout.type = 7;
+            workout.stepCount = stepCount;
+            report.addWorkoutData(workout);
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    //stuff that updates ui
+                    ArrayList<Workout> items = new ArrayList<>(report.map.values());
+                    adapter.setItems(items, valueDesc[position]);
+                    adapter.notifyDataSetChanged();
+                }
+            });
+
+
+            return null;
+        }
+    }
+
+    private class ReadHistoricalDataTask extends AsyncTask<Void, Void, Void> {
         protected Void doInBackground(Void... params) {
             // Setting a start and end date using a range of 1 month before this moment.
             Calendar cal = Calendar.getInstance();
@@ -130,13 +201,6 @@ public class MainActivity extends ApiClientActivity {
             DataReadRequest activitySegmentRequest = DataQueries.queryActivitySegment(startTime, endTime);
             DataReadResult dataReadResult = Fitness.HistoryApi.readData(mClient, activitySegmentRequest).await(1, TimeUnit.MINUTES);
             writeActivityDataToCache(dataReadResult);
-            printActivityData();
-
-            // Estimated steps by bucket
-            DataReadRequest stepCountRequest = DataQueries.queryStepEstimate(startTime, endTime);
-            dataReadResult = Fitness.HistoryApi.readData(mClient, stepCountRequest).await(1, TimeUnit.MINUTES);
-            int stepCount = countStepData(dataReadResult);
-            printEstimatedStepData(stepCount);
 
             return null;
         }
@@ -148,7 +212,6 @@ public class MainActivity extends ApiClientActivity {
     private void printActivityData() {
         WorkoutReport report = new WorkoutReport();
 
-        // Iterate Bunnys
         QueryResultIterable<Workout> itr = cupboard().withDatabase(db).query(Workout.class).query();
         for (Workout workout : itr) {
             report.addWorkoutData(workout);
@@ -164,6 +227,14 @@ public class MainActivity extends ApiClientActivity {
     private void writeActivityDataToCache(DataReadResult dataReadResult) {
         for (DataSet dataSet : dataReadResult.getDataSets()) {
             writeDataSetToCache(dataSet);
+        }
+    }
+
+    private void writeActivityDataToWorkout(DataReadResult dataReadResult) {
+        for (Bucket bucket : dataReadResult.getBuckets()) {
+            for (DataSet dataSet : bucket.getDataSets()) {
+                parseDataSet(dataSet);
+            }
         }
     }
 
@@ -226,10 +297,27 @@ public class MainActivity extends ApiClientActivity {
         int dataSteps = 0;
         for (DataPoint dp : dataSet.getDataPoints()) {
             // Accumulate step count for estimate
-            for(Field field : dp.getDataType().getFields()) {
-                if(dp.getDataType().getName().equals("com.google.step_count.delta") && dp.getValue(field).asInt() > 0) {
-                    dataSteps += dp.getValue(field).asInt();
+
+            if(dp.getDataType().getName().equals("com.google.step_count.delta")) {
+                for (Field field : dp.getDataType().getFields()) {
+                    if (dp.getValue(field).asInt() > 0) {
+                        dataSteps += dp.getValue(field).asInt();
+                    }
                 }
+            }else {
+                Workout workout = new Workout();
+                workout.start = 0;
+                workout.stepCount = 0;
+                for (Field field : dp.getDataType().getFields()) {
+
+                    String fieldName = field.getName();
+                    if(fieldName == "activity") {
+                        workout.type = dp.getValue(field).asInt();
+                    }else if(fieldName == "duration") {
+                        workout.duration = dp.getValue(field).asInt();
+                    }
+                }
+                report.addWorkoutData(workout);
             }
         }
         return dataSteps;
@@ -247,89 +335,10 @@ public class MainActivity extends ApiClientActivity {
         int id = item.getItemId();
         if (id == R.id.action_delete_data) {
             if(connected) {
-                new ReadDataTask().execute();
+                new ReadHistoricalDataTask().execute();
             }
             return true;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    /**
-     *  Initialize a custom log class that outputs both to in-app targets and logcat.
-     */
-    private void initializeLogging() {
-        // Wraps Android's native log framework.
-        LogWrapper logWrapper = new LogWrapper();
-        // Using Log, front-end to the logging chain, emulates android.util.log method signatures.
-        Log.setLogNode(logWrapper);
-        // Filter strips out everything except the message text.
-        MessageOnlyLogFilter msgFilter = new MessageOnlyLogFilter();
-        logWrapper.setNext(msgFilter);
-        // On screen logging via a customized TextView.
-        LogView logView = (LogView) findViewById(R.id.sample_logview);
-        logView.setTextAppearance(this, R.style.Log);
-        logView.setBackgroundColor(Color.WHITE);
-        msgFilter.setNext(logView);
-        Log.i(TAG, "Ready");
-    }
-
-    private static class GridViewAdapter extends BaseAdapter {
-
-        public static final Integer[] mIcons = new Integer[]{
-                R.drawable.heart_icon_red,
-                R.drawable.trends_icon,
-                R.drawable.shoeprints_icon_color,
-                R.drawable.biker_icon_color,
-                R.drawable.car_icon_color,
-                R.drawable.running_icon_color
-        };
-
-        public static final String[] mTitles = new String[]{
-                "Heart",
-                "Summary",
-                "Walking",
-                "Biking",
-                "Driving",
-                "Running"
-        };
-
-        @Override public int getCount() {
-            return mIcons.length;
-        }
-
-        @Override public Object getItem(int i) {
-            return mTitles[i];
-        }
-
-        @Override public long getItemId(int i) {
-            return i;
-        }
-
-        @Override public View getView(int i, View view, ViewGroup viewGroup) {
-
-            if (view == null) {
-                view = LayoutInflater.from(viewGroup.getContext())
-                        .inflate(R.layout.grid_item, viewGroup, false);
-            }
-
-            ImageView image = (ImageView) view.findViewById(R.id.image);
-            image.setImageResource(mIcons[i]);
-            view.setTag(i);
-
-            Bitmap bitmap = ((BitmapDrawable)image.getDrawable()).getBitmap();
-            Palette palette = Palette.generate(bitmap);
-            int vibrant = palette.getVibrantColor(0x000000);
-
-            image.setBackgroundColor(Utilities.lighter(vibrant, 0.4f));
-            LinearLayout container = (LinearLayout) view.findViewById(R.id.container);
-            container.setBackgroundColor(vibrant);
-
-            TextView text = (TextView) view.findViewById(R.id.text);
-            text.setText(getItem(i).toString());
-
-            return view;
-        }
-
-
     }
 }

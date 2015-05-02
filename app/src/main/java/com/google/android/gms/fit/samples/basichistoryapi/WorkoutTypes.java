@@ -9,6 +9,9 @@ public class WorkoutTypes {
     public static String getWorkOutById(int id) {
         String result = "Unknown";
         switch (id) {
+            case -1:
+                result = "Time";
+                break;
             case 1:
                 result = "Biking";
                 break;
@@ -38,6 +41,37 @@ public class WorkoutTypes {
                 break;
             default:
                 result = "ID: " + id + " not defined";
+                break;
+        }
+        return result;
+    }
+
+    public static final Integer[] mIcons = new Integer[]{
+            R.drawable.heart_icon_red,
+            R.drawable.trends_icon,
+            R.drawable.shoeprints_icon_color,
+            R.drawable.biker_icon_color,
+            R.drawable.car_icon_color,
+            R.drawable.running_icon_color
+    };
+
+    public static int getImageById(int id) {
+        int result = R.drawable.heart_icon_gray;
+        switch (id) {
+            case -1:
+                result = R.drawable.calendar_icon;
+                break;
+            case 1:
+                result = R.drawable.biker_icon_color;
+                break;
+            case 7:
+                result = R.drawable.shoeprints_icon_color;
+                break;
+            case 8:
+                result = R.drawable.running_icon_color;
+                break;
+            case 0:
+                result = R.drawable.car_icon_color;
                 break;
         }
         return result;
