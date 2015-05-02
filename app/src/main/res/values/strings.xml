@@ -16,7 +16,7 @@
   -->
 <resources>
 
-    <string name="app_name">BasicHistoryApi</string>
+    <string name="app_name">Fit Data</string>
     <string name="intro_text">Behold, a data dump from the Fitness API! Check the menu for more actions!</string>
     <string name="action_delete_session">Fetch data</string>
     <string name="action_settings">Settings</string>
