@@ -5,7 +5,11 @@ Example app using the Google Fit history API. Currently, the app summarizes dura
 
 Icons
 ---------------------------
-+ [iconpack](http://www.iconarchive.com/show/beautiful-flat-one-color-icons-by-elegantthemes.html)
++ [Iconpack](http://www.iconarchive.com/show/beautiful-flat-one-color-icons-by-elegantthemes.html)
+
+Resources
+---------------------------
++ [Material Everywhere](http://antonioleiva.com/material-design-everywhere/)
 
 Third Party Libraries
 ---------------------------

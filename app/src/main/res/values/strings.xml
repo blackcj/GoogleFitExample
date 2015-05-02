@@ -20,5 +20,6 @@
     <string name="intro_text">Behold, a data dump from the Fitness API! Check the menu for more actions!</string>
     <string name="action_load_data">Fetch data</string>
     <string name="action_settings">Settings</string>
+    <string name="hello_world">Coming soon!</string>
 
 </resources>

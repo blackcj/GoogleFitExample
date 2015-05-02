@@ -16,25 +16,26 @@
 package com.google.android.gms.fit.samples.basichistoryapi;
 
 import static nl.qbusict.cupboard.CupboardFactory.cupboard;
-import android.content.Intent;
-import android.content.IntentSender;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.graphics.Palette;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.BaseAdapter;
+import android.widget.GridView;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.android.gms.common.Scopes;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Scope;
-import com.google.android.gms.common.api.Status;
 import com.google.android.gms.fit.samples.common.logger.Log;
 import com.google.android.gms.fit.samples.common.logger.LogView;
 import com.google.android.gms.fit.samples.common.logger.LogWrapper;
@@ -51,6 +52,7 @@ import com.google.android.gms.fitness.request.DataReadRequest;
 import com.google.android.gms.fitness.result.DataReadResult;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -76,7 +78,20 @@ public class MainActivity extends ApiClientActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setActionBarIcon(R.drawable.barchart_icon);
+
+        final GridView gridView = (GridView) findViewById(R.id.gridView);
+        gridView.setAdapter(new GridViewAdapter());
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                Integer index = (Integer) view.getTag();
+                Integer url = GridViewAdapter.mIcons[index];
+                String title = GridViewAdapter.mTitles[index];
+                DetailActivity.launch(MainActivity.this, view.findViewById(R.id.image), url, title);
+            }
+        });
+
         // This method sets up our custom logger, which will print all log messages to the device
         // screen, as well as to adb logcat.
         initializeLogging();
@@ -85,6 +100,11 @@ public class MainActivity extends ApiClientActivity {
         db = dbHelper.getWritableDatabase();
 
         printActivityData();
+    }
+
+    @Override
+    protected int getLayoutResource() {
+        return R.layout.activity_main;
     }
 
     private class ReadDataTask extends AsyncTask<Void, Void, Void> {
@@ -251,5 +271,65 @@ public class MainActivity extends ApiClientActivity {
         logView.setBackgroundColor(Color.WHITE);
         msgFilter.setNext(logView);
         Log.i(TAG, "Ready");
+    }
+
+    private static class GridViewAdapter extends BaseAdapter {
+
+        public static final Integer[] mIcons = new Integer[]{
+                R.drawable.heart_icon_red,
+                R.drawable.trends_icon,
+                R.drawable.shoeprints_icon_color,
+                R.drawable.biker_icon_color,
+                R.drawable.car_icon_color,
+                R.drawable.running_icon_color
+        };
+
+        public static final String[] mTitles = new String[]{
+                "Heart",
+                "Summary",
+                "Walking",
+                "Biking",
+                "Driving",
+                "Running"
+        };
+
+        @Override public int getCount() {
+            return mIcons.length;
+        }
+
+        @Override public Object getItem(int i) {
+            return mTitles[i];
+        }
+
+        @Override public long getItemId(int i) {
+            return i;
+        }
+
+        @Override public View getView(int i, View view, ViewGroup viewGroup) {
+
+            if (view == null) {
+                view = LayoutInflater.from(viewGroup.getContext())
+                        .inflate(R.layout.grid_item, viewGroup, false);
+            }
+
+            ImageView image = (ImageView) view.findViewById(R.id.image);
+            image.setImageResource(mIcons[i]);
+            view.setTag(i);
+
+            Bitmap bitmap = ((BitmapDrawable)image.getDrawable()).getBitmap();
+            Palette palette = Palette.generate(bitmap);
+            int vibrant = palette.getVibrantColor(0x000000);
+
+            image.setBackgroundColor(Utilities.lighter(vibrant, 0.4f));
+            LinearLayout container = (LinearLayout) view.findViewById(R.id.container);
+            container.setBackgroundColor(vibrant);
+
+            TextView text = (TextView) view.findViewById(R.id.text);
+            text.setText(getItem(i).toString());
+
+            return view;
+        }
+
+
     }
 }

@@ -16,7 +16,7 @@ import com.google.android.gms.fitness.Fitness;
 /**
  * Created by chris.black on 5/1/15.
  */
-public class ApiClientActivity extends ActionBarActivity {
+abstract class ApiClientActivity extends BaseActivity {
     public static final String TAG = "BasicHistoryApi";
     private static final int REQUEST_OAUTH = 1;
 
@@ -33,7 +33,6 @@ public class ApiClientActivity extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
         if (savedInstanceState != null) {
             authInProgress = savedInstanceState.getBoolean(AUTH_PENDING);
