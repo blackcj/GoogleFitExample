@@ -15,8 +15,10 @@
  */
 package com.google.android.gms.fit.samples.basichistoryapi;
 
+import static nl.qbusict.cupboard.CupboardFactory.cupboard;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -72,6 +74,8 @@ public class MainActivity extends ActionBarActivity {
     private boolean authInProgress = false;
     private boolean connected = false;
     private GoogleApiClient mClient = null;
+    private CupboardSQLiteOpenHelper dbHelper;
+    private SQLiteDatabase db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,6 +88,8 @@ public class MainActivity extends ActionBarActivity {
         if (savedInstanceState != null) {
             authInProgress = savedInstanceState.getBoolean(AUTH_PENDING);
         }
+        dbHelper = new CupboardSQLiteOpenHelper(this);
+        db = dbHelper.getWritableDatabase();
 
         buildFitnessClient();
     }
@@ -235,7 +241,7 @@ public class MainActivity extends ActionBarActivity {
             cal.set(Calendar.MILLISECOND, 0);
             cal.add(Calendar.DAY_OF_YEAR, -1);
             long endTime = cal.getTimeInMillis();
-            cal.add(Calendar.DAY_OF_YEAR, -1);
+            cal.add(Calendar.DAY_OF_YEAR, -30);
             long startTime = cal.getTimeInMillis();
 
             SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
@@ -341,20 +347,14 @@ public class MainActivity extends ActionBarActivity {
 
     // https://developers.google.com/fit/rest/v1/reference/activity-types
 
-    private void countStepDataByActivity(DataReadResult dataReadResult, int activity) {
+    private int countStepDataByActivity(DataReadResult dataReadResult) {
+        int stepCount = 0;
         for (Bucket bucket : dataReadResult.getBuckets()) {
             for (DataSet dataSet : bucket.getDataSets()) {
-                if(activity == 7) {
-                    walkingSteps += parseDataSet(dataSet);
-                } else if(activity == 8) {
-                    runningSteps += parseDataSet(dataSet);
-                } else if(activity == 1) {
-                    bikingSteps += parseDataSet(dataSet);
-                }  else {
-                    miscSteps += parseDataSet(dataSet);
-                }
+                stepCount += parseDataSet(dataSet);
             }
         }
+        return stepCount;
     }
 
     // [START parse_dataset]
@@ -371,19 +371,36 @@ public class MainActivity extends ActionBarActivity {
             for(Field field : dp.getDataType().getFields()) {
                 if(field.getName().equals("activity") && dp.getDataType().getName().equals("com.google.activity.segment")) {
                     long startTime = dp.getStartTime(TimeUnit.MILLISECONDS);
-                    long endTime = dp.getEndTime(TimeUnit.MILLISECONDS);
                     int activity = dp.getValue(field).asInt();
-                    if(activity == 7) {
-                        walkingDuration += endTime - startTime;
-                    } else if(activity == 8) {
-                        runningDuration += endTime - startTime;
-                    } else if(activity == 1) {
-                        bikingDuration += endTime - startTime;
+                    Workout workout = cupboard().withDatabase(db).get(Workout.class, startTime);
+                    if(workout == null) {
+                        long endTime = dp.getEndTime(TimeUnit.MILLISECONDS);
+                        //Log.i(TAG, "\tField: " + field.getName() + " Value: " + dp.getValue(field));
+                        DataReadRequest readRequest = queryStepCount(startTime, endTime);
+                        DataReadResult dataReadResult = Fitness.HistoryApi.readData(mClient, readRequest).await(1, TimeUnit.MINUTES);
+                        int stepCount = countStepDataByActivity(dataReadResult);
+                        workout = new Workout();
+                        workout._id = startTime;
+                        workout.start = startTime;
+                        workout.duration = endTime - startTime;
+                        workout.stepCount = stepCount;
+                        workout.type = activity;
+                        cupboard().withDatabase(db).put(workout);
                     }
-                    //Log.i(TAG, "\tField: " + field.getName() + " Value: " + dp.getValue(field));
-                    DataReadRequest readRequest = queryStepCount(startTime, endTime);
-                    DataReadResult dataReadResult = Fitness.HistoryApi.readData(mClient, readRequest).await(1, TimeUnit.MINUTES);
-                    countStepDataByActivity(dataReadResult, activity);
+
+                    if(activity == 7) {
+                        walkingSteps += workout.stepCount;
+                        walkingDuration += workout.duration;
+                    } else if(activity == 8) {
+                        runningSteps += workout.stepCount;
+                        runningDuration += workout.duration;
+                    } else if(activity == 1) {
+                        bikingSteps += workout.stepCount;
+                        bikingDuration += workout.duration;
+                    }  else {
+                        miscSteps += workout.stepCount;
+                    }
+
                 }
             }
         }
