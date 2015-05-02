@@ -3,6 +3,10 @@ Example app using the Google Fit history API. Currently, the app summarizes dura
 
 ![Screen Shot](screen_shot.png)
 
+Icons
+---------------------------
++ [iconpack](http://www.iconarchive.com/show/beautiful-flat-one-color-icons-by-elegantthemes.html)
+
 Third Party Libraries
 ---------------------------
 + [AChartEngine](https://code.google.com/p/achartengine/) (will be used to display the report graph)
