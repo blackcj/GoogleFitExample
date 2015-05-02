@@ -2,6 +2,8 @@ package com.google.android.gms.fit.samples.basichistoryapi;
 
 /**
  * Created by chris.black on 5/1/15.
+ *
+ * https://developers.google.com/fit/rest/v1/reference/activity-types
  */
 public class WorkoutTypes {
     public static String getWorkOutById(int id) {
