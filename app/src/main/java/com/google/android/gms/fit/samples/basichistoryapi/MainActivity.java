@@ -18,6 +18,7 @@ package com.google.android.gms.fit.samples.basichistoryapi;
 import static nl.qbusict.cupboard.CupboardFactory.cupboard;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.os.AsyncTask;
@@ -54,6 +55,9 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import nl.qbusict.cupboard.QueryResultIterable;
+import java.util.Iterator;
 
 /**
  * This sample demonstrates how to use the History API of the Google Fit platform to insert data,
@@ -92,6 +96,8 @@ public class MainActivity extends ActionBarActivity {
         db = dbHelper.getWritableDatabase();
 
         buildFitnessClient();
+
+        printActivityData();
     }
 
     /**
@@ -200,14 +206,7 @@ public class MainActivity extends ActionBarActivity {
     }
 
     int estimatedSteps = 0;
-    int walkingSteps = 0;
-    int runningSteps = 0;
-    int bikingSteps = 0;
-    int miscSteps = 0;
 
-    int walkingDuration = 0;
-    int runningDuration = 0;
-    int bikingDuration = 0;
 
     /**
      *  Create a {@link DataSet} to insert data into the History API, and
@@ -221,14 +220,6 @@ public class MainActivity extends ActionBarActivity {
     private class ReadDataTask extends AsyncTask<Void, Void, Void> {
         protected Void doInBackground(Void... params) {
             estimatedSteps = 0;
-            walkingSteps = 0;
-            miscSteps = 0;
-            runningSteps = 0;
-            bikingSteps = 0;
-
-            walkingDuration = 0;
-            runningDuration = 0;
-            bikingDuration = 0;
 
             // Setting a start and end date using a range of 1 week before this moment.
             Calendar cal = Calendar.getInstance();
@@ -239,7 +230,7 @@ public class MainActivity extends ActionBarActivity {
             cal.set(Calendar.MINUTE, 0);
             cal.set(Calendar.SECOND, 0);
             cal.set(Calendar.MILLISECOND, 0);
-            cal.add(Calendar.DAY_OF_YEAR, -1);
+            cal.add(Calendar.DAY_OF_YEAR, 0);
             long endTime = cal.getTimeInMillis();
             cal.add(Calendar.DAY_OF_YEAR, -30);
             long startTime = cal.getTimeInMillis();
@@ -265,22 +256,21 @@ public class MainActivity extends ActionBarActivity {
     }
 
     private void printActivityData() {
-        Log.i(TAG, "Walking steps: " + walkingSteps);
-        Log.i(TAG, "Walking duration: " + miliToMinutes(walkingDuration) + " minutes");
-        Log.i(TAG, "Misc steps: " + miscSteps);
-        Log.i(TAG, "Biking steps: " + bikingSteps);
-        Log.i(TAG, "Biking duration: " + miliToMinutes(bikingDuration) + " minutes");
-        Log.i(TAG, "Running steps: " + runningSteps);
-        Log.i(TAG, "Running duration: " + miliToMinutes(runningDuration) + " minutes");
+        WorkoutReport report = new WorkoutReport();
+
+        // Iterate Bunnys
+        QueryResultIterable<Workout> itr = cupboard().withDatabase(db).query(Workout.class).query();
+        for (Workout workout : itr) {
+            report.addWorkoutData(workout);
+        }
+        itr.close();
+        Log.i(TAG, report.toString());
     }
 
     private void printEstimatedStepData() {
         Log.i(TAG, "Estimated steps: " + estimatedSteps);
     }
 
-    private double miliToMinutes(long mili) {
-        return Math.floor(mili / 1000 / 60);
-    }
 
     /**
      * GET data by ACTIVITY
@@ -362,12 +352,13 @@ public class MainActivity extends ActionBarActivity {
         SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
         int dataSteps = 0;
         for (DataPoint dp : dataSet.getDataPoints()) {
+            // Accumulate step count for estimate
             for(Field field : dp.getDataType().getFields()) {
                 if(dp.getDataType().getName().equals("com.google.step_count.delta") && dp.getValue(field).asInt() > 0) {
                     dataSteps += dp.getValue(field).asInt();
                 }
             }
-
+            // Populate db cache with data
             for(Field field : dp.getDataType().getFields()) {
                 if(field.getName().equals("activity") && dp.getDataType().getName().equals("com.google.activity.segment")) {
                     long startTime = dp.getStartTime(TimeUnit.MILLISECONDS);
@@ -387,20 +378,6 @@ public class MainActivity extends ActionBarActivity {
                         workout.type = activity;
                         cupboard().withDatabase(db).put(workout);
                     }
-
-                    if(activity == 7) {
-                        walkingSteps += workout.stepCount;
-                        walkingDuration += workout.duration;
-                    } else if(activity == 8) {
-                        runningSteps += workout.stepCount;
-                        runningDuration += workout.duration;
-                    } else if(activity == 1) {
-                        bikingSteps += workout.stepCount;
-                        bikingDuration += workout.duration;
-                    }  else {
-                        miscSteps += workout.stepCount;
-                    }
-
                 }
             }
         }
