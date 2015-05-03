@@ -1,4 +1,4 @@
-package com.google.android.gms.fit.samples.basichistoryapi;
+package com.google.android.gms.fit.samples.basichistoryapi.activity;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -15,7 +15,10 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
-import com.google.android.gms.fit.samples.common.logger.Log;
+import com.google.android.gms.fit.samples.basichistoryapi.R;
+import com.google.android.gms.fit.samples.basichistoryapi.Utilities;
+import com.google.android.gms.fit.samples.basichistoryapi.model.Workout;
+import com.google.android.gms.fit.samples.basichistoryapi.model.WorkoutTypes;
 
 
 /**

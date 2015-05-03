@@ -1,9 +1,8 @@
-package com.google.android.gms.fit.samples.basichistoryapi;
+package com.google.android.gms.fit.samples.basichistoryapi.activity;
 
 import android.content.Intent;
 import android.content.IntentSender;
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;

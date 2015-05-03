@@ -1,4 +1,6 @@
-package com.google.android.gms.fit.samples.basichistoryapi;
+package com.google.android.gms.fit.samples.basichistoryapi.model;
+
+import com.google.android.gms.fit.samples.basichistoryapi.R;
 
 /**
  * Created by chris.black on 5/1/15.

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.android.gms.fit.samples.basichistoryapi;
+package com.google.android.gms.fit.samples.basichistoryapi.activity;
 
 import static nl.qbusict.cupboard.CupboardFactory.cupboard;
 import android.database.sqlite.SQLiteDatabase;
@@ -26,6 +26,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.google.android.gms.fit.samples.basichistoryapi.database.CupboardSQLiteOpenHelper;
+import com.google.android.gms.fit.samples.basichistoryapi.database.DataQueries;
+import com.google.android.gms.fit.samples.basichistoryapi.R;
+import com.google.android.gms.fit.samples.basichistoryapi.adapter.RecyclerViewAdapter;
+import com.google.android.gms.fit.samples.basichistoryapi.model.Workout;
+import com.google.android.gms.fit.samples.basichistoryapi.model.WorkoutReport;
 import com.google.android.gms.fit.samples.common.logger.Log;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.data.Bucket;

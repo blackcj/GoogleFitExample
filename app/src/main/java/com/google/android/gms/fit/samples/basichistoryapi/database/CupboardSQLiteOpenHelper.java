@@ -1,9 +1,11 @@
-package com.google.android.gms.fit.samples.basichistoryapi;
+package com.google.android.gms.fit.samples.basichistoryapi.database;
 
 import static nl.qbusict.cupboard.CupboardFactory.cupboard;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+
+import com.google.android.gms.fit.samples.basichistoryapi.model.Workout;
 
 public class CupboardSQLiteOpenHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "googlefitexample.db";

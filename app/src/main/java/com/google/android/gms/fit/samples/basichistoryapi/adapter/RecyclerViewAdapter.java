@@ -1,9 +1,8 @@
-package com.google.android.gms.fit.samples.basichistoryapi;
+package com.google.android.gms.fit.samples.basichistoryapi.adapter;
 
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
-import android.os.Handler;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -14,6 +13,13 @@ import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import com.google.android.gms.fit.samples.basichistoryapi.R;
+import com.google.android.gms.fit.samples.basichistoryapi.Utilities;
+import com.google.android.gms.fit.samples.basichistoryapi.activity.MainActivity;
+import com.google.android.gms.fit.samples.basichistoryapi.model.Workout;
+import com.google.android.gms.fit.samples.basichistoryapi.model.WorkoutReport;
+import com.google.android.gms.fit.samples.basichistoryapi.model.WorkoutTypes;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;

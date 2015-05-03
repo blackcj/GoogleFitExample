@@ -1,8 +1,7 @@
-package com.google.android.gms.fit.samples.basichistoryapi;
+package com.google.android.gms.fit.samples.basichistoryapi.model;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -11,7 +10,7 @@ import java.util.concurrent.TimeUnit;
  * Created by chris.black on 5/1/15.
  */
 public class WorkoutReport {
-    Map<Integer,Workout> map =  new HashMap<>();
+    public Map<Integer,Workout> map =  new HashMap<>();
 
 
     public void addWorkoutData(Workout workout) {
