@@ -29,6 +29,19 @@ public class WorkoutReport {
         }
     }
 
+    /**
+     * Special case for steps. Maybe track estimated steps separately from walking?
+     * @param workout
+     */
+    public void replaceWorkoutData(Workout workout) {
+        if(map.get(workout.type) == null) {
+            map.put(workout.type, workout);
+        }else {
+            Workout w = map.get(workout.type);
+            w.stepCount = workout.stepCount;
+        }
+    }
+
     public Workout getWorkoutByType(int type) {
         return map.get(type);
     }

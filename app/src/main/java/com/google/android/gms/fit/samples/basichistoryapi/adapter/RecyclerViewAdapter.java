@@ -43,8 +43,10 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         this.onItemClickListener = onItemClickListener;
     }
 
-    public void setItems(List<Workout> items, String time) {
-        lastPosition = 0;
+    public void setItems(List<Workout> items, String time, boolean animated) {
+        if(animated) {
+            lastPosition = 0;
+        }
         this.items.clear();
         this.items.addAll(items);
         this.timeDesc = time;

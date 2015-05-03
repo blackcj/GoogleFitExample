@@ -130,6 +130,8 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
         return R.layout.activity_main;
     }
 
+    private boolean initialDisplay = true;
+
     private class ReadTodayDataTask extends AsyncTask<Void, Void, Void> {
         protected Void doInBackground(Void... params) {
 
@@ -140,30 +142,50 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
             cal1.setTime(now);
             cal1.add(Calendar.DAY_OF_YEAR, -values[position]);
             long reportStartTime = cal1.getTimeInMillis();
-            QueryResultIterable<Workout> itr = cupboard().withDatabase(db).query(Workout.class).query();
+            QueryResultIterable<Workout> itr = cupboard().withDatabase(db).query(Workout.class).withSelection("start > ?", "" + reportStartTime).query();
             for (Workout workout : itr) {
                 if(workout.start > reportStartTime) {
                     report.addWorkoutData(workout);
                 } else {
                     // Ignore the workout
+                    Log.i("Test","test");
                 }
             }
             itr.close();
+            if(initialDisplay) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        //stuff that updates ui
+                        ArrayList<Workout> items = new ArrayList<>(report.map.values());
+                        adapter.setItems(items, valueDesc[position], initialDisplay);
+                        adapter.notifyDataSetChanged();
+                    }
+                });
+            }
 
             // Setting a start and end date using a range of 1 month before this moment.
             Calendar cal = Calendar.getInstance();
             cal.setTime(now);
             long endTime = cal.getTimeInMillis();
-            cal.set(Calendar.HOUR_OF_DAY, 0);
             cal.set(Calendar.MINUTE, 0);
             cal.set(Calendar.SECOND, 0);
             cal.set(Calendar.MILLISECOND, 0);
+            cal.add(Calendar.HOUR_OF_DAY, -2);
             long startTime = cal.getTimeInMillis();
 
             // Estimated steps and duration by Activity
             DataReadRequest activitySegmentRequest = DataQueries.queryActivitySegmentBucket(startTime, endTime);
             DataReadResult dataReadResult = Fitness.HistoryApi.readData(mClient, activitySegmentRequest).await(1, TimeUnit.MINUTES);
             writeActivityDataToWorkout(dataReadResult);
+
+            cal.setTime(now);
+            endTime = cal.getTimeInMillis();
+            cal.set(Calendar.HOUR_OF_DAY, 0);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
+            startTime = cal.getTimeInMillis();
 
             // Estimated steps by bucket
             DataReadRequest stepCountRequest = DataQueries.queryStepEstimate(startTime, endTime);
@@ -174,15 +196,16 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
             workout.duration = 0;
             workout.type = 7;
             workout.stepCount = stepCount;
-            report.addWorkoutData(workout);
+            report.replaceWorkoutData(workout);
 
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     //stuff that updates ui
                     ArrayList<Workout> items = new ArrayList<>(report.map.values());
-                    adapter.setItems(items, valueDesc[position]);
+                    adapter.setItems(items, valueDesc[position], !initialDisplay);
                     adapter.notifyDataSetChanged();
+                    initialDisplay = false;
                 }
             });
 
@@ -197,11 +220,11 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
             Calendar cal = Calendar.getInstance();
             Date now = new Date();
             cal.setTime(now);
-            cal.set(Calendar.HOUR_OF_DAY, 0);
+            //cal.set(Calendar.HOUR_OF_DAY, 0);
             cal.set(Calendar.MINUTE, 0);
             cal.set(Calendar.SECOND, 0);
             cal.set(Calendar.MILLISECOND, 0);
-            cal.add(Calendar.DAY_OF_YEAR, 0);
+            cal.add(Calendar.HOUR_OF_DAY, -2);
             long endTime = cal.getTimeInMillis();
             cal.add(Calendar.DAY_OF_YEAR, -30);
             long startTime = cal.getTimeInMillis();
