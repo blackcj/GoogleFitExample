@@ -13,9 +13,11 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.google.android.gms.fit.samples.basichistoryapi.Utilities;
 import com.google.android.gms.fit.samples.basichistoryapi.database.CupboardSQLiteOpenHelper;
 import com.google.android.gms.fit.samples.basichistoryapi.model.Workout;
 import com.google.android.gms.fit.samples.basichistoryapi.R;
+import com.google.android.gms.fit.samples.common.logger.Log;
 
 import org.achartengine.ChartFactory;
 import org.achartengine.GraphicalView;
@@ -56,7 +58,7 @@ public class ReportsFragment extends BaseFragment {
     private XYSeries mCurrentSeries;
     /** The most recently created renderer, customizing the current series. */
     private XYSeriesRenderer mCurrentRenderer;
-    private List<Workout> mWorkoutData;
+    private List<Workout> mReportData = new ArrayList<>();
 
     private CupboardSQLiteOpenHelper dbHelper;
     private SQLiteDatabase db;
@@ -64,6 +66,7 @@ public class ReportsFragment extends BaseFragment {
     /** The chart view that displays the data. */
     private GraphicalView mChartView;
 
+    private int workoutType;
     @InjectView(R.id.chart)
     LinearLayout mChartLayout;
 
@@ -86,6 +89,8 @@ public class ReportsFragment extends BaseFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_report, container, false);
+
+
 
         ButterKnife.inject(this, view);
         dbHelper = new CupboardSQLiteOpenHelper(this.getActivity());
@@ -117,6 +122,13 @@ public class ReportsFragment extends BaseFragment {
     }
 
     @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        workoutType = getArguments() != null ? getArguments().getInt(ARG_SECTION_NUMBER) : 0;
+        Log.i("ReportsFragment", "Workout type:" + workoutType);
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
@@ -128,12 +140,21 @@ public class ReportsFragment extends BaseFragment {
     private void updateLabels() {
         double start = mRenderer.getXAxisMin();
         double stop = mRenderer.getXAxisMax();
-        double quarterStep = (stop - start) / 6;
+        double quarterStep = (stop - start) / 8;
         double halfStep = (stop - start) / 2;
         mRenderer.clearXTextLabels();
-        //mRenderer.addXTextLabel(start + quarterStep, mReportData.get((int) (start + quarterStep)).formatted_date);
-        //mRenderer.addXTextLabel(start + halfStep, mReportData.get((int) (start + halfStep)).formatted_date);
-        //mRenderer.addXTextLabel(stop - quarterStep, mReportData.get((int) (stop - quarterStep)).formatted_date);
+        int index = normalize((int) (start + quarterStep));
+        mRenderer.addXTextLabel(start + quarterStep, Utilities.getDayString(mReportData.get(index).start));
+        index = normalize((int) (start + halfStep));
+        mRenderer.addXTextLabel(start + halfStep, Utilities.getDayString(mReportData.get(index).start));
+        index = normalize((int) (stop - quarterStep));
+        mRenderer.addXTextLabel(stop - quarterStep, Utilities.getDayString(mReportData.get(index).start));
+    }
+
+    private int normalize(int index) {
+        int result = index > 0 ? index : 0;
+        result = result < mReportData.size() ? result : mReportData.size() - 1;
+        return result;
     }
 
     private void setUpRenderer() {
@@ -218,49 +239,48 @@ public class ReportsFragment extends BaseFragment {
         return (size * metrics.densityDpi) / DisplayMetrics.DENSITY_DEFAULT;
     }
 
+
+
     public void showData() {
         Map<Long,Workout> map =  new HashMap<>();
-        //Collections.reverse(reportData);
+        mReportData.clear();
         int hour = 0;
-        //mReportData = reportData;
         mCurrentSeries.clear();
         double maxTemp = 70;
         double minTemp = 70;
         QueryResultIterable<Workout> itr = cupboard().withDatabase(db).query(Workout.class).query();
         for (Workout workout : itr) {
-            //if(workout.type == 7) {
-                long id = workout.start - workout.start % (1000*60*60*24);
-                if(map.get(id) == null) {
-                    map.put(id, workout);
-                }else {
-                    Workout w = map.get(id);
-                    w.stepCount += workout.stepCount;
-                    w.duration += workout.duration;
-                }
-
-            //}
+            long id = workout.start - workout.start % (1000*60*60*24);
+            //Log.i("ReportFragment", "Day: " + Utilities.getDayString(id));
+            if(map.get(id) == null) {
+                map.put(id, workout);
+            }else {
+                Workout w = map.get(id);
+                w.stepCount += workout.stepCount;
+                w.duration += workout.duration;
+            }
         }
         itr.close();
 
-        Iterator it = map.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry pair = (Map.Entry)it.next();
-            Workout workout = ((Workout)pair.getValue());
-            if(workout.stepCount > maxTemp) maxTemp = workout.stepCount;
-            if(workout.stepCount < minTemp) minTemp = workout.stepCount;
-            mCurrentSeries.add(hour++, workout.stepCount);
-            it.remove(); // avoids a ConcurrentModificationException
-        }
+        // Convert to ArrayList and sort
+        mReportData = new ArrayList<>(map.values());
 
+        Collections.sort(mReportData);
+
+        for (Workout workout : mReportData) {
+            if (workout.stepCount > maxTemp) maxTemp = workout.stepCount;
+            if (workout.stepCount < minTemp) minTemp = workout.stepCount;
+            mCurrentSeries.add(hour++, workout.stepCount);
+        }
 
 
         mRenderer.clearXTextLabels();
         mRenderer.setYAxisMax(Math.round(maxTemp) + 200);
-        mRenderer.setYAxisMin(0);
+        mRenderer.setYAxisMin(-500);
         mRenderer.setXAxisMin(mCurrentSeries.getItemCount() - 20);
         mRenderer.setXAxisMax(mCurrentSeries.getItemCount());
-        mRenderer.setPanLimits(new double [] {0, mCurrentSeries.getItemCount(), 0, 0});
-        mRenderer.setZoomLimits(new double [] {0, mCurrentSeries.getItemCount(), 0, 0});
+        mRenderer.setPanLimits(new double[]{-5, mCurrentSeries.getItemCount() + 5, 0, 0});
+        mRenderer.setZoomLimits(new double [] {-5, mCurrentSeries.getItemCount() + 5, 0, 0});
         // An array containing the margin size values, in this order: top, left, bottom, right
         mRenderer.setMargins(new int [] {5,0,5,0});
 

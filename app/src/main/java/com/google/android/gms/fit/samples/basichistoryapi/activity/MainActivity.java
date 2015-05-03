@@ -17,9 +17,11 @@ package com.google.android.gms.fit.samples.basichistoryapi.activity;
 
 import static nl.qbusict.cupboard.CupboardFactory.cupboard;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
@@ -31,10 +33,14 @@ import com.google.android.gms.fit.samples.basichistoryapi.database.CupboardSQLit
 import com.google.android.gms.fit.samples.basichistoryapi.database.DataQueries;
 import com.google.android.gms.fit.samples.basichistoryapi.R;
 import com.google.android.gms.fit.samples.basichistoryapi.adapter.RecyclerViewAdapter;
+import com.google.android.gms.fit.samples.basichistoryapi.model.UserPreferences;
 import com.google.android.gms.fit.samples.basichistoryapi.model.Workout;
 import com.google.android.gms.fit.samples.basichistoryapi.model.WorkoutReport;
 import com.google.android.gms.fit.samples.basichistoryapi.model.WorkoutTypes;
 import com.google.android.gms.fit.samples.common.logger.Log;
+import com.google.android.gms.fit.samples.common.logger.LogView;
+import com.google.android.gms.fit.samples.common.logger.LogWrapper;
+import com.google.android.gms.fit.samples.common.logger.MessageOnlyLogFilter;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.data.Bucket;
 import com.google.android.gms.fitness.data.DataPoint;
@@ -60,64 +66,75 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
 
     public static final String DATE_FORMAT = "MM.dd h:mm a";
 
-    private CupboardSQLiteOpenHelper dbHelper;
     private SQLiteDatabase db;
     private WorkoutReport report = new WorkoutReport();
     private RecyclerViewAdapter adapter;
-    private RecyclerView recyclerView;
-    private boolean needsHistoricalData = true;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setActionBarIcon(R.drawable.barchart_icon);
 
-        dbHelper = new CupboardSQLiteOpenHelper(this);
+        initializeLogging();
+
+        CupboardSQLiteOpenHelper dbHelper = new CupboardSQLiteOpenHelper(this);
         db = dbHelper.getWritableDatabase();
 
         ArrayList<Workout> items = new ArrayList<>(report.map.values());
 
-        recyclerView = (RecyclerView) findViewById(R.id.recycler);
+        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler);
         recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
         adapter = new RecyclerViewAdapter(items, this);
         adapter.setOnItemClickListener(this);
         recyclerView.setAdapter(adapter);
+
+        mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.contentView);
+        mSwipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary);
+        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                // Grabs 30 days worth of data
+                populateHistoricalData();
+                populateReport(true);
+            }
+        });
     }
 
     Utilities.TimeFrame timeFrame = Utilities.TimeFrame.BEGINNING_OF_DAY;
     Utilities.TimeFrame lastPosition;
 
-    protected void populateReport() {
+    protected void populateReport(boolean forceRun) {
 
-        if(lastPosition != timeFrame) {
+        if(forceRun || lastPosition != timeFrame) {
             new ReadTodayDataTask().execute();
             lastPosition = timeFrame;
         }
     }
 
+    private void populateHistoricalData() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            // Run on executer to allow both tasks to run at the same time.
+            // This task writes to the DB and the other reads so we shouldn't run into any issues.
+            new ReadHistoricalDataTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        }else {
+            new ReadHistoricalDataTask().execute();
+        }
+    }
+
     @Override
     public void onConnect() {
-        if(needsHistoricalData) {
-            // Grabs 30 days worth of data
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-                // Run on executer to allow both tasks to run at the same time.
-                // This task writes to the DB and the other reads so we shouldn't run into any issues.
-                new ReadHistoricalDataTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-            }else {
-                new ReadHistoricalDataTask().execute();
-            }
-
-            needsHistoricalData = false;
-        }
-        // Read cached data and calculate real time step estimates
-        populateReport();
+        // Grabs 30 days worth of data
+        populateHistoricalData();
+        // Data load not complete, could take a while so lets show some data
+        populateReport(false);
     }
 
     @Override
     public void onItemClick(View view, Workout viewModel) {
         if(viewModel.type == WorkoutTypes.TIME.getValue()) {
             timeFrame = timeFrame.next();
-            populateReport();
+            populateReport(false);
         } else {
             DetailActivity.launch(MainActivity.this, view.findViewById(R.id.image), viewModel);
         }
@@ -131,22 +148,34 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
 
     // Show partial data on first run to make the app feel faster
     private boolean initialDisplay = true;
+    // Used to determine if new data has been added to the cache
+    private boolean needsRefresh = false;
 
     private class ReadTodayDataTask extends AsyncTask<Void, Void, Void> {
         protected Void doInBackground(Void... params) {
 
             report.map.clear();
 
+
+            long endTime = Utilities.getTimeFrameEnd(timeFrame);
+
             // Get data prior to today from cache
-            long reportStartTime = Utilities.getTimeFrameStamp(timeFrame);
+            long reportStartTime = Utilities.getTimeFrameStart(timeFrame);
+
+            SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
+            Log.i(TAG, "Range Start: " + dateFormat.format(reportStartTime));
+            Log.i(TAG, "Range End: " + dateFormat.format(endTime));
+
+
             QueryResultIterable<Workout> itr = cupboard().withDatabase(db).query(Workout.class).withSelection("start > ?", "" + reportStartTime).query();
             for (Workout workout : itr) {
-                if(workout.start > reportStartTime) {
+                if(workout.start > reportStartTime && workout.start < endTime) {
                     report.addWorkoutData(workout);
                 }
             }
             itr.close();
             if(initialDisplay) {
+                // TODO: Make sure the app is still in focus or this will crash.
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -160,28 +189,32 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
 
             // We don't write the activity duration from the past two hours to the cache.
             // Grab past two hours worth of data.
-            Calendar cal = Calendar.getInstance();
-            Date now = new Date();
-            cal.setTime(now);
-            long endTime = cal.getTimeInMillis();
-            cal.add(Calendar.HOUR_OF_DAY, -2);
-            long startTime = cal.getTimeInMillis();
+            if(timeFrame != Utilities.TimeFrame.LAST_MONTH) {
+                Calendar cal = Calendar.getInstance();
+                Date now = new Date();
+                cal.setTime(now);
+                cal.add(Calendar.HOUR_OF_DAY, -2);
+                long startTime = cal.getTimeInMillis();
 
-            // Estimated duration by Activity within the past two hours
-            DataReadRequest activitySegmentRequest = DataQueries.queryActivitySegmentBucket(startTime, endTime);
-            DataReadResult dataReadResult = Fitness.HistoryApi.readData(mClient, activitySegmentRequest).await(1, TimeUnit.MINUTES);
-            writeActivityDataToWorkout(dataReadResult);
+                // Estimated duration by Activity within the past two hours
+                DataReadRequest activitySegmentRequest = DataQueries.queryActivitySegmentBucket(startTime, endTime);
+                DataReadResult dataReadResult = Fitness.HistoryApi.readData(mClient, activitySegmentRequest).await(1, TimeUnit.MINUTES);
+                writeActivityDataToWorkout(dataReadResult);
+            } else {
+                // We don't need this data when reporting on last month.
+            }
 
             // Estimated steps by bucket is more accurate than the step count by activity.
             // Replace walking step count total with this number to more closely match Google Fit.
             DataReadRequest stepCountRequest = DataQueries.queryStepEstimate(reportStartTime, endTime);
-            dataReadResult = Fitness.HistoryApi.readData(mClient, stepCountRequest).await(1, TimeUnit.MINUTES);
-            int stepCount = countStepData(dataReadResult);
+            DataReadResult stepCountReadResult = Fitness.HistoryApi.readData(mClient, stepCountRequest).await(1, TimeUnit.MINUTES);
+            int stepCount = countStepData(stepCountReadResult);
             Workout workout = new Workout();
             workout.type = WorkoutTypes.WALKING.getValue();
             workout.stepCount = stepCount;
             report.replaceWorkoutData(workout);
 
+            // TODO: Make sure the app is still in focus or this will crash.
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -190,6 +223,7 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
                     adapter.setItems(items, Utilities.getTimeFrameText(timeFrame), !initialDisplay);
                     adapter.notifyDataSetChanged();
                     initialDisplay = false;
+                    mSwipeRefreshLayout.setRefreshing(false);
                 }
             });
 
@@ -199,6 +233,7 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
 
     private class ReadHistoricalDataTask extends AsyncTask<Void, Void, Void> {
         protected Void doInBackground(Void... params) {
+            needsRefresh = false;
             // Setting a start and end date using a range of 1 month before this moment.
             Calendar cal = Calendar.getInstance();
             Date now = new Date();
@@ -207,10 +242,16 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
             // This could be an issue for workouts longer than 2 hours. Special case for that?
             cal.add(Calendar.HOUR_OF_DAY, -2);
             long endTime = cal.getTimeInMillis();
-            cal.add(Calendar.DAY_OF_YEAR, -30);
-            long startTime = cal.getTimeInMillis();
-
+            long startTime = endTime;
+            if(UserPreferences.getBackgroundLoadComplete(MainActivity.this)) {
+                Workout w = cupboard().withDatabase(db).query(Workout.class).orderBy("start DESC").get();
+                startTime = w.start - 1000*60*60*8; // Go back eight hours just to be safe
+            } else {
+                cal.add(Calendar.DAY_OF_YEAR, -45);
+                startTime = cal.getTimeInMillis();
+            }
             SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
+
             Log.i(TAG, "Range Start: " + dateFormat.format(startTime));
             Log.i(TAG, "Range End: " + dateFormat.format(endTime));
 
@@ -219,12 +260,19 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
             DataReadResult dataReadResult = Fitness.HistoryApi.readData(mClient, activitySegmentRequest).await(1, TimeUnit.MINUTES);
             writeActivityDataToCache(dataReadResult);
 
+            UserPreferences.setBackgroundLoadComplete(MainActivity.this, true);
+            // If we added new data to the cache, refresh the UI
+            if(needsRefresh) {
+                // Read cached data and calculate real time step estimates
+                populateReport(false);
+            }
+
             return null;
         }
     }
 
     /**
-     * Retrieve data from the db cache and display it on the screen.
+     * Retrieve data from the db cache and print it to the log.
      */
     private void printActivityData() {
         WorkoutReport report = new WorkoutReport();
@@ -235,10 +283,6 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
         }
         itr.close();
         Log.i(TAG, report.toString());
-    }
-
-    private void printEstimatedStepData(int estimatedSteps) {
-        Log.i(TAG, "Estimated steps: " + estimatedSteps);
     }
 
     private void writeActivityDataToCache(DataReadResult dataReadResult) {
@@ -258,8 +302,8 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
     /**
      * Count step data for a bucket of step count deltas.
      *
-     * @param dataReadResult
-     * @return
+     * @param dataReadResult Read result from the step count estimate Google Fit call.
+     * @return Step count for data read.
      */
     private int countStepData(DataReadResult dataReadResult) {
         int stepCount = 0;
@@ -297,6 +341,7 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
                         workout.stepCount = stepCount;
                         workout.type = activity;
                         cupboard().withDatabase(db).put(workout);
+                        needsRefresh = true;
                     }
                 }
             }
@@ -351,10 +396,30 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
         int id = item.getItemId();
         if (id == R.id.action_refresh_data) {
             if(connected) {
-                new ReadHistoricalDataTask().execute();
+                UserPreferences.setBackgroundLoadComplete(MainActivity.this, false);
+                populateHistoricalData();
             }
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    /**
+     *  Initialize a custom log class that outputs both to in-app targets and logcat.
+     */
+    private void initializeLogging() {
+        // Wraps Android's native log framework.
+        LogWrapper logWrapper = new LogWrapper();
+        // Using Log, front-end to the logging chain, emulates android.util.log method signatures.
+        Log.setLogNode(logWrapper);
+        // Filter strips out everything except the message text.
+        MessageOnlyLogFilter msgFilter = new MessageOnlyLogFilter();
+        logWrapper.setNext(msgFilter);
+        // On screen logging via a customized TextView.
+        LogView logView = (LogView) findViewById(R.id.sample_logview);
+        logView.setTextAppearance(this, R.style.Log);
+        logView.setBackgroundColor(Color.WHITE);
+        msgFilter.setNext(logView);
+        Log.i(TAG, "Ready");
     }
 }

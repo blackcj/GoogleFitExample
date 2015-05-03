@@ -7,6 +7,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ActivityOptionsCompat;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.graphics.Palette;
 import android.view.Menu;
@@ -17,6 +18,7 @@ import android.widget.RelativeLayout;
 
 import com.google.android.gms.fit.samples.basichistoryapi.R;
 import com.google.android.gms.fit.samples.basichistoryapi.Utilities;
+import com.google.android.gms.fit.samples.basichistoryapi.fragment.ReportsFragment;
 import com.google.android.gms.fit.samples.basichistoryapi.model.Workout;
 import com.google.android.gms.fit.samples.basichistoryapi.model.WorkoutTypes;
 
@@ -27,8 +29,9 @@ import com.google.android.gms.fit.samples.basichistoryapi.model.WorkoutTypes;
 public class DetailActivity extends BaseActivity {
 
 
-    public static final String EXTRA_TITLE = "DetailActivity:title";
-    public static final String EXTRA_IMAGE = "DetailActivity:image";
+    private static final String EXTRA_TYPE = "DetailActivity:type";
+    private static final String EXTRA_TITLE = "DetailActivity:title";
+    private static final String EXTRA_IMAGE = "DetailActivity:image";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,9 +56,16 @@ public class DetailActivity extends BaseActivity {
         if (Build.VERSION.SDK_INT >= 21) {
             getWindow().setStatusBarColor(vibrant);
         }
+
+        // TODO: Pass in workout type instead of title.
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        fragmentManager.beginTransaction()
+                       .replace(R.id.chart_container, ReportsFragment.newInstance(getIntent().getIntExtra(EXTRA_TYPE, 0)))
+                       .commit();
     }
 
-    @Override protected int getLayoutResource() {
+    @Override
+    protected int getLayoutResource() {
         return R.layout.activity_detail;
     }
 
@@ -92,6 +102,7 @@ public class DetailActivity extends BaseActivity {
         Intent intent = new Intent(activity, DetailActivity.class);
         intent.putExtra(EXTRA_IMAGE, WorkoutTypes.getImageById(workout.type));
         intent.putExtra(EXTRA_TITLE, WorkoutTypes.getWorkOutTextById(workout.type));
+        intent.putExtra(EXTRA_TYPE, workout.type);
         ActivityCompat.startActivity(activity, intent, options.toBundle());
     }
 }

@@ -2,6 +2,9 @@ package com.google.android.gms.fit.samples.basichistoryapi;
 
 import android.graphics.Color;
 
+import com.google.android.gms.fit.samples.common.logger.Log;
+
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -27,10 +30,18 @@ public class Utilities {
         return Color.argb(Color.alpha(color), red, green, blue);
     }
 
+    public static final String DAY_FORMAT = "MM/dd";
+
+    public static String getDayString(Long ms) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(DAY_FORMAT);
+        return dateFormat.format(ms);
+    }
+
     public enum TimeFrame {
         BEGINNING_OF_DAY,
         BEGINNING_OF_WEEK,
-        BEGINNING_OF_MONTH;
+        BEGINNING_OF_MONTH,
+        LAST_MONTH;
         private static TimeFrame[] vals = values();
         public TimeFrame next()
         {
@@ -50,11 +61,35 @@ public class Utilities {
             case BEGINNING_OF_MONTH: // 1 month
                 result = "This Month";
                 break;
+            case LAST_MONTH: // 1 month
+                result = "Last Month";
+                break;
         }
         return result;
     }
 
-    public static long getTimeFrameStamp(TimeFrame timeFrame) {
+    public static long getTimeFrameEnd(TimeFrame timeFrame) {
+
+        Calendar cal = Calendar.getInstance();
+        Date now = new Date();
+        cal.setTime(now);
+        switch (timeFrame) {
+            case BEGINNING_OF_DAY: // 1 day
+            case BEGINNING_OF_WEEK: // 1 week
+            case BEGINNING_OF_MONTH: // 1 month
+                break;
+            case LAST_MONTH: // 1 month ago
+                cal.set(Calendar.DAY_OF_MONTH, 0);
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                break;
+        }
+        return cal.getTimeInMillis();
+    }
+
+    public static long getTimeFrameStart(TimeFrame timeFrame) {
 
         Calendar cal = Calendar.getInstance();
         Date now = new Date();
@@ -79,6 +114,14 @@ public class Utilities {
                 cal.set(Calendar.MINUTE, 0);
                 cal.set(Calendar.SECOND, 0);
                 cal.set(Calendar.MILLISECOND, 0);
+                break;
+            case LAST_MONTH: // 1 month ago
+                cal.set(Calendar.DAY_OF_MONTH, 0);
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                cal.add(Calendar.MONTH, -1);
                 break;
         }
         return cal.getTimeInMillis();

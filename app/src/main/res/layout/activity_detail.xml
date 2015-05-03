@@ -25,11 +25,16 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="All graphs currently display step count! This will be changed soon."/>
-    <fragment android:name="com.google.android.gms.fit.samples.basichistoryapi.fragment.ReportsFragment"
+    <FrameLayout
+        android:id="@+id/chart_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/warning_text"/>
+    <!--<fragment android:name="com.google.android.gms.fit.samples.basichistoryapi.fragment.ReportsFragment"
         android:id="@+id/chart"
         android:layout_weight="1"
         android:layout_width="match_parent"
         android:layout_below="@+id/warning_text"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent"/>-->
 
 </RelativeLayout>

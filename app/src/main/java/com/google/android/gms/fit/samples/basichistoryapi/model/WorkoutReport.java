@@ -1,5 +1,7 @@
 package com.google.android.gms.fit.samples.basichistoryapi.model;
 
+import com.google.android.gms.fit.samples.common.logger.Log;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -26,6 +28,11 @@ public class WorkoutReport {
             Workout w = map.get(workout.type);
             w.stepCount += workout.stepCount;
             w.duration += workout.duration;
+        }
+        if(workout._id == 0){
+            //Log.v("WorkoutReport", "No Cache: " + WorkoutTypes.getWorkOutTextById(workout.type) + " " + workout.duration);
+        }else {
+            //Log.v("WorkoutReport", "Cache: " + WorkoutTypes.getWorkOutTextById(workout.type) + " " + workout.duration);
         }
     }
 

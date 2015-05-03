@@ -21,13 +21,30 @@
     tools:context=".MainActivity"
     android:background="@color/lightGray">
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/recycler"
+    <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingTop="?attr/actionBarSize"
-        android:clipToPadding="false"/>
-
+        android:layout_gravity="bottom"
+        android:visibility="invisible">
+        <com.google.android.gms.fit.samples.common.logger.LogView
+            android:id="@+id/sample_logview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:scrollbars="vertical"
+            android:textColor="@color/semiBlack"/>
+    </ScrollView>
+    <android.support.v4.widget.SwipeRefreshLayout
+        android:id="@+id/contentView"
+        android:layout_width="match_parent"
+        android:layout_marginTop="?attr/actionBarSize"
+        android:layout_height="match_parent"
+        android:clipToPadding="false">
+        <com.google.android.gms.fit.samples.basichistoryapi.view.FixedRecyclerView
+            android:id="@+id/recycler"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            />
+    </android.support.v4.widget.SwipeRefreshLayout>
     <include
         android:id="@+id/toolbar"
         layout="@layout/toolbar"/>
