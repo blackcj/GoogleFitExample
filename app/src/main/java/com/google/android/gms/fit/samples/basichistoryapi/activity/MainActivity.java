@@ -75,8 +75,6 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
         dbHelper = new CupboardSQLiteOpenHelper(this);
         db = dbHelper.getWritableDatabase();
 
-
-
         ArrayList<Workout> items = new ArrayList<>(report.map.values());
 
         recyclerView = (RecyclerView) findViewById(R.id.recycler);

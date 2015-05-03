@@ -9,4 +9,8 @@
     <color name="semiWhite">#CCFFFFFF</color>
     <color name="colorWhite">#FFFFFF</color>
     <color name="lightGray">#eee</color>
+
+    <color name="blue4">#8AD5F0</color>
+    <color name="darkGrey">#888888</color>
+    <color name="blue14">#0099CC</color>
 </resources>

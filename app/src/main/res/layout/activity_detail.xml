@@ -20,11 +20,11 @@
         android:padding="20dp"
         tools:src="@drawable/heart_icon_red"/>
 
-    <TextView
-        android:id="@+id/text"
-        android:text="@string/hello_world"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/image"/>
+    <fragment android:name="com.google.android.gms.fit.samples.basichistoryapi.fragment.ReportsFragment"
+        android:id="@+id/chart"
+        android:layout_weight="1"
+        android:layout_width="match_parent"
+        android:layout_below="@+id/image"
+        android:layout_height="match_parent"/>
 
 </RelativeLayout>
