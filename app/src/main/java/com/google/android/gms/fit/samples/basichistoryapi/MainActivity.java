@@ -18,6 +18,7 @@ package com.google.android.gms.fit.samples.basichistoryapi;
 import static nl.qbusict.cupboard.CupboardFactory.cupboard;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -58,6 +59,7 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
     private WorkoutReport report = new WorkoutReport();
     private RecyclerViewAdapter adapter;
     private RecyclerView recyclerView;
+    private boolean needsHistoricalData = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,7 +68,7 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
 
         dbHelper = new CupboardSQLiteOpenHelper(this);
         db = dbHelper.getWritableDatabase();
-        // 7 days worth of data
+
 
 
         ArrayList<Workout> items = new ArrayList<>(report.map.values());
@@ -76,8 +78,6 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
         adapter = new RecyclerViewAdapter(items, this);
         adapter.setOnItemClickListener(this);
         recyclerView.setAdapter(adapter);
-
-        printActivityData();
     }
 
     int lastPosition = -1;
@@ -92,8 +92,17 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
 
     @Override
     public void onConnect() {
+        if(needsHistoricalData) {
+            // Grabs 30 days worth of data
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+                new ReadHistoricalDataTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            }else {
+                new ReadHistoricalDataTask().execute();
+            }
+
+            needsHistoricalData = false;
+        }
         populateReport();
-        //new ReadTodayDataTask().execute();
     }
 
     int[] values = {1, 7, 30};
