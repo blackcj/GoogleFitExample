@@ -115,7 +115,7 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
 
     @Override
     public void onItemClick(View view, Workout viewModel) {
-        if(viewModel.type == -1) {
+        if(viewModel.type == WorkoutTypes.TIME.getValue()) {
             timeFrame = timeFrame.next();
             populateReport();
         } else {
@@ -327,9 +327,9 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
                 for (Field field : dp.getDataType().getFields()) {
 
                     String fieldName = field.getName();
-                    if(fieldName == "activity") {
+                    if(fieldName.equals("activity")) {
                         workout.type = dp.getValue(field).asInt();
-                    }else if(fieldName == "duration") {
+                    }else if(fieldName.equals("duration")) {
                         workout.duration = dp.getValue(field).asInt();
                     }
                 }

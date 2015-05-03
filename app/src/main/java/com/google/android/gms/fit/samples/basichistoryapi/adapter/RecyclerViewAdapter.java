@@ -63,12 +63,12 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         Workout item;
         if(position == 0) {
             item = new Workout();
-            item.type = -1;
+            item.type = WorkoutTypes.TIME.getValue();
         } else {
             item = items.get(position - 1);
         }
 
-        if(item.type == -1) {
+        if(item.type == WorkoutTypes.TIME.getValue()) {
             holder.text.setText(timeDesc);
         } else {
             holder.text.setText(WorkoutTypes.getWorkOutTextById(item.type));
@@ -80,9 +80,9 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         int vibrant = palette.getVibrantColor(0x000000);
         Date now = new Date();
         SimpleDateFormat dateFormat = new SimpleDateFormat(MainActivity.DATE_FORMAT);
-        if(item.type == -1) {
+        if(item.type == WorkoutTypes.TIME.getValue()) {
             holder.detail.setText("Last updated: " + dateFormat.format(now));
-        }else if(item.type == 7) {
+        }else if(item.type == WorkoutTypes.WALKING.getValue()) {
             holder.detail.setText(item.stepCount + " steps");
         } else {
             holder.detail.setText(WorkoutReport.getDurationBreakdown(item.duration));
