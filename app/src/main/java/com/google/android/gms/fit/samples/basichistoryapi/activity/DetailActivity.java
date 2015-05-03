@@ -91,7 +91,7 @@ public class DetailActivity extends BaseActivity {
                         activity, transitionView, EXTRA_IMAGE);
         Intent intent = new Intent(activity, DetailActivity.class);
         intent.putExtra(EXTRA_IMAGE, WorkoutTypes.getImageById(workout.type));
-        intent.putExtra(EXTRA_TITLE, WorkoutTypes.getWorkOutById(workout.type));
+        intent.putExtra(EXTRA_TITLE, WorkoutTypes.getWorkOutTextById(workout.type));
         ActivityCompat.startActivity(activity, intent, options.toBundle());
     }
 }

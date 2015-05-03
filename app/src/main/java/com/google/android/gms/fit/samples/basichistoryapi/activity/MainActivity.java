@@ -26,12 +26,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.google.android.gms.fit.samples.basichistoryapi.Utilities;
 import com.google.android.gms.fit.samples.basichistoryapi.database.CupboardSQLiteOpenHelper;
 import com.google.android.gms.fit.samples.basichistoryapi.database.DataQueries;
 import com.google.android.gms.fit.samples.basichistoryapi.R;
 import com.google.android.gms.fit.samples.basichistoryapi.adapter.RecyclerViewAdapter;
 import com.google.android.gms.fit.samples.basichistoryapi.model.Workout;
 import com.google.android.gms.fit.samples.basichistoryapi.model.WorkoutReport;
+import com.google.android.gms.fit.samples.basichistoryapi.model.WorkoutTypes;
 import com.google.android.gms.fit.samples.common.logger.Log;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.data.Bucket;
@@ -56,9 +58,7 @@ import nl.qbusict.cupboard.QueryResultIterable;
  */
 public class MainActivity extends ApiClientActivity implements RecyclerViewAdapter.OnItemClickListener {
 
-
     public static final String DATE_FORMAT = "MM.dd h:mm a";
-
 
     private CupboardSQLiteOpenHelper dbHelper;
     private SQLiteDatabase db;
@@ -84,13 +84,14 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
         recyclerView.setAdapter(adapter);
     }
 
-    int lastPosition = -1;
+    Utilities.TimeFrame timeFrame = Utilities.TimeFrame.BEGINNING_OF_DAY;
+    Utilities.TimeFrame lastPosition;
 
     protected void populateReport() {
 
-        if(lastPosition != position) {
+        if(lastPosition != timeFrame) {
             new ReadTodayDataTask().execute();
-            lastPosition = position;
+            lastPosition = timeFrame;
         }
     }
 
@@ -99,6 +100,8 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
         if(needsHistoricalData) {
             // Grabs 30 days worth of data
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+                // Run on executer to allow both tasks to run at the same time.
+                // This task writes to the DB and the other reads so we shouldn't run into any issues.
                 new ReadHistoricalDataTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             }else {
                 new ReadHistoricalDataTask().execute();
@@ -106,18 +109,14 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
 
             needsHistoricalData = false;
         }
+        // Read cached data and calculate real time step estimates
         populateReport();
     }
-
-    int[] values = {1, 7, 30};
-    String[] valueDesc = {"Today","This Week","This Month"};
-    int position = 0;
 
     @Override
     public void onItemClick(View view, Workout viewModel) {
         if(viewModel.type == -1) {
-            position += 1;
-            position = position % 3;
+            timeFrame = timeFrame.next();
             populateReport();
         } else {
             DetailActivity.launch(MainActivity.this, view.findViewById(R.id.image), viewModel);
@@ -130,41 +129,16 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
         return R.layout.activity_main;
     }
 
+    // Show partial data on first run to make the app feel faster
     private boolean initialDisplay = true;
 
     private class ReadTodayDataTask extends AsyncTask<Void, Void, Void> {
         protected Void doInBackground(Void... params) {
 
             report.map.clear();
-            // Get data prior to today
-            Calendar cal = Calendar.getInstance();
-            Date now = new Date();
-            cal.setTime(now);
-            // TODO: Clean this up.
-            switch (position) {
-                case 0: // 1 day
-                    cal.set(Calendar.HOUR_OF_DAY, 0);
-                    cal.set(Calendar.MINUTE, 0);
-                    cal.set(Calendar.SECOND, 0);
-                    cal.set(Calendar.MILLISECOND, 0);
-                    break;
-                case 1: // 1 week
-                    cal.set(Calendar.DAY_OF_WEEK, 1);
-                    cal.set(Calendar.HOUR_OF_DAY, 0);
-                    cal.set(Calendar.MINUTE, 0);
-                    cal.set(Calendar.SECOND, 0);
-                    cal.set(Calendar.MILLISECOND, 0);
-                    break;
-                case 2: // 1 month
-                    cal.set(Calendar.DAY_OF_MONTH, 0);
-                    cal.set(Calendar.HOUR_OF_DAY, 0);
-                    cal.set(Calendar.MINUTE, 0);
-                    cal.set(Calendar.SECOND, 0);
-                    cal.set(Calendar.MILLISECOND, 0);
-                    break;
-            }
-            //cal.add(Calendar.DAY_OF_YEAR, -values[position]); // This was a shortcut
-            long reportStartTime = cal.getTimeInMillis();
+
+            // Get data prior to today from cache
+            long reportStartTime = Utilities.getTimeFrameStamp(timeFrame);
             QueryResultIterable<Workout> itr = cupboard().withDatabase(db).query(Workout.class).withSelection("start > ?", "" + reportStartTime).query();
             for (Workout workout : itr) {
                 if(workout.start > reportStartTime) {
@@ -176,21 +150,20 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        //stuff that updates ui
+                        // Update the UI
                         ArrayList<Workout> items = new ArrayList<>(report.map.values());
-                        adapter.setItems(items, valueDesc[position], initialDisplay);
+                        adapter.setItems(items, Utilities.getTimeFrameText(timeFrame), initialDisplay);
                         adapter.notifyDataSetChanged();
                     }
                 });
             }
 
             // We don't write the activity duration from the past two hours to the cache.
-            // Grab it.
+            // Grab past two hours worth of data.
+            Calendar cal = Calendar.getInstance();
+            Date now = new Date();
             cal.setTime(now);
             long endTime = cal.getTimeInMillis();
-            cal.set(Calendar.MINUTE, 0);
-            cal.set(Calendar.SECOND, 0);
-            cal.set(Calendar.MILLISECOND, 0);
             cal.add(Calendar.HOUR_OF_DAY, -2);
             long startTime = cal.getTimeInMillis();
 
@@ -199,29 +172,26 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
             DataReadResult dataReadResult = Fitness.HistoryApi.readData(mClient, activitySegmentRequest).await(1, TimeUnit.MINUTES);
             writeActivityDataToWorkout(dataReadResult);
 
-            // Estimated steps by bucket is more accurate than the step count by activity
+            // Estimated steps by bucket is more accurate than the step count by activity.
             // Replace walking step count total with this number to more closely match Google Fit.
             DataReadRequest stepCountRequest = DataQueries.queryStepEstimate(reportStartTime, endTime);
             dataReadResult = Fitness.HistoryApi.readData(mClient, stepCountRequest).await(1, TimeUnit.MINUTES);
             int stepCount = countStepData(dataReadResult);
             Workout workout = new Workout();
-            workout.start = 0;
-            workout.duration = 0;
-            workout.type = 7;
+            workout.type = WorkoutTypes.WALKING.getValue();
             workout.stepCount = stepCount;
             report.replaceWorkoutData(workout);
 
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    //stuff that updates ui
+                    // Update the UI
                     ArrayList<Workout> items = new ArrayList<>(report.map.values());
-                    adapter.setItems(items, valueDesc[position], !initialDisplay);
+                    adapter.setItems(items, Utilities.getTimeFrameText(timeFrame), !initialDisplay);
                     adapter.notifyDataSetChanged();
                     initialDisplay = false;
                 }
             });
-
 
             return null;
         }
@@ -233,10 +203,8 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
             Calendar cal = Calendar.getInstance();
             Date now = new Date();
             cal.setTime(now);
-            //cal.set(Calendar.HOUR_OF_DAY, 0);
-            cal.set(Calendar.MINUTE, 0);
-            cal.set(Calendar.SECOND, 0);
-            cal.set(Calendar.MILLISECOND, 0);
+            // You might be in the middle of a workout, don't cache the past two hours of data.
+            // This could be an issue for workouts longer than 2 hours. Special case for that?
             cal.add(Calendar.HOUR_OF_DAY, -2);
             long endTime = cal.getTimeInMillis();
             cal.add(Calendar.DAY_OF_YEAR, -30);
@@ -319,7 +287,6 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
                     Workout workout = cupboard().withDatabase(db).get(Workout.class, startTime);
                     if(workout == null) {
                         long endTime = dp.getEndTime(TimeUnit.MILLISECONDS);
-                        //Log.i(TAG, "\tField: " + field.getName() + " Value: " + dp.getValue(field));
                         DataReadRequest readRequest = DataQueries.queryStepCount(startTime, endTime);
                         DataReadResult dataReadResult = Fitness.HistoryApi.readData(mClient, readRequest).await(1, TimeUnit.MINUTES);
                         int stepCount = countStepData(dataReadResult);
@@ -382,7 +349,7 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.action_delete_data) {
+        if (id == R.id.action_refresh_data) {
             if(connected) {
                 new ReadHistoricalDataTask().execute();
             }

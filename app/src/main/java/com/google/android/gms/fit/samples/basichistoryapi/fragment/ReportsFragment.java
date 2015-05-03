@@ -255,8 +255,8 @@ public class ReportsFragment extends BaseFragment {
 
 
         mRenderer.clearXTextLabels();
-        mRenderer.setYAxisMax(Math.round(maxTemp) + 100);
-        mRenderer.setYAxisMin(Math.round(minTemp) - 100);
+        mRenderer.setYAxisMax(Math.round(maxTemp) + 200);
+        mRenderer.setYAxisMin(0);
         mRenderer.setXAxisMin(mCurrentSeries.getItemCount() - 20);
         mRenderer.setXAxisMax(mCurrentSeries.getItemCount());
         mRenderer.setPanLimits(new double [] {0, mCurrentSeries.getItemCount(), 0, 0});

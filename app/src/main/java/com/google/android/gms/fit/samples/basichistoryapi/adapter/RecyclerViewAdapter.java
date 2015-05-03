@@ -71,7 +71,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         if(item.type == -1) {
             holder.text.setText(timeDesc);
         } else {
-            holder.text.setText(WorkoutTypes.getWorkOutById(item.type));
+            holder.text.setText(WorkoutTypes.getWorkOutTextById(item.type));
         }
         holder.image.setImageResource(WorkoutTypes.getImageById(item.type));
         holder.itemView.setTag(item);

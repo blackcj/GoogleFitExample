@@ -7,8 +7,29 @@ import com.google.android.gms.fit.samples.basichistoryapi.R;
  *
  * https://developers.google.com/fit/rest/v1/reference/activity-types
  */
-public class WorkoutTypes {
-    public static String getWorkOutById(int id) {
+public enum WorkoutTypes {
+    TIME(-1),
+    IN_VEHICLE(0),
+    BIKING(1),
+    STILL(3),
+    UNKNOWN(4),
+    WALKING(7), // We are technically using walking for total estimated "steps"
+    RUNNING(8),
+    AEROBICS(9),
+    STRENGTH_TRAINING(80),
+    WEIGHT_LIFTING(97);
+
+    private final int value;
+
+    WorkoutTypes(int value) {
+        this.value = value;
+    }
+
+    public int getValue() {
+        return value;
+    }
+
+    public static String getWorkOutTextById(int id) {
         String result = "Unknown";
         switch (id) {
             case -1:

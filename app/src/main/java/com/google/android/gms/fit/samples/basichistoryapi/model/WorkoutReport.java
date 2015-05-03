@@ -15,8 +15,8 @@ public class WorkoutReport {
 
     public void addWorkoutData(Workout workout) {
 
-        if(workout.type == 3 || (workout.stepCount == 0 && workout.duration < 60000)) {
-            // Ignore "still" time
+        if(workout.type == WorkoutTypes.STILL.getValue() || (workout.stepCount == 0 && workout.duration < 60000)) {
+            // Ignore "still" time or workouts less than 1 minute.
             return;
         }
 
@@ -52,9 +52,9 @@ public class WorkoutReport {
         for (Iterator i = keys.iterator(); i.hasNext();)
         {
             int key = (int) i.next();
-            Workout value = (Workout) map.get(key);
-            result += WorkoutTypes.getWorkOutById(value.type) + " steps: " + value.stepCount + "\n";
-            result += WorkoutTypes.getWorkOutById(value.type) + " duration: " + getDurationBreakdown(value.duration) + "\n";
+            Workout value = map.get(key);
+            result += WorkoutTypes.getWorkOutTextById(value.type) + " steps: " + value.stepCount + "\n";
+            result += WorkoutTypes.getWorkOutTextById(value.type) + " duration: " + getDurationBreakdown(value.duration) + "\n";
         }
         return result;
     }
