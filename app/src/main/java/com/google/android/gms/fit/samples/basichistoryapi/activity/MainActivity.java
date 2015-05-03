@@ -137,18 +137,38 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
 
             report.map.clear();
             // Get data prior to today
-            Calendar cal1 = Calendar.getInstance();
+            Calendar cal = Calendar.getInstance();
             Date now = new Date();
-            cal1.setTime(now);
-            cal1.add(Calendar.DAY_OF_YEAR, -values[position]);
-            long reportStartTime = cal1.getTimeInMillis();
+            cal.setTime(now);
+            // TODO: Clean this up.
+            switch (position) {
+                case 0: // 1 day
+                    cal.set(Calendar.HOUR_OF_DAY, 0);
+                    cal.set(Calendar.MINUTE, 0);
+                    cal.set(Calendar.SECOND, 0);
+                    cal.set(Calendar.MILLISECOND, 0);
+                    break;
+                case 1: // 1 week
+                    cal.set(Calendar.DAY_OF_WEEK, 1);
+                    cal.set(Calendar.HOUR_OF_DAY, 0);
+                    cal.set(Calendar.MINUTE, 0);
+                    cal.set(Calendar.SECOND, 0);
+                    cal.set(Calendar.MILLISECOND, 0);
+                    break;
+                case 2: // 1 month
+                    cal.set(Calendar.DAY_OF_MONTH, 0);
+                    cal.set(Calendar.HOUR_OF_DAY, 0);
+                    cal.set(Calendar.MINUTE, 0);
+                    cal.set(Calendar.SECOND, 0);
+                    cal.set(Calendar.MILLISECOND, 0);
+                    break;
+            }
+            //cal.add(Calendar.DAY_OF_YEAR, -values[position]); // This was a shortcut
+            long reportStartTime = cal.getTimeInMillis();
             QueryResultIterable<Workout> itr = cupboard().withDatabase(db).query(Workout.class).withSelection("start > ?", "" + reportStartTime).query();
             for (Workout workout : itr) {
                 if(workout.start > reportStartTime) {
                     report.addWorkoutData(workout);
-                } else {
-                    // Ignore the workout
-                    Log.i("Test","test");
                 }
             }
             itr.close();
@@ -164,8 +184,8 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
                 });
             }
 
-            // Setting a start and end date using a range of 1 month before this moment.
-            Calendar cal = Calendar.getInstance();
+            // We don't write the activity duration from the past two hours to the cache.
+            // Grab it.
             cal.setTime(now);
             long endTime = cal.getTimeInMillis();
             cal.set(Calendar.MINUTE, 0);
@@ -174,21 +194,14 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
             cal.add(Calendar.HOUR_OF_DAY, -2);
             long startTime = cal.getTimeInMillis();
 
-            // Estimated steps and duration by Activity
+            // Estimated duration by Activity within the past two hours
             DataReadRequest activitySegmentRequest = DataQueries.queryActivitySegmentBucket(startTime, endTime);
             DataReadResult dataReadResult = Fitness.HistoryApi.readData(mClient, activitySegmentRequest).await(1, TimeUnit.MINUTES);
             writeActivityDataToWorkout(dataReadResult);
 
-            cal.setTime(now);
-            endTime = cal.getTimeInMillis();
-            cal.set(Calendar.HOUR_OF_DAY, 0);
-            cal.set(Calendar.MINUTE, 0);
-            cal.set(Calendar.SECOND, 0);
-            cal.set(Calendar.MILLISECOND, 0);
-            startTime = cal.getTimeInMillis();
-
-            // Estimated steps by bucket
-            DataReadRequest stepCountRequest = DataQueries.queryStepEstimate(startTime, endTime);
+            // Estimated steps by bucket is more accurate than the step count by activity
+            // Replace walking step count total with this number to more closely match Google Fit.
+            DataReadRequest stepCountRequest = DataQueries.queryStepEstimate(reportStartTime, endTime);
             dataReadResult = Fitness.HistoryApi.readData(mClient, stepCountRequest).await(1, TimeUnit.MINUTES);
             int stepCount = countStepData(dataReadResult);
             Workout workout = new Workout();
