@@ -19,22 +19,11 @@
         android:layout_below="@id/toolbar"
         android:padding="20dp"
         tools:src="@drawable/heart_icon_red"/>
-    <TextView
-        android:id="@+id/warning_text"
-        android:layout_below="@+id/image"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="All graphs currently display step count! This will be changed soon."/>
+
     <FrameLayout
         android:id="@+id/chart_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@+id/warning_text"/>
-    <!--<fragment android:name="com.google.android.gms.fit.samples.basichistoryapi.fragment.ReportsFragment"
-        android:id="@+id/chart"
-        android:layout_weight="1"
-        android:layout_width="match_parent"
-        android:layout_below="@+id/warning_text"
-        android:layout_height="match_parent"/>-->
+        android:layout_height="200dp"
+        android:layout_below="@+id/image"/>
 
 </RelativeLayout>

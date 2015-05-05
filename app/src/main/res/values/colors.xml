@@ -7,6 +7,7 @@
     <color name="colorTextPrimary">#353F50</color>
     <color name="semiBlack">#aa111111</color>
     <color name="semiWhite">#CCFFFFFF</color>
+    <color name="colorBarGraph">#77FFFFFF</color>
     <color name="colorWhite">#FFFFFF</color>
     <color name="lightGray">#eee</color>
 

@@ -45,7 +45,8 @@ public class Utilities {
         private static TimeFrame[] vals = values();
         public TimeFrame next()
         {
-            return vals[(this.ordinal()+1) % vals.length];
+            // Hide last month for now. It takes too long.
+            return vals[(this.ordinal()+1) % (vals.length - 1)];
         }
     }
 
@@ -109,14 +110,14 @@ public class Utilities {
                 cal.set(Calendar.MILLISECOND, 0);
                 break;
             case BEGINNING_OF_MONTH: // 1 month
-                cal.set(Calendar.DAY_OF_MONTH, 0);
+                cal.set(Calendar.DAY_OF_MONTH, 1);
                 cal.set(Calendar.HOUR_OF_DAY, 0);
                 cal.set(Calendar.MINUTE, 0);
                 cal.set(Calendar.SECOND, 0);
                 cal.set(Calendar.MILLISECOND, 0);
                 break;
             case LAST_MONTH: // 1 month ago
-                cal.set(Calendar.DAY_OF_MONTH, 0);
+                cal.set(Calendar.DAY_OF_MONTH, 1);
                 cal.set(Calendar.HOUR_OF_DAY, 0);
                 cal.set(Calendar.MINUTE, 0);
                 cal.set(Calendar.SECOND, 0);

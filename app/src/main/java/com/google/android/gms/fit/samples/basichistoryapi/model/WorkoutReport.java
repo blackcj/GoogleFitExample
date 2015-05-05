@@ -2,8 +2,11 @@ package com.google.android.gms.fit.samples.basichistoryapi.model;
 
 import com.google.android.gms.fit.samples.common.logger.Log;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -12,7 +15,7 @@ import java.util.concurrent.TimeUnit;
  * Created by chris.black on 5/1/15.
  */
 public class WorkoutReport {
-    public Map<Integer,Workout> map =  new HashMap<>();
+    private Map<Integer, Workout> map =  new HashMap<>();
 
 
     public void addWorkoutData(Workout workout) {
@@ -36,11 +39,49 @@ public class WorkoutReport {
         }
     }
 
+    public void clearWorkoutData() {
+        map.clear();
+    }
+
+    public List<Workout> getWorkoutData() {
+        Workout summary = new Workout();
+        summary.type = WorkoutTypes.TIME.getValue();
+        summary.duration = getTotalDuration();
+        summary.start = -1;
+        replaceWorkout(summary);
+        List<Workout> result = new ArrayList<>(map.values());
+        Collections.sort(result);
+        return result;
+    }
+
+    public void replaceWorkout(Workout workout) {
+        if(map.get(workout.type) == null) {
+            map.put(workout.type, workout);
+        }else {
+            Workout w = map.get(workout.type);
+            w = workout;
+        }
+    }
+
+    public long getTotalDuration() {
+        long totalDuration = 0;
+        Set keys = map.keySet();
+        for (Iterator i = keys.iterator(); i.hasNext();)
+        {
+            int key = (int) i.next();
+            Workout workout = map.get(key);
+            if(workout.type != WorkoutTypes.TIME.getValue() && workout.type != WorkoutTypes.STILL.getValue()) {
+                totalDuration += workout.duration;
+            }
+        }
+        return totalDuration;
+    }
+
     /**
      * Special case for steps. Maybe track estimated steps separately from walking?
      * @param workout
      */
-    public void replaceWorkoutData(Workout workout) {
+    public void setStepData(Workout workout) {
         if(map.get(workout.type) == null) {
             map.put(workout.type, workout);
         }else {

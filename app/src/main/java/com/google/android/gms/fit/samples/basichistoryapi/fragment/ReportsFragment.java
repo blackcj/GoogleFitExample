@@ -17,10 +17,12 @@ import com.google.android.gms.fit.samples.basichistoryapi.Utilities;
 import com.google.android.gms.fit.samples.basichistoryapi.database.CupboardSQLiteOpenHelper;
 import com.google.android.gms.fit.samples.basichistoryapi.model.Workout;
 import com.google.android.gms.fit.samples.basichistoryapi.R;
+import com.google.android.gms.fit.samples.basichistoryapi.model.WorkoutTypes;
 import com.google.android.gms.fit.samples.common.logger.Log;
 
 import org.achartengine.ChartFactory;
 import org.achartengine.GraphicalView;
+import org.achartengine.chart.BarChart;
 import org.achartengine.chart.PointStyle;
 import org.achartengine.model.XYMultipleSeriesDataset;
 import org.achartengine.model.XYSeries;
@@ -31,7 +33,9 @@ import org.achartengine.tools.ZoomEvent;
 import org.achartengine.tools.ZoomListener;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -100,7 +104,7 @@ public class ReportsFragment extends BaseFragment {
         mCurrentSeries = new XYSeries(getString(R.string.series_title));
         mDataset = new XYMultipleSeriesDataset();
         mDataset.addSeries(mCurrentSeries);
-        mChartView = ChartFactory.getLineChartView(getActivity(), mDataset, mRenderer);
+        mChartView = ChartFactory.getBarChartView(getActivity(), mDataset, mRenderer, BarChart.Type.DEFAULT);
         mChartView.addZoomListener(new ZoomListener() {
             public void zoomApplied(ZoomEvent e) {
                 updateLabels();
@@ -161,7 +165,7 @@ public class ReportsFragment extends BaseFragment {
         // Now we create the renderer
         mCurrentRenderer = new XYSeriesRenderer();
         mCurrentRenderer.setLineWidth(getDPI(2, metrics));
-        mCurrentRenderer.setColor(getResources().getColor(R.color.semiWhite));
+        mCurrentRenderer.setColor(getResources().getColor(R.color.colorBarGraph));
         // Include low and max value
         mCurrentRenderer.setDisplayBoundingPoints(true);
         // we add point markers
@@ -181,6 +185,7 @@ public class ReportsFragment extends BaseFragment {
         mRenderer.setYLabelsColor(0, getResources().getColor(R.color.colorWhite));
         mRenderer.setLabelsColor(getResources().getColor(R.color.colorWhite));
         mRenderer.setAxesColor(getResources().getColor(R.color.colorWhite));
+        mRenderer.setBarSpacing(0.2);
 
         mRenderer.setShowGrid(true); // we show the grid
         mRenderer.setXLabels(0);
@@ -246,18 +251,44 @@ public class ReportsFragment extends BaseFragment {
         mReportData.clear();
         int hour = 0;
         mCurrentSeries.clear();
-        double maxTemp = 70;
-        double minTemp = 70;
-        QueryResultIterable<Workout> itr = cupboard().withDatabase(db).query(Workout.class).query();
+
+        // TODO: START Move this logic into it's own class
+        Calendar cal = Calendar.getInstance();
+        Date now = new Date();
+        cal.setTime(now);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        cal.add(Calendar.DAY_OF_YEAR, -30);        // 30 days of history
+        long startTime = cal.getTimeInMillis();
+        QueryResultIterable<Workout> itr = cupboard().withDatabase(db).query(Workout.class).withSelection("start > ?", "" + startTime).query();
         for (Workout workout : itr) {
             long id = workout.start - workout.start % (1000*60*60*24);
-            //Log.i("ReportFragment", "Day: " + Utilities.getDayString(id));
-            if(map.get(id) == null) {
-                map.put(id, workout);
-            }else {
-                Workout w = map.get(id);
-                w.stepCount += workout.stepCount;
-                w.duration += workout.duration;
+            if(workoutType == WorkoutTypes.WALKING.getValue()) {
+                if(map.get(id) == null) {
+                    map.put(id, workout);
+                }else {
+                    Workout w = map.get(id);
+                    w.stepCount += workout.stepCount;
+                    w.duration += workout.duration;
+                }
+            } else if(workout.type == workoutType) {
+                if(map.get(id) == null) {
+                    map.put(id, workout);
+                }else {
+                    Workout w = map.get(id);
+                    w.stepCount += workout.stepCount;
+                    w.duration += workout.duration;
+                }
+            } else {
+                if(map.get(id) == null) {
+                    Workout placeholder = new Workout();
+                    placeholder.type = workoutType;
+                    placeholder.start = id;
+                    placeholder.stepCount = 1;
+                    map.put(id, placeholder);
+                }
             }
         }
         itr.close();
@@ -267,17 +298,30 @@ public class ReportsFragment extends BaseFragment {
 
         Collections.sort(mReportData);
 
+        // TODO: END
+
+        double maxData = 70;
+        double minData = 70;
         for (Workout workout : mReportData) {
-            if (workout.stepCount > maxTemp) maxTemp = workout.stepCount;
-            if (workout.stepCount < minTemp) minTemp = workout.stepCount;
-            mCurrentSeries.add(hour++, workout.stepCount);
+            if(workoutType == WorkoutTypes.WALKING.getValue()) {
+                if (workout.stepCount > maxData) maxData = workout.stepCount;
+                if (workout.stepCount < minData) minData = workout.stepCount;
+                mCurrentSeries.add(hour++, workout.stepCount);
+            }else {
+                double duration = Math.floor(workout.duration / 1000 / 60);
+                if (duration > maxData) maxData = duration;
+                if (duration < minData) minData = duration;
+                mCurrentSeries.add(hour++, duration);
+            }
         }
 
 
         mRenderer.clearXTextLabels();
-        mRenderer.setYAxisMax(Math.round(maxTemp) + 200);
-        mRenderer.setYAxisMin(-500);
-        mRenderer.setXAxisMin(mCurrentSeries.getItemCount() - 20);
+        if(workoutType == WorkoutTypes.WALKING.getValue()) {
+            mRenderer.setYAxisMax(Math.round(maxData) + 200);
+            mRenderer.setYAxisMin(-500);
+        }
+        mRenderer.setXAxisMin(mCurrentSeries.getItemCount() - 7);
         mRenderer.setXAxisMax(mCurrentSeries.getItemCount());
         mRenderer.setPanLimits(new double[]{-5, mCurrentSeries.getItemCount() + 5, 0, 0});
         mRenderer.setZoomLimits(new double [] {-5, mCurrentSeries.getItemCount() + 5, 0, 0});

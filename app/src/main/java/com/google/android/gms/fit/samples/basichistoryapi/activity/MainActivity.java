@@ -1,18 +1,3 @@
-/*
- * Copyright (C) 2014 Google, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.google.android.gms.fit.samples.basichistoryapi.activity;
 
 import static nl.qbusict.cupboard.CupboardFactory.cupboard;
@@ -22,6 +7,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
@@ -53,6 +39,11 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import nl.qbusict.cupboard.QueryResultIterable;
@@ -81,10 +72,11 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
         CupboardSQLiteOpenHelper dbHelper = new CupboardSQLiteOpenHelper(this);
         db = dbHelper.getWritableDatabase();
 
-        ArrayList<Workout> items = new ArrayList<>(report.map.values());
+        List<Workout> items = new ArrayList<>(report.getWorkoutData());
 
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler);
         recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
+        recyclerView.setItemAnimator(new DefaultItemAnimator());
         adapter = new RecyclerViewAdapter(items, this);
         adapter.setOnItemClickListener(this);
         recyclerView.setAdapter(adapter);
@@ -96,7 +88,7 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
             public void onRefresh() {
                 // Grabs 30 days worth of data
                 populateHistoricalData();
-                populateReport(true);
+                populateReport();
             }
         });
     }
@@ -104,12 +96,9 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
     Utilities.TimeFrame timeFrame = Utilities.TimeFrame.BEGINNING_OF_DAY;
     Utilities.TimeFrame lastPosition;
 
-    protected void populateReport(boolean forceRun) {
-
-        if(forceRun || lastPosition != timeFrame) {
-            new ReadTodayDataTask().execute();
-            lastPosition = timeFrame;
-        }
+    protected void populateReport() {
+        new ReadTodayDataTask().execute();
+        lastPosition = timeFrame;
     }
 
     private void populateHistoricalData() {
@@ -122,19 +111,50 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
         }
     }
 
+    Timer timer;
+
     @Override
     public void onConnect() {
-        // Grabs 30 days worth of data
-        populateHistoricalData();
-        // Data load not complete, could take a while so lets show some data
-        populateReport(false);
+        if(initialDisplay) {
+            // Grabs 30 days worth of data
+            populateHistoricalData();
+            // Data load not complete, could take a while so lets show some data
+            populateReport();
+        } else {
+            cancelTimer();
+            timer = new Timer();
+            timer.schedule(new TimerTask() {
+                public void run() {
+                    // Grabs 30 days worth of data
+                    populateHistoricalData();
+                    // Data load not complete, could take a while so lets show some data
+                    populateReport();
+                    timer.cancel();
+                }
+            }, 750);
+        }
+    }
+
+    private void cancelTimer() {
+        if(timer != null) {
+            timer.cancel();
+            timer = null;
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        cancelTimer();
     }
 
     @Override
     public void onItemClick(View view, Workout viewModel) {
         if(viewModel.type == WorkoutTypes.TIME.getValue()) {
+            cancelTimer();
             timeFrame = timeFrame.next();
-            populateReport(false);
+            adapter.setNeedsAnimate();
+            populateReport();
         } else {
             DetailActivity.launch(MainActivity.this, view.findViewById(R.id.image), viewModel);
         }
@@ -148,14 +168,12 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
 
     // Show partial data on first run to make the app feel faster
     private boolean initialDisplay = true;
-    // Used to determine if new data has been added to the cache
-    private boolean needsRefresh = false;
 
+    // TODO: Move these AsyncTask's to another class and call them via RetroFit
     private class ReadTodayDataTask extends AsyncTask<Void, Void, Void> {
         protected Void doInBackground(Void... params) {
 
-            report.map.clear();
-
+            report.clearWorkoutData();
 
             long endTime = Utilities.getTimeFrameEnd(timeFrame);
 
@@ -180,9 +198,8 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
                     @Override
                     public void run() {
                         // Update the UI
-                        ArrayList<Workout> items = new ArrayList<>(report.map.values());
-                        adapter.setItems(items, Utilities.getTimeFrameText(timeFrame), initialDisplay);
-                        adapter.notifyDataSetChanged();
+                        List<Workout> items = report.getWorkoutData();
+                        adapter.setItems(items, Utilities.getTimeFrameText(timeFrame));
                     }
                 });
             }
@@ -210,18 +227,18 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
             DataReadResult stepCountReadResult = Fitness.HistoryApi.readData(mClient, stepCountRequest).await(1, TimeUnit.MINUTES);
             int stepCount = countStepData(stepCountReadResult);
             Workout workout = new Workout();
+            workout.start = reportStartTime;
             workout.type = WorkoutTypes.WALKING.getValue();
             workout.stepCount = stepCount;
-            report.replaceWorkoutData(workout);
+            report.setStepData(workout);
 
             // TODO: Make sure the app is still in focus or this will crash.
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     // Update the UI
-                    ArrayList<Workout> items = new ArrayList<>(report.map.values());
-                    adapter.setItems(items, Utilities.getTimeFrameText(timeFrame), !initialDisplay);
-                    adapter.notifyDataSetChanged();
+                    List<Workout> items = new ArrayList<>(report.getWorkoutData());
+                    adapter.setItems(items, Utilities.getTimeFrameText(timeFrame));
                     initialDisplay = false;
                     mSwipeRefreshLayout.setRefreshing(false);
                 }
@@ -231,9 +248,10 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
         }
     }
 
+    // TODO: Move these AsyncTask's to another class and call them via RetroFit
     private class ReadHistoricalDataTask extends AsyncTask<Void, Void, Void> {
         protected Void doInBackground(Void... params) {
-            needsRefresh = false;
+
             // Setting a start and end date using a range of 1 month before this moment.
             Calendar cal = Calendar.getInstance();
             Date now = new Date();
@@ -261,11 +279,9 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
             writeActivityDataToCache(dataReadResult);
 
             UserPreferences.setBackgroundLoadComplete(MainActivity.this, true);
-            // If we added new data to the cache, refresh the UI
-            if(needsRefresh) {
-                // Read cached data and calculate real time step estimates
-                populateReport(false);
-            }
+
+            // Read cached data and calculate real time step estimates
+            populateReport();
 
             return null;
         }
@@ -285,10 +301,12 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
         Log.i(TAG, report.toString());
     }
 
-    private void writeActivityDataToCache(DataReadResult dataReadResult) {
+    private boolean writeActivityDataToCache(DataReadResult dataReadResult) {
+        boolean wroteDataToCache = false;
         for (DataSet dataSet : dataReadResult.getDataSets()) {
-            writeDataSetToCache(dataSet);
+            wroteDataToCache = wroteDataToCache || writeDataSetToCache(dataSet);
         }
+        return wroteDataToCache;
     }
 
     private void writeActivityDataToWorkout(DataReadResult dataReadResult) {
@@ -321,7 +339,8 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
      *
      * @param dataSet
      */
-    private void writeDataSetToCache(DataSet dataSet) {
+    private boolean writeDataSetToCache(DataSet dataSet) {
+        boolean wroteDataToCache = false;
         for (DataPoint dp : dataSet.getDataPoints()) {
             // Populate db cache with data
             for(Field field : dp.getDataType().getFields()) {
@@ -329,7 +348,11 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
                     long startTime = dp.getStartTime(TimeUnit.MILLISECONDS);
                     int activity = dp.getValue(field).asInt();
                     Workout workout = cupboard().withDatabase(db).get(Workout.class, startTime);
-                    if(workout == null) {
+
+                    // When the workout is null, we need to cache it. If the background task has completed,
+                    // then we have at most 8 - 12 hours of data. Recent data is likely to change so over-
+                    // write it.
+                    if(workout == null || UserPreferences.getBackgroundLoadComplete(MainActivity.this)) {
                         long endTime = dp.getEndTime(TimeUnit.MILLISECONDS);
                         DataReadRequest readRequest = DataQueries.queryStepCount(startTime, endTime);
                         DataReadResult dataReadResult = Fitness.HistoryApi.readData(mClient, readRequest).await(1, TimeUnit.MINUTES);
@@ -340,12 +363,17 @@ public class MainActivity extends ApiClientActivity implements RecyclerViewAdapt
                         workout.duration = endTime - startTime;
                         workout.stepCount = stepCount;
                         workout.type = activity;
+                        //Log.v("MainActivity", "Put Cache: " + WorkoutTypes.getWorkOutTextById(workout.type) + " " + workout.duration);
                         cupboard().withDatabase(db).put(workout);
-                        needsRefresh = true;
+                        wroteDataToCache = true;
+                    } else {
+                        // Do not overwrite data if the initial load is in progress. This would take too
+                        // long and prevent us from accumulating a base set of data.
                     }
                 }
             }
         }
+        return wroteDataToCache;
     }
 
     /**

@@ -24,6 +24,8 @@ import com.google.android.gms.fit.samples.basichistoryapi.model.WorkoutTypes;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Created by chris.black on 5/2/15.
@@ -33,6 +35,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     private List<Workout> items;
     private OnItemClickListener onItemClickListener;
     private String timeDesc = "Today";
+    private boolean animate = true;
 
     public RecyclerViewAdapter(List<Workout> items, Context context) {
         this.items = items;
@@ -43,16 +46,46 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         this.onItemClickListener = onItemClickListener;
     }
 
-    public void setItems(List<Workout> items, String time, boolean animated) {
-        if(animated) {
-            lastPosition = 0;
+    /**
+     * Do some fun animation for remove and add. If the data is fresh or some how smaller,
+     * than just reset the data set normally.
+     *
+     * @param newItems
+     * @param time
+     */
+    public void setItems(final List<Workout> newItems, final String time) {
+        timeDesc = time;
+        if(items.size() > 1 && newItems.size() > 1 && newItems.size() >= items.size()) {
+            items.set(0, newItems.get(0));
+            notifyItemChanged(0);
+            for (int i = items.size() - 1; i > 0; i--) {
+                if(i > lastPosition) {
+                    items.remove(i);
+                    notifyItemRemoved(i);
+                }
+            }
+            for (int i = 1; i < newItems.size(); i++) {
+                if(i > lastPosition) {
+                    items.add(newItems.get(i));
+                    notifyItemInserted(i);
+                } else {
+                    items.set(i, newItems.get(i));
+                    notifyItemChanged(i);
+                }
+            }
+        } else {
+            items.clear();
+            items.addAll(newItems);
+            notifyDataSetChanged();
         }
-        this.items.clear();
-        this.items.addAll(items);
-        this.timeDesc = time;
     }
 
-    @Override public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public void setNeedsAnimate() {
+        lastPosition = 0;
+    }
+
+    @Override
+    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.grid_item, parent, false);
         v.setOnClickListener(this);
         return new ViewHolder(v);
@@ -61,12 +94,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         Workout item;
-        if(position == 0) {
-            item = new Workout();
-            item.type = WorkoutTypes.TIME.getValue();
-        } else {
-            item = items.get(position - 1);
-        }
+        item = items.get(position);
 
         if(item.type == WorkoutTypes.TIME.getValue()) {
             holder.text.setText(timeDesc);
@@ -81,7 +109,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         Date now = new Date();
         SimpleDateFormat dateFormat = new SimpleDateFormat(MainActivity.DATE_FORMAT);
         if(item.type == WorkoutTypes.TIME.getValue()) {
-            holder.detail.setText("Last updated: " + dateFormat.format(now));
+            holder.detail.setText("Active: " + WorkoutReport.getDurationBreakdown(item.duration));
         }else if(item.type == WorkoutTypes.WALKING.getValue()) {
             holder.detail.setText(item.stepCount + " steps");
         } else {
@@ -113,7 +141,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
     @Override
     public int getItemCount() {
-        return items.size() + 1;
+        return items.size();
     }
 
     @Override public void onClick(final View v) {

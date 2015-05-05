@@ -39,7 +39,7 @@
         android:layout_marginTop="?attr/actionBarSize"
         android:layout_height="match_parent"
         android:clipToPadding="false">
-        <com.google.android.gms.fit.samples.basichistoryapi.view.FixedRecyclerView
+        <android.support.v7.widget.RecyclerView
             android:id="@+id/recycler"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
