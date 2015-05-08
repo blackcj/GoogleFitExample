@@ -70,7 +70,8 @@ public class WorkoutReport {
         {
             int key = (int) i.next();
             Workout workout = map.get(key);
-            if(workout.type != WorkoutTypes.TIME.getValue() && workout.type != WorkoutTypes.STILL.getValue()) {
+            if(workout.type != WorkoutTypes.TIME.getValue() && workout.type != WorkoutTypes.STILL.getValue()
+                    && workout.type != WorkoutTypes.IN_VEHICLE.getValue()) {
                 totalDuration += workout.duration;
             }
         }
