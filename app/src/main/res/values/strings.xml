@@ -26,4 +26,6 @@
     <string name="temp_graph_title">GRAPH</string>
     <string name="series_title">Temperature hourly</string>
 
+    <!-- This is an ad unit ID for a test ad. Replace with your own banner ad unit id. -->
+    <string name="banner_ad_unit_id">ca-app-pub-2268515898379138/6308994166</string>
 </resources>
