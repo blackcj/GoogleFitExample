@@ -263,7 +263,7 @@ public class ReportsFragment extends BaseFragment {
         QueryResultIterable<Workout> itr = cupboard().withDatabase(db).query(Workout.class).withSelection("start > ?", "" + startTime).query();
         for (Workout workout : itr) {
             long id = workout.start - workout.start % (1000*60*60*24);
-            if(workoutType == WorkoutTypes.WALKING.getValue()) {
+            if(workout.type == workoutType) {
                 if(map.get(id) == null) {
                     map.put(id, workout);
                 }else {
@@ -271,14 +271,7 @@ public class ReportsFragment extends BaseFragment {
                     w.stepCount += workout.stepCount;
                     w.duration += workout.duration;
                 }
-            } else if(workout.type == workoutType) {
-                if(map.get(id) == null) {
-                    map.put(id, workout);
-                }else {
-                    Workout w = map.get(id);
-                    w.stepCount += workout.stepCount;
-                    w.duration += workout.duration;
-                }
+
             } else {
                 if(map.get(id) == null) {
                     Workout placeholder = new Workout();
@@ -301,7 +294,7 @@ public class ReportsFragment extends BaseFragment {
         double maxData = 70;
         double minData = 70;
         for (Workout workout : mReportData) {
-            if(workoutType == WorkoutTypes.WALKING.getValue()) {
+            if(workoutType == WorkoutTypes.STEP_COUNT.getValue()) {
                 if (workout.stepCount > maxData) maxData = workout.stepCount;
                 if (workout.stepCount < minData) minData = workout.stepCount;
                 mCurrentSeries.add(hour++, workout.stepCount);
@@ -315,7 +308,7 @@ public class ReportsFragment extends BaseFragment {
 
 
         mRenderer.clearXTextLabels();
-        if(workoutType == WorkoutTypes.WALKING.getValue()) {
+        if(workoutType == WorkoutTypes.STEP_COUNT.getValue()) {
             mRenderer.setYAxisMax(Math.round(maxData) + 200);
             mRenderer.setYAxisMin(-500);
         }

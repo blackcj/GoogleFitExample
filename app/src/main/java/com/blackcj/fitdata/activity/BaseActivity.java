@@ -2,11 +2,12 @@ package com.blackcj.fitdata.activity;
 
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
 import com.blackcj.fitdata.R;
+
+import butterknife.InjectView;
 
 /**
  * Created by chris.black on 5/2/15.

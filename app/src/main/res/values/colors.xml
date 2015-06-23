@@ -3,6 +3,7 @@
 
     <color name="colorPrimary">#70C4AF</color>
     <color name="colorPrimaryDark">#5CA292</color>
+    <color name="colorPrimaryDarker">#1A302C</color>
     <color name="colorAccent">#4E5D74</color>
     <color name="colorTextPrimary">#353F50</color>
     <color name="semiBlack">#aa111111</color>
@@ -13,5 +14,6 @@
 
     <color name="blue4">#8AD5F0</color>
     <color name="darkGrey">#888888</color>
+    <color name="darkerGrey">#444</color>
     <color name="blue14">#0099CC</color>
 </resources>

@@ -135,14 +135,14 @@ public class WorkoutReport {
         StringBuilder sb = new StringBuilder(64);
         if(days > 0) {
             sb.append(days);
-            sb.append(" Days ");
+            sb.append(" days ");
         }
         if(hours > 0) {
             sb.append(hours);
-            sb.append(" Hours ");
+            sb.append(" hrs ");
         }
         sb.append(minutes);
-        sb.append(" Minutes ");
+        sb.append(" mins ");
 
         return(sb.toString());
     }

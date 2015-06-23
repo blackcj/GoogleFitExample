@@ -1,5 +1,7 @@
 package com.blackcj.fitdata.model;
 
+import com.blackcj.fitdata.Utilities;
+
 /**
  * Created by chris.black on 5/1/15.
  */
@@ -22,13 +24,21 @@ public class Workout implements Comparable<Workout> {
             result = -1;
         } else if(another.start == -1) {
             result = 1;
-        } else if(this.type == WorkoutTypes.WALKING.getValue()) {
+        } else if (this.type == another.type) {
+            result = obj1.compareTo(obj2);
+        } else if(this.type == WorkoutTypes.STEP_COUNT.getValue()) {
             result = -1;
-        }else if(another.type == WorkoutTypes.WALKING.getValue()) {
+        } else if(another.type == WorkoutTypes.STEP_COUNT.getValue()) {
             result = 1;
         }else {
             result = obj1.compareTo(obj2);
         }
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        String result = "You went " + WorkoutTypes.getWorkOutTextById(type) + " on " + Utilities.getDateString(start) + " for " + WorkoutReport.getDurationBreakdown(duration);
         return result;
     }
 }

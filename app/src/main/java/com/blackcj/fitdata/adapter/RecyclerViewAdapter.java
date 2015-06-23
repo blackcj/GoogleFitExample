@@ -30,16 +30,17 @@ import java.util.List;
 /**
  * Created by chris.black on 5/2/15.
  */
-public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> implements View.OnClickListener {
+public class RecyclerViewAdapter extends RecyclerView.Adapter<WorkoutViewHolder> implements View.OnClickListener {
 
     private List<Workout> items;
     private OnItemClickListener onItemClickListener;
     private String timeDesc = "Today";
     private boolean animate = true;
 
-    public RecyclerViewAdapter(List<Workout> items, Context context) {
+    public RecyclerViewAdapter(List<Workout> items, Context context, final String time) {
         this.items = items;
         this.context = context;
+        this.timeDesc = time;
     }
 
     public void setOnItemClickListener(OnItemClickListener onItemClickListener) {
@@ -57,8 +58,10 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         timeDesc = time;
         if(newItems.size() > items.size()) {
             lastPosition = 0;
-        }
-        if(items.size() > 0 && newItems.size() > 0) {
+            items.clear();
+            items.addAll(newItems);
+            notifyDataSetChanged();
+        }else if(items.size() > 0 && newItems.size() > 0) {
             items.set(0, newItems.get(0));
             notifyItemChanged(0);
             if(items.size() > 1) {
@@ -93,14 +96,14 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     }
 
     @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public WorkoutViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.grid_item, parent, false);
         v.setOnClickListener(this);
-        return new ViewHolder(v);
+        return new WorkoutViewHolder(v);
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(WorkoutViewHolder holder, int position) {
         Workout item;
         item = items.get(position);
 
@@ -121,10 +124,10 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
         if(item.type == WorkoutTypes.TIME.getValue()) {
             holder.detail.setText("Active: " + WorkoutReport.getDurationBreakdown(item.duration));
-        }else if(item.type == WorkoutTypes.WALKING.getValue()) {
+        }else if(item.type == WorkoutTypes.STEP_COUNT.getValue()) {
             if(item.start != 0) {
                 // TODO: Remove this when we have step summary cached
-                holder.detail.setText("");
+                holder.detail.setText(item.stepCount + " steps");
             } else {
                 holder.detail.setText(item.stepCount + " steps");
             }
@@ -188,8 +191,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     }
 
     public interface OnItemClickListener {
-
         void onItemClick(View view, Workout viewModel);
-
     }
 }

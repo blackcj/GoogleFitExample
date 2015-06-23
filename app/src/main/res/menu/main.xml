@@ -32,4 +32,8 @@
         android:title="@string/action_load_data"
         android:orderInCategory="100"
         app:showAsAction="never" />
+    <item android:id="@+id/action_delete_steps"
+        android:title="@string/action_delete_steps"
+        android:orderInCategory="100"
+        app:showAsAction="never" />
 </menu>

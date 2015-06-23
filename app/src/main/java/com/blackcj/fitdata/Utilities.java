@@ -30,8 +30,22 @@ public class Utilities {
 
     public static final String DAY_FORMAT = "MM/dd";
 
+    public static final String DATE_FORMAT = "MM/dd/yyy";
+
+    public static final String TIME_FORMAT = "h:mm a";
+
     public static String getDayString(Long ms) {
         SimpleDateFormat dateFormat = new SimpleDateFormat(DAY_FORMAT);
+        return dateFormat.format(ms);
+    }
+
+    public static String getDateString(Long ms) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
+        return dateFormat.format(ms);
+    }
+
+    public static String getTimeString(Long ms) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(TIME_FORMAT);
         return dateFormat.format(ms);
     }
 
@@ -39,6 +53,7 @@ public class Utilities {
         BEGINNING_OF_DAY,
         BEGINNING_OF_WEEK,
         BEGINNING_OF_MONTH,
+        BEGINNING_OF_YEAR,
         LAST_MONTH;
         private static TimeFrame[] vals = values();
         public TimeFrame next()
@@ -121,6 +136,14 @@ public class Utilities {
                 cal.set(Calendar.SECOND, 0);
                 cal.set(Calendar.MILLISECOND, 0);
                 cal.add(Calendar.MONTH, -1);
+                break;
+            case BEGINNING_OF_YEAR: // 1 month ago
+                cal.set(Calendar.DAY_OF_MONTH, 1);
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                cal.set(Calendar.YEAR, 0);
                 break;
         }
         return cal.getTimeInMillis();

@@ -24,5 +24,19 @@ public class UserPreferences {
         editor.commit();
     }
 
+    public static long getLastSync(Context context) {
+        SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, 0);
+        long complete = settings.getLong("lastSuccessfulSync", 0);
+        return complete;
+    }
+
+    public static void setLastSync(Context context, long value) {
+        SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, 0);
+        SharedPreferences.Editor editor = settings.edit();
+        editor.putLong("lastSuccessfulSync", value);
+
+        // Commit the edits!
+        editor.commit();
+    }
 
 }

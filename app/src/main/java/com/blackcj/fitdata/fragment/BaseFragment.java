@@ -28,7 +28,6 @@ public abstract class BaseFragment extends Fragment {
         super.onAttach(activity);
         if(activity instanceof IMainActivityCallback) {
             mCallback = (IMainActivityCallback)activity;
-            mCallback.onSectionAttached(getArguments().getInt(ARG_SECTION_NUMBER));
         }
     }
 

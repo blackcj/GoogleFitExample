@@ -1,8 +1,15 @@
 package com.blackcj.fitdata.database;
 
+import com.blackcj.fitdata.model.Workout;
+import com.google.android.gms.fitness.FitnessActivities;
+import com.google.android.gms.fitness.data.DataPoint;
+import com.google.android.gms.fitness.data.DataSet;
 import com.google.android.gms.fitness.data.DataSource;
 import com.google.android.gms.fitness.data.DataType;
+import com.google.android.gms.fitness.data.Field;
+import com.google.android.gms.fitness.data.Session;
 import com.google.android.gms.fitness.request.DataReadRequest;
+import com.google.android.gms.fitness.request.SessionInsertRequest;
 
 import java.util.concurrent.TimeUnit;
 
@@ -10,7 +17,7 @@ import java.util.concurrent.TimeUnit;
  * Created by chris.black on 5/1/15.
  */
 public class DataQueries {
-
+    public static final String TAG = "FitData";
     /**
      * GET data by ACTIVITY
      *
@@ -77,5 +84,90 @@ public class DataQueries {
         // [END build_read_data_request]
 
         return readRequest;
+    }
+
+    /**
+     * Sessions can include multiple data set types.
+     *
+     * @param startTime Start time for the activity in milliseconds
+     * @param endTime End time for the activity in milliseconds
+     * @param stepCountDelta Number of steps during the activity
+     * @param activityName Name of the activity, must match FitnessActivities types
+     * @param packageName Package name for the app
+     * @return Resulting insert request
+     */
+    public static SessionInsertRequest createSession(long startTime, long endTime, int stepCountDelta, String activityName, String packageName) {
+        // Create a session with metadata about the activity.
+        Session session = new Session.Builder()
+                .setName(TAG)
+                //.setDescription("Long run around Shoreline Park")
+                .setIdentifier(packageName + ":" + startTime)
+                .setActivity(FitnessActivities.WALKING)
+                .setStartTime(startTime, TimeUnit.MILLISECONDS)
+                .setEndTime(endTime, TimeUnit.MILLISECONDS)
+                .build();
+
+        // Build a session insert request
+        SessionInsertRequest insertRequest = new SessionInsertRequest.Builder()
+                .setSession(session)
+                .addDataSet(createStepDeltaDataSet(startTime, endTime, stepCountDelta, packageName))
+                .addDataSet(createActivityDataSet(startTime, endTime, activityName, packageName))
+                .build();
+
+        return insertRequest;
+    }
+
+    /**
+     * DataSets can only include one data type.
+     *
+     * @param startTime Start time for the activity in milliseconds
+     * @param endTime End time for the activity in milliseconds
+     * @param stepCountDelta Number of steps during the activity
+     * @param packageName Package name for the app
+     * @return Resulting DataSet
+     */
+    public static DataSet createStepDeltaDataSet(long startTime, long endTime, int stepCountDelta, String packageName) {
+
+        // Create a data source
+        DataSource dataSource = new DataSource.Builder()
+                .setAppPackageName(packageName)
+                .setDataType(DataType.TYPE_STEP_COUNT_DELTA)
+                .setName(TAG + " - step count")
+                .setType(DataSource.TYPE_RAW)
+                .build();
+
+        // Create a data set
+        DataSet dataSet = DataSet.create(dataSource);
+        // For each data point, specify a start time, end time, and the data value -- in this case,
+        // the number of new steps.
+        DataPoint dataPoint = dataSet.createDataPoint()
+                .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS);
+        dataPoint.getValue(Field.FIELD_STEPS).setInt(stepCountDelta); // Can't do this on an Activity Segment
+        dataSet.add(dataPoint);
+
+        return dataSet;
+    }
+
+    public static DataSet createActivityDataSet(long startTime, long endTime, String activityName, String packageName) {
+
+        // Create a data source
+        DataSource dataSource = new DataSource.Builder()
+                .setAppPackageName(packageName)
+                .setDataType(DataType.TYPE_ACTIVITY_SEGMENT)
+                .setName(TAG + " - activity")
+                .setType(DataSource.TYPE_RAW)
+                .build();
+
+        // Create a data set
+        DataSet dataSet = DataSet.create(dataSource);
+        // For each data point, specify a start time, end time, and the data value -- in this case,
+        // the number of new steps.
+        DataPoint activityDataPoint = dataSet.createDataPoint()
+                .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS);
+        //dataPoint.getValue(Field.FIELD_STEPS).setInt(stepCountDelta); // Can't do this on an Activity Segment
+        activityDataPoint.getValue(Field.FIELD_ACTIVITY).setActivity(activityName);
+        dataSet.add(activityDataPoint);
+
+        return dataSet;
     }
 }

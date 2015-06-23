@@ -19,6 +19,7 @@
     <string name="app_name">Fit Data</string>
     <string name="intro_text">Behold, a data dump from the Fitness API! Check the menu for more actions!</string>
     <string name="action_load_data">Fetch data</string>
+    <string name="action_delete_steps">Delete steps</string>
     <string name="action_settings">Settings</string>
     <string name="hello_world">Coming soon!</string>
 
@@ -26,6 +27,13 @@
     <string name="temp_graph_title">GRAPH</string>
     <string name="series_title">Temperature hourly</string>
 
-    <!-- This is an ad unit ID for a test ad. Replace with your own banner ad unit id. -->
-    <string name="banner_ad_unit_id">ca-app-pub-2268515898379138/6308994166</string>
+    <string name="activity_prompt">Choose an activity</string>
+
+    <string-array name="activity_types">
+        <item>Walking</item>
+        <item>Running</item>
+        <item>Biking</item>
+        <item>Golfing</item>
+        <item>Kayaking</item>
+    </string-array>
 </resources>
