@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.os.Bundle;
+import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -18,13 +19,11 @@ import android.widget.TimePicker;
 
 import com.blackcj.fitdata.R;
 import com.blackcj.fitdata.Utilities;
-import com.blackcj.fitdata.database.CacheManager;
 import com.blackcj.fitdata.database.DataManager;
 import com.blackcj.fitdata.model.Workout;
 import com.blackcj.fitdata.model.WorkoutTypes;
 
 import java.util.Calendar;
-import java.util.Date;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -51,6 +50,12 @@ public class AddEntryFragment extends Fragment {
 
     @InjectView(R.id.editTextMinutes)
     EditText editTextMinutes;
+
+    @InjectView(R.id.editTextSteps)
+    EditText editTextSteps;
+
+    @InjectView(R.id.editInputLayout)
+    TextInputLayout editInputLayout;
 
     public static AddEntryFragment create() {
         AddEntryFragment fragment = new AddEntryFragment();
@@ -179,12 +184,21 @@ public class AddEntryFragment extends Fragment {
             case 4:
                 workout.type = WorkoutTypes.KAYAKING.getValue();
                 break;
+        }
+        workout.stepCount = Integer.parseInt(editTextSteps.getText().toString());
 
+        boolean valid = true;
+        if (workout.type == WorkoutTypes.WALKING.getValue()) {
+            if ((workout.stepCount / 1000) * 10 > workout.duration / (1000 * 60)) {
+                valid = false;
+                editInputLayout.setError("Maximum of 1000 steps per 10 minutes walking");
+            }
         }
 
-        workout.stepCount = 100;
-        //mCallback.insertData(workout);
-        Log.d(TAG, workout.toString());
-        getActivity().getSupportFragmentManager().popBackStack();
+        if (valid) {
+            mCallback.insertData(workout);
+            Log.d(TAG, workout.toString());
+            getActivity().getSupportFragmentManager().popBackStack();
+        }
     }
 }

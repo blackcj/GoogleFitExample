@@ -31,6 +31,7 @@ import com.blackcj.fitdata.database.CupboardSQLiteOpenHelper;
 import com.blackcj.fitdata.R;
 import com.blackcj.fitdata.database.DataManager;
 import com.blackcj.fitdata.fragment.AddEntryFragment;
+import com.blackcj.fitdata.fragment.PageFragment;
 import com.blackcj.fitdata.model.Workout;
 import com.blackcj.fitdata.model.WorkoutReport;
 import com.blackcj.fitdata.model.WorkoutTypes;
@@ -133,10 +134,13 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
-                if (index == 0) {
-                    mAdapter.getFragment(mViewPager.getCurrentItem()).setSwipeToRefreshEnabled(true);
-                } else {
-                    mAdapter.getFragment(mViewPager.getCurrentItem()).setSwipeToRefreshEnabled(false);
+                PageFragment pageFragment = mAdapter.getFragment(mViewPager.getCurrentItem());
+                if (pageFragment != null) {
+                    if (index == 0) {
+                        pageFragment.setSwipeToRefreshEnabled(true);
+                    } else {
+                        pageFragment.setSwipeToRefreshEnabled(false);
+                    }
                 }
                 break;
         }

@@ -38,7 +38,9 @@ public class Workout implements Comparable<Workout> {
 
     @Override
     public String toString() {
-        String result = "You went " + WorkoutTypes.getWorkOutTextById(type) + " on " + Utilities.getDateString(start) + " for " + WorkoutReport.getDurationBreakdown(duration);
-        return result;
+        return "You went " + WorkoutTypes.getWorkOutTextById(type) +
+                " on " + Utilities.getDateString(start) +
+                " for " + WorkoutReport.getDurationBreakdown(duration) +
+                " with " + stepCount + " steps";
     }
 }

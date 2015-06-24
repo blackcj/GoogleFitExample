@@ -51,6 +51,8 @@ import static nl.qbusict.cupboard.CupboardFactory.cupboard;
 @SuppressWarnings("WeakerAccess") // Butterknife requires public reference of injected views
 public class ReportsFragment extends BaseFragment {
 
+    public static final String TAG = "ReportsFragment";
+
     protected DisplayMetrics metrics;
     /** The main dataset that includes all the series that go into a chart. */
     private XYMultipleSeriesDataset mDataset;
@@ -127,7 +129,7 @@ public class ReportsFragment extends BaseFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         workoutType = getArguments() != null ? getArguments().getInt(ARG_SECTION_NUMBER) : 0;
-        Log.i("ReportsFragment", "Workout type:" + workoutType);
+        Log.i(TAG, "Workout type:" + workoutType);
     }
 
     @Override
@@ -263,7 +265,9 @@ public class ReportsFragment extends BaseFragment {
         QueryResultIterable<Workout> itr = cupboard().withDatabase(db).query(Workout.class).withSelection("start > ?", "" + startTime).query();
         for (Workout workout : itr) {
             long id = workout.start - workout.start % (1000*60*60*24);
+
             if(workout.type == workoutType) {
+                //Log.d(TAG, workout.toString());
                 if(map.get(id) == null) {
                     map.put(id, workout);
                 }else {

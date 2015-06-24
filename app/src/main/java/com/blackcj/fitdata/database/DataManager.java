@@ -75,6 +75,7 @@ public class DataManager {
         if (mClient.isConnected()) {
             mDb.execSQL("DELETE FROM " + Workout.class.getSimpleName());
             UserPreferences.setBackgroundLoadComplete(mContext, false);
+            UserPreferences.setLastSync(mContext, 0);
             populateHistoricalData();
         }
     }
@@ -85,14 +86,17 @@ public class DataManager {
         Date now = new Date();
         cal.setTime(now);
         long endTime = cal.getTimeInMillis();
-        cal.add(Calendar.DAY_OF_YEAR, -7);
+        cal.add(Calendar.DAY_OF_YEAR, -2);
         long startTime = cal.getTimeInMillis();
 
+        cupboard().withDatabase(mDb).delete(Workout.class, "start > ?", "" + startTime);
+
+        // https://developers.google.com/android/reference/com/google/android/gms/fitness/request/DataDeleteRequest
         //  Create a delete request object, providing a data type and a time interval
         DataDeleteRequest request = new DataDeleteRequest.Builder()
                 .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS)
-                .addDataType(DataType.TYPE_STEP_COUNT_DELTA)
-                .addDataType(DataType.TYPE_ACTIVITY_SEGMENT)
+                .deleteAllData()
+                .deleteAllSessions()
                 .build();
 
         // Invoke the History API with the Google API client object and delete request, and then
@@ -102,14 +106,17 @@ public class DataManager {
                     @Override
                     public void onResult(Status status) {
                         if (status.isSuccess()) {
-                            Log.i(TAG, "Successfully deleted today's step count data");
+                            Log.i(TAG, "Successfully deleted all data");
                         } else {
                             // The deletion will fail if the requesting app tries to delete data
                             // that it did not insert.
-                            Log.i(TAG, "Failed to delete today's step count data");
+                            Log.i(TAG, "Failed to delete all data");
                         }
                     }
                 });
+
+        UserPreferences.setLastSync(mContext, 0);
+
     }
 
     public void populateHistoricalData() {
@@ -157,6 +164,10 @@ public class DataManager {
 
             // At this point, the session has been inserted and can be read.
             Log.i(TAG, "Session insert was successful!");
+
+            cupboard().withDatabase(mDb).put(workout);
+            //UserPreferences.setBackgroundLoadComplete(mContext, false);
+            UserPreferences.setLastSync(mContext, 0);
 
             populateHistoricalData();
 
@@ -302,7 +313,7 @@ public class DataManager {
             if(UserPreferences.getBackgroundLoadComplete(mContext.getApplicationContext())) {
                 Log.i(TAG, "Fast data read");
                 Workout w = cupboard().withDatabase(mDb).query(Workout.class).orderBy("start DESC").get();
-                startTime = w.start - 1000*60*60*8; // Go back eight hours just to be safe
+                startTime = w.start - 1000*60*60*8; // Go back 7 days just to be safe
             } else {
                 Log.i(TAG, "Slow data read");
                 cal.add(Calendar.DAY_OF_YEAR, -31);
@@ -349,7 +360,7 @@ public class DataManager {
             cal.set(Calendar.MILLISECOND, 0);
             startTime = cal.getTimeInMillis();
 
-            int numberOfDays = 30;
+            int numberOfDays = 45;
             long lastSync = UserPreferences.getLastSync(mContext);
             if (lastSync != 0) {
                 if (lastSync > startTime) {

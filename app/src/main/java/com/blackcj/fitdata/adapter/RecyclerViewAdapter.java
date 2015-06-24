@@ -58,10 +58,12 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<WorkoutViewHolder>
         timeDesc = time;
         if(newItems.size() > items.size()) {
             lastPosition = 0;
+        }else if (newItems.size() < items.size()) {
             items.clear();
             items.addAll(newItems);
             notifyDataSetChanged();
-        }else if(items.size() > 0 && newItems.size() > 0) {
+
+        } else if (items.size() > 0 && newItems.size() > 0) {
             items.set(0, newItems.get(0));
             notifyItemChanged(0);
             if(items.size() > 1) {
