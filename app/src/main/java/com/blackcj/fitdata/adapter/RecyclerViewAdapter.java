@@ -26,6 +26,7 @@ import com.blackcj.fitdata.model.WorkoutTypes;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by chris.black on 5/2/15.
@@ -91,6 +92,24 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<WorkoutViewHolder>
             items.addAll(newItems);
             notifyDataSetChanged();
         }
+    }
+
+    // Filter Class
+    public void filter(String charText) {
+        charText = charText.toLowerCase(Locale.getDefault());
+        /*
+        worldpopulationlist.clear();
+        if (charText.length() == 0) {
+            worldpopulationlist.addAll(arraylist);
+        } else {
+            for (WorldPopulation wp : arraylist) {
+                if (wp.getCountry().toLowerCase(Locale.getDefault())
+                        .contains(charText)) {
+                    worldpopulationlist.add(wp);
+                }
+            }
+        }*/
+        notifyDataSetChanged();
     }
 
     public void setNeedsAnimate() {

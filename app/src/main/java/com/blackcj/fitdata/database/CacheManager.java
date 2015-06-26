@@ -47,7 +47,7 @@ public class CacheManager {
         } else {
             long startTime = Utilities.getTimeFrameStart(timeFrame);
             workoutReport.clearWorkoutData();
-            QueryResultIterable<Workout> itr = cupboard().withDatabase(mDb).query(Workout.class).withSelection("start > ?", "" + startTime).query();
+            QueryResultIterable<Workout> itr = cupboard().withDatabase(mDb).query(Workout.class).withSelection("start >= ?", "" + startTime).query();
             for (Workout workout : itr) {
                 if (workout.start > startTime) {
                     workoutReport.addWorkoutData(workout);

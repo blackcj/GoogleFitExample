@@ -58,9 +58,7 @@ public class DetailActivity extends BaseActivity {
 
         toolbar.setBackgroundColor(vibrant);
 
-        if (Build.VERSION.SDK_INT >= 21) {
-            getWindow().setStatusBarColor(vibrant);
-        }
+        getWindow().setStatusBarColor(vibrant);
 
         FragmentManager fragmentManager = getSupportFragmentManager();
         fragmentManager.beginTransaction()
@@ -78,7 +76,7 @@ public class DetailActivity extends BaseActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
+        getMenuInflater().inflate(R.menu.detail, menu);
         return true;
     }
 
@@ -92,8 +90,6 @@ public class DetailActivity extends BaseActivity {
             case android.R.id.home:
                 // Reverse the animation back to the previous view.
                 finishAfterTransition();
-                return true;
-            case R.id.action_settings:
                 return true;
         }
         return super.onOptionsItemSelected(item);

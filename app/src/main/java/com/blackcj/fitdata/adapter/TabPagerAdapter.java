@@ -8,6 +8,7 @@ import android.view.View;
 import com.blackcj.fitdata.fragment.PageFragment;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -45,10 +46,8 @@ public class TabPagerAdapter extends FragmentPagerAdapter {
         return myFragment;
     }
 
-    @Override
-    public void destroyItem(View container, int position, Object object) {
-        super.destroyItem(container, position, object);
-        mPageReferenceMap.remove(position);
+    public void destroy() {
+        mPageReferenceMap.clear();
     }
 
     public PageFragment getFragment(int key) {

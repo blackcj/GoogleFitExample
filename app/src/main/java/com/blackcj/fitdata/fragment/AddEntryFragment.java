@@ -184,6 +184,12 @@ public class AddEntryFragment extends Fragment {
             case 4:
                 workout.type = WorkoutTypes.KAYAKING.getValue();
                 break;
+            case 5:
+                workout.type = WorkoutTypes.STRENGTH_TRAINING.getValue();
+                break;
+            case 6:
+                workout.type = WorkoutTypes.IN_VEHICLE.getValue();
+                break;
         }
         workout.stepCount = Integer.parseInt(editTextSteps.getText().toString());
 

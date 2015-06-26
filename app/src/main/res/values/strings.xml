@@ -35,5 +35,7 @@
         <item>Biking</item>
         <item>Golfing</item>
         <item>Kayaking</item>
+        <item>Strength Training</item>
+        <item>In Vehicle</item>
     </string-array>
 </resources>

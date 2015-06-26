@@ -6,8 +6,6 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
-import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CoordinatorLayout;
@@ -34,16 +32,13 @@ import com.blackcj.fitdata.fragment.AddEntryFragment;
 import com.blackcj.fitdata.fragment.PageFragment;
 import com.blackcj.fitdata.model.Workout;
 import com.blackcj.fitdata.model.WorkoutReport;
-import com.blackcj.fitdata.model.WorkoutTypes;
-import com.google.android.gms.fitness.FitnessActivities;
+import com.getbase.floatingactionbutton.FloatingActionsMenu;
 import com.google.android.gms.fitness.data.Bucket;
 import com.google.android.gms.fitness.data.DataPoint;
 import com.google.android.gms.fitness.data.DataSet;
 import com.google.android.gms.fitness.data.Field;
 import com.google.android.gms.fitness.result.DataReadResult;
 
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 import butterknife.ButterKnife;
@@ -57,7 +52,7 @@ import butterknife.OnClick;
  */
 public class MainActivity extends BaseActivity implements SearchView.OnQueryTextListener,
         FragmentManager.OnBackStackChangedListener, AppBarLayout.OnOffsetChangedListener,
-        IMainActivityCallback, DataManager.IDataManager {
+        IMainActivityCallback, DataManager.IDataManager, FloatingActionsMenu.OnFloatingActionsMenuUpdateListener {
 
     public static final String TAG = "MainActivity";
     public static boolean active = false;
@@ -71,6 +66,7 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     @InjectView(R.id.appBarLayout) AppBarLayout appBarLayout;
     @InjectView(R.id.viewPager) ViewPager mViewPager;
     @InjectView(R.id.main_overlay) View overlay;
+    @InjectView(R.id.floatingActionMenu) FloatingActionsMenu floatingActionMenu;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,6 +103,17 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
         mViewPager.setAdapter(mAdapter);
 
         overlay.setVisibility(View.GONE);
+
+        overlay.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                floatingActionMenu.collapse();
+                return true;
+            }
+        });
+
+        floatingActionMenu.setOnFloatingActionsMenuUpdateListener(this);
+
     }
 
     @Override
@@ -168,16 +175,18 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     {
         FragmentManager manager = getSupportFragmentManager();
         if (manager != null && manager.getBackStackEntryCount() == 0 && overlay.getVisibility() == View.VISIBLE) {
+            floatingActionMenu.collapse();
+            /*
             getWindow().setStatusBarColor(getResources().getColor(R.color.colorPrimaryDark));
             ValueAnimator fadeAnim = ObjectAnimator.ofFloat(overlay, "alpha", 1f, 0f);
             fadeAnim.setDuration(250);
             fadeAnim.addListener(new AnimatorListenerAdapter() {
                 public void onAnimationEnd(Animator animation) {
-
                     overlay.setVisibility(View.GONE);
                 }
             });
             fadeAnim.start();
+            */
         }
     }
 
@@ -235,6 +244,7 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
 
     @Override
     public boolean onQueryTextChange(String newText) {
+        //mAdapter.filter(newText);
         Log.d("MainActivity", "Query test: " + newText);
         return false;
     }
@@ -273,32 +283,13 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
         return stepCount;
     }
 
-
-
-    @OnClick(R.id.floatingActionButton)
+    @OnClick({R.id.step_button, R.id.bike_button, R.id.run_button, R.id.other_button})
     void showAddEntryFragment() {
-
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         transaction.setCustomAnimations(R.anim.enter_anim, R.anim.exit_anim, R.anim.enter_anim, R.anim.exit_anim);
         transaction.add(R.id.top_container, new AddEntryFragment(), AddEntryFragment.TAG);
         transaction.addToBackStack("add_entry");
         transaction.commit();
-
-        getWindow().setStatusBarColor(getResources().getColor(R.color.colorPrimaryDarker));
-
-        overlay.clearAnimation();
-        overlay.setVisibility(View.VISIBLE);
-
-        ValueAnimator fadeAnim = ObjectAnimator.ofFloat(overlay, "alpha", 0f, 1f);
-        fadeAnim.setDuration(250);
-        fadeAnim.addListener(new AnimatorListenerAdapter() {
-            public void onAnimationEnd(Animator animation) {
-
-            }
-        });
-
-        fadeAnim.start();
-
     }
 
     /**
@@ -360,5 +351,32 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     @Override
     public void insertData(Workout workout) {
         mDataManager.insertData(workout);
+    }
+
+    @Override
+    public void onMenuExpanded() {
+        overlay.clearAnimation();
+        float viewAlpha = overlay.getAlpha();
+        overlay.setVisibility(View.VISIBLE);
+
+        ValueAnimator fadeAnim = ObjectAnimator.ofFloat(overlay, "alpha", viewAlpha, 1f);
+        fadeAnim.setDuration(200L);
+
+        fadeAnim.start();
+    }
+
+    @Override
+    public void onMenuCollapsed() {
+        overlay.clearAnimation();
+        float viewAlpha = overlay.getAlpha();
+        ValueAnimator fadeAnim = ObjectAnimator.ofFloat(overlay, "alpha", viewAlpha, 0f);
+        fadeAnim.setDuration(200L);
+        fadeAnim.addListener(new AnimatorListenerAdapter() {
+            public void onAnimationEnd(Animator animation) {
+                overlay.setVisibility(View.GONE);
+            }
+        });
+
+        fadeAnim.start();
     }
 }

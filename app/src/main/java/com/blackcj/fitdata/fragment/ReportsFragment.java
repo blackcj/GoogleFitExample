@@ -265,9 +265,9 @@ public class ReportsFragment extends BaseFragment {
         QueryResultIterable<Workout> itr = cupboard().withDatabase(db).query(Workout.class).withSelection("start > ?", "" + startTime).query();
         for (Workout workout : itr) {
             long id = workout.start - workout.start % (1000*60*60*24);
-
+            //Log.d(TAG, workout.toString());
             if(workout.type == workoutType) {
-                //Log.d(TAG, workout.toString());
+
                 if(map.get(id) == null) {
                     map.put(id, workout);
                 }else {
@@ -298,6 +298,7 @@ public class ReportsFragment extends BaseFragment {
         double maxData = 70;
         double minData = 70;
         for (Workout workout : mReportData) {
+            //Log.d(TAG, workout.toString());
             if(workoutType == WorkoutTypes.STEP_COUNT.getValue()) {
                 if (workout.stepCount > maxData) maxData = workout.stepCount;
                 if (workout.stepCount < minData) minData = workout.stepCount;

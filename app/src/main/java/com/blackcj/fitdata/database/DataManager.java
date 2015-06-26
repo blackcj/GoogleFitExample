@@ -73,7 +73,7 @@ public class DataManager {
 
     public void refreshData() {
         if (mClient.isConnected()) {
-            mDb.execSQL("DELETE FROM " + Workout.class.getSimpleName());
+            //mDb.execSQL("DELETE FROM " + Workout.class.getSimpleName());
             UserPreferences.setBackgroundLoadComplete(mContext, false);
             UserPreferences.setLastSync(mContext, 0);
             populateHistoricalData();
@@ -86,10 +86,10 @@ public class DataManager {
         Date now = new Date();
         cal.setTime(now);
         long endTime = cal.getTimeInMillis();
-        cal.add(Calendar.DAY_OF_YEAR, -2);
+        cal.add(Calendar.DAY_OF_YEAR, -1);
         long startTime = cal.getTimeInMillis();
 
-        cupboard().withDatabase(mDb).delete(Workout.class, "start > ?", "" + startTime);
+        cupboard().withDatabase(mDb).delete(Workout.class, "start >= ?", "" + startTime);
 
         // https://developers.google.com/android/reference/com/google/android/gms/fitness/request/DataDeleteRequest
         //  Create a delete request object, providing a data type and a time interval
@@ -166,8 +166,8 @@ public class DataManager {
             Log.i(TAG, "Session insert was successful!");
 
             cupboard().withDatabase(mDb).put(workout);
-            //UserPreferences.setBackgroundLoadComplete(mContext, false);
-            UserPreferences.setLastSync(mContext, 0);
+            UserPreferences.setBackgroundLoadComplete(mContext, false);
+            UserPreferences.setLastSync(mContext, workout.start - (1000 * 60 * 60 * 24));
 
             populateHistoricalData();
 
@@ -200,6 +200,9 @@ public class DataManager {
 
             // At this point, the session has been inserted and can be read.
             Log.i(TAG, "Data insert was successful!");
+
+            UserPreferences.setBackgroundLoadComplete(mContext, false);
+            UserPreferences.setLastSync(mContext, workout.start - (1000 * 60 * 60 * 24));
 
             populateHistoricalData();
 
@@ -363,13 +366,14 @@ public class DataManager {
             int numberOfDays = 45;
             long lastSync = UserPreferences.getLastSync(mContext);
             if (lastSync != 0) {
-                if (lastSync > startTime) {
-                    numberOfDays = 2;
-                } else {
-                    double diff = startTime - lastSync;
+                if (lastSync < startTime) {
+                    double diff =  startTime - lastSync;
                     if (diff / (1000 * 60 * 60 * 24) < 30) {
                         numberOfDays = (int)Math.floor(diff / (1000 * 60 * 60 * 24));
+                        numberOfDays += 1;
                     }
+                } else {
+                    numberOfDays = 2;
                 }
             }
             Log.i(TAG, "Loading " + numberOfDays + " days step count");

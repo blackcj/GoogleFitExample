@@ -52,4 +52,24 @@
 
     </style>
 
+    <style name="menu_labels_style">
+        <item name="android:background">@drawable/fab_label_background</item>
+        <item name="android:textColor">@color/darkerGrey</item>
+    </style>
+
+    <style name="form_item">
+        <item name="android:layout_marginLeft">20dp</item>
+        <item name="android:layout_width">190dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@android:color/black</item>
+        <item name="android:textSize">18sp</item>
+    </style>
+
+    <style name="form_divider">
+        <item name="android:layout_width">172dp</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:layout_marginLeft">20dp</item>
+        <item name="android:background">@color/colorAccent</item>
+    </style>
+
 </resources>

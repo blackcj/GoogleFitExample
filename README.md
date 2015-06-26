@@ -13,5 +13,6 @@ Resources
 
 Third Party Libraries
 ---------------------------
-+ [AChartEngine](https://code.google.com/p/achartengine/) (will be used to display the report graph)
-+ [Cupboard](https://bitbucket.org/qbusict/cupboard) (used to cache data locally)
++ [AChartEngine](https://code.google.com/p/achartengine/)
++ [Cupboard](https://bitbucket.org/qbusict/cupboard) 
++ [Floating Action Menu](https://github.com/futuresimple/android-floating-action-button)
