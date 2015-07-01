@@ -62,15 +62,16 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<WorkoutViewHolder>
         timeDesc = time;
         if(newItems.size() > items.size()) {
             lastPosition = 0;
-        }else if (newItems.size() < items.size()) {
+        }
+        if (newItems.size() < items.size()) {
             items.clear();
             items.addAll(newItems);
             notifyDataSetChanged();
 
-        } else if (items.size() > 0 && newItems.size() > 0) {
-            items.set(0, newItems.get(0));
+        } else if (newItems.size() > 0) {
+            items.add(0, newItems.get(0));
             notifyItemChanged(0);
-            if(items.size() > 1) {
+            if(items.size() > 0) {
                 int itemSize = items.size() - 1;
                 for (int i = itemSize; i > 0; i--) {
                     if (i > lastPosition) {
@@ -79,7 +80,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<WorkoutViewHolder>
                     }
                 }
             }
-            if(newItems.size() > 1) {
+            if(newItems.size() > 0) {
                 for (int i = 1; i < newItems.size(); i++) {
                     if (i > lastPosition) {
                         items.add(newItems.get(i));
@@ -183,7 +184,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<WorkoutViewHolder>
             Animation animation = AnimationUtils.loadAnimation(context, android.R.anim.slide_in_left);
             animation.setInterpolator(new DecelerateInterpolator());
             if(position < 6) {
-                animation.setStartOffset(150 * (position - 1));
+                animation.setStartOffset(150 * (position));
             } else if (position % 2 != 0) {
                 animation.setStartOffset(150);
             }

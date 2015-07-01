@@ -18,9 +18,10 @@ public class TabPagerAdapter extends FragmentPagerAdapter {
     private Map<Integer, PageFragment> mPageReferenceMap = new HashMap<>();
 
     private static final String[] TITLES = new String[] {
-            "Day",
+            "Today",
             "Week",
-            "Month"
+            "Month",
+            "Last Month"
     };
 
     public static final int NUM_TITLES = TITLES.length;

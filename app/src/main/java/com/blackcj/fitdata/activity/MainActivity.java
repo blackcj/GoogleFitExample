@@ -23,6 +23,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.TableLayout;
 
 import com.blackcj.fitdata.Utilities;
 import com.blackcj.fitdata.adapter.TabPagerAdapter;
@@ -82,6 +83,9 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
 
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabLayout);
         tabLayout.setTabsFromPagerAdapter(mAdapter);
+        tabLayout.setTabMode(TabLayout.MODE_SCROLLABLE);
+
+        tabLayout.setTabGravity(TabLayout.GRAVITY_CENTER);
         tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
@@ -330,8 +334,8 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     }
 
     @Override
-    public List<Workout> getData(Utilities.TimeFrame timeFrame) {
-        return mCacheManager.getReport(timeFrame);
+    public void getData(Utilities.TimeFrame timeFrame, CacheManager.ICacheCallback callback) {
+        mCacheManager.getReport(timeFrame, callback, this);
     }
 
     ///////////////////////////////////////

@@ -5,6 +5,7 @@ import android.os.Handler;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,6 +19,7 @@ import com.blackcj.fitdata.database.CacheManager;
 import com.blackcj.fitdata.model.Workout;
 import com.blackcj.fitdata.model.WorkoutTypes;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.Bind;
@@ -26,8 +28,9 @@ import butterknife.ButterKnife;
 /**
  * Created by chris.black on 6/19/15.
  */
-public class PageFragment extends BaseFragment implements RecyclerViewAdapter.OnItemClickListener {
+public class PageFragment extends BaseFragment implements RecyclerViewAdapter.OnItemClickListener, CacheManager.ICacheCallback {
 
+    public static final String TAG = "PageFragment";
     public static final String ARG_PAGE = "ARG_PAGE";
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private RecyclerViewAdapter adapter;
@@ -58,18 +61,24 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
         ButterKnife.bind(this, view);
         mRecyclerView.setLayoutManager(new GridLayoutManager(this.getActivity(), 2));
 
-        List<Workout> items = mCallback.getData(Utilities.TimeFrame.values()[mPage - 1]);
+        List<Workout> items = new ArrayList<>();
+
         adapter = new RecyclerViewAdapter(items, this.getActivity(), Utilities.getTimeFrameText(Utilities.TimeFrame.values()[mPage - 1]));
         adapter.setOnItemClickListener(this);
 
         mRecyclerView.setItemAnimator(new ItemAnimator());
         mRecyclerView.setAdapter(adapter);
 
+        final PageFragment pageFragment = this;
+
         mSwipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.contentView);
         mSwipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary);
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
+                mCallback.getData(Utilities.TimeFrame.values()[mPage - 1], pageFragment);
+
+                /*
                 Handler handler = new Handler();
                 handler.postDelayed(new Runnable() {
                     @Override
@@ -79,9 +88,12 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
                         mSwipeRefreshLayout.setRefreshing(false);
                     }
                 }, 1000);
+                */
             }
         });
         mSwipeRefreshLayout.setEnabled(false);
+        Log.d(TAG, "Requesting: " + mPage);
+        mCallback.getData(Utilities.TimeFrame.values()[mPage - 1], this);
         return view;
     }
 
@@ -92,6 +104,7 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
     @Override
     public void onResume() {
         super.onResume();
+
         //mSwipeRefreshLayout.setEnabled(true);
     }
 
@@ -123,5 +136,19 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
         mCallback.launch(view.findViewById(R.id.image), viewModel);
     }
 
+    @Override
+    public void loadData(final List<Workout> workoutList) {
+
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                // Update the UI
+                adapter.setItems(workoutList, Utilities.getTimeFrameText(Utilities.TimeFrame.values()[mPage - 1]));
+                Log.d(TAG, "Data " + mPage);
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+        });
+
+    }
 }
 

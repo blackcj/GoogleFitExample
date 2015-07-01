@@ -2,10 +2,12 @@ package com.blackcj.fitdata.model;
 
 import com.blackcj.fitdata.Utilities;
 
+import java.io.Serializable;
+
 /**
  * Created by chris.black on 5/1/15.
  */
-public class Workout implements Comparable<Workout> {
+public class Workout implements Comparable<Workout>, Serializable {
 
     public long _id;            // same as start
     public long duration = 0;   // length of activity

@@ -328,7 +328,6 @@ public class DataManager {
         //populateReport();
     }
 
-    // TODO: Move these AsyncTask's to another class
     private class ReadHistoricalDataTask extends AsyncTask<Void, Void, Void> {
         protected Void doInBackground(Void... params) {
 

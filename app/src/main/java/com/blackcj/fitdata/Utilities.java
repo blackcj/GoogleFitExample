@@ -128,6 +128,7 @@ public class Utilities {
                 cal.set(Calendar.MINUTE, 0);
                 cal.set(Calendar.SECOND, 0);
                 cal.set(Calendar.MILLISECOND, 0);
+                //cal.add(Calendar.DAY_OF_YEAR, -30);
                 break;
             case LAST_MONTH: // 1 month ago
                 cal.set(Calendar.DAY_OF_MONTH, 1);
