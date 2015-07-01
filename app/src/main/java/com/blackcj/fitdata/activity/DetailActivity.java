@@ -5,22 +5,37 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewCompat;
+import android.support.v4.view.ViewPager;
+import android.support.v7.app.ActionBar;
 import android.support.v7.graphics.Palette;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
 
 import com.blackcj.fitdata.R;
 import com.blackcj.fitdata.Utilities;
+import com.blackcj.fitdata.adapter.TabPagerAdapter;
 import com.blackcj.fitdata.fragment.ReportsFragment;
 import com.blackcj.fitdata.model.Workout;
 import com.blackcj.fitdata.model.WorkoutTypes;
+
+import butterknife.Bind;
+import butterknife.ButterKnife;
 
 
 /**
@@ -28,15 +43,19 @@ import com.blackcj.fitdata.model.WorkoutTypes;
  */
 public class DetailActivity extends BaseActivity {
 
-
     private static final String EXTRA_TYPE = "DetailActivity:type";
     private static final String EXTRA_TITLE = "DetailActivity:title";
     private static final String EXTRA_IMAGE = "DetailActivity:image";
 
+    @Bind(R.id.spinner) Spinner navigationSpinner;
+
+    private ReportsFragment mReportsFragment;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        ButterKnife.bind(this);
         ImageView image = (ImageView) findViewById(R.id.image);
         ViewCompat.setTransitionName(image, EXTRA_IMAGE);
         image.setImageResource(getIntent().getIntExtra(EXTRA_IMAGE, R.drawable.heart_icon));
@@ -54,24 +73,56 @@ public class DetailActivity extends BaseActivity {
         RelativeLayout container = (RelativeLayout) findViewById(R.id.container);
         container.setBackgroundColor(vibrant);
 
-        getSupportActionBar().setTitle(getIntent().getStringExtra(EXTRA_TITLE));
+        final ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            getSupportActionBar().setTitle(getIntent().getStringExtra(EXTRA_TITLE));
+        }
 
         toolbar.setBackgroundColor(vibrant);
 
+        ArrayAdapter spinnerAdapter = ArrayAdapter.createFromResource(getApplicationContext(), R.array.graph_types, R.layout.spinner_item);
+        spinnerAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
+        navigationSpinner.setAdapter(spinnerAdapter);
+
+        navigationSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+                updateReport();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parentView) {
+                // your code here
+            }
+
+        });
+
         getWindow().setStatusBarColor(vibrant);
 
+
         FragmentManager fragmentManager = getSupportFragmentManager();
+        mReportsFragment = ReportsFragment.newInstance(getIntent().getIntExtra(EXTRA_TYPE, 0), 1);
         fragmentManager.beginTransaction()
-                       .replace(R.id.chart_container, ReportsFragment.newInstance(getIntent().getIntExtra(EXTRA_TYPE, 0)))
+                       .replace(R.id.chart_container, mReportsFragment)
                        .commit();
+    }
+
+    private void updateReport() {
+        int selectedIndex = navigationSpinner.getSelectedItemPosition();
+        switch (selectedIndex) {
+            case 0:
+                mReportsFragment.setGroupCount(1);
+                break;
+            case 1:
+                mReportsFragment.setGroupCount(7);
+                break;
+        }
     }
 
     @Override
     protected int getLayoutResource() {
         return R.layout.activity_detail;
     }
-
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

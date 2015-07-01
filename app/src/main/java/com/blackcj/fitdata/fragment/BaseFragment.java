@@ -20,7 +20,7 @@ public abstract class BaseFragment extends Fragment {
         super.onDestroyView();
 
         // Release the views injects by butterknife
-        ButterKnife.reset(this);
+        ButterKnife.unbind(this);
     }
 
     @Override

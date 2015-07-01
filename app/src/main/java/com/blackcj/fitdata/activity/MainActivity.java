@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
+import android.app.Activity;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -21,6 +22,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
 
 import com.blackcj.fitdata.Utilities;
 import com.blackcj.fitdata.adapter.TabPagerAdapter;
@@ -28,21 +30,15 @@ import com.blackcj.fitdata.database.CacheManager;
 import com.blackcj.fitdata.database.CupboardSQLiteOpenHelper;
 import com.blackcj.fitdata.R;
 import com.blackcj.fitdata.database.DataManager;
-import com.blackcj.fitdata.fragment.AddEntryFragment;
 import com.blackcj.fitdata.fragment.PageFragment;
 import com.blackcj.fitdata.model.Workout;
-import com.blackcj.fitdata.model.WorkoutReport;
 import com.getbase.floatingactionbutton.FloatingActionsMenu;
-import com.google.android.gms.fitness.data.Bucket;
-import com.google.android.gms.fitness.data.DataPoint;
 import com.google.android.gms.fitness.data.DataSet;
-import com.google.android.gms.fitness.data.Field;
-import com.google.android.gms.fitness.result.DataReadResult;
 
 import java.util.List;
 
+import butterknife.Bind;
 import butterknife.ButterKnife;
-import butterknife.InjectView;
 import butterknife.OnClick;
 
 /**
@@ -57,22 +53,26 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     public static final String TAG = "MainActivity";
     public static boolean active = false;
 
-    private WorkoutReport report = new WorkoutReport();
     private CacheManager mCacheManager;
     private DataManager mDataManager;
     private TabPagerAdapter mAdapter;
 
-    @InjectView(R.id.coordinatorLayout) CoordinatorLayout coordinatorLayout;
-    @InjectView(R.id.appBarLayout) AppBarLayout appBarLayout;
-    @InjectView(R.id.viewPager) ViewPager mViewPager;
-    @InjectView(R.id.main_overlay) View overlay;
-    @InjectView(R.id.floatingActionMenu) FloatingActionsMenu floatingActionMenu;
+    @Bind(R.id.coordinatorLayout) CoordinatorLayout coordinatorLayout;
+    @Bind(R.id.appBarLayout) AppBarLayout appBarLayout;
+    @Bind(R.id.viewPager) ViewPager mViewPager;
+    @Bind(R.id.main_overlay) View overlay;
+    @Bind(R.id.floatingActionMenu) FloatingActionsMenu floatingActionMenu;
+
+
+    ///////////////////////////////////////
+    // LIFE CYCLE
+    ///////////////////////////////////////
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setActionBarIcon(R.drawable.barchart_icon);
-        ButterKnife.inject(this);
+        ButterKnife.bind(this);
 
         CupboardSQLiteOpenHelper dbHelper = new CupboardSQLiteOpenHelper(this);
         final SQLiteDatabase db = dbHelper.getWritableDatabase();
@@ -114,6 +114,50 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
 
         floatingActionMenu.setOnFloatingActionsMenuUpdateListener(this);
 
+        //appBarLayout.addOnOffsetChangedListener();
+
+    }
+
+    @Override
+    protected int getLayoutResource() {
+        return R.layout.activity_main;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        appBarLayout.addOnOffsetChangedListener(this);
+        getSupportFragmentManager().addOnBackStackChangedListener(this);
+        overlay.setAlpha(0f);
+        floatingActionMenu.collapse();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        active = true;
+        mDataManager.connect();
+    }
+
+    @Override
+    protected void onStop() {
+        active = false;
+        mDataManager.disconnect();
+        super.onStop();
+    }
+
+    @Override
+    protected void onPause() {
+        floatingActionMenu.collapse();
+        appBarLayout.removeOnOffsetChangedListener(this);
+        getSupportFragmentManager().removeOnBackStackChangedListener(this);
+        super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        mAdapter.destroy();
+        super.onDestroy();
     }
 
     @Override
@@ -155,52 +199,36 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        appBarLayout.addOnOffsetChangedListener(this);
-        getSupportFragmentManager().addOnBackStackChangedListener(this);
-        Log.d("MainActivity", "OnResume");
-    }
-
-
-    @Override
-    protected void onPause() {
-        appBarLayout.removeOnOffsetChangedListener(this);
-        getSupportFragmentManager().removeOnBackStackChangedListener(this);
-        Log.d("MainActivity", "OnPause");
-        super.onPause();
-    }
-
     public void onBackStackChanged()
     {
         FragmentManager manager = getSupportFragmentManager();
         if (manager != null && manager.getBackStackEntryCount() == 0 && overlay.getVisibility() == View.VISIBLE) {
+            overlay.setAlpha(0f);
+
             floatingActionMenu.collapse();
-            /*
-            getWindow().setStatusBarColor(getResources().getColor(R.color.colorPrimaryDark));
-            ValueAnimator fadeAnim = ObjectAnimator.ofFloat(overlay, "alpha", 1f, 0f);
-            fadeAnim.setDuration(250);
-            fadeAnim.addListener(new AnimatorListenerAdapter() {
-                public void onAnimationEnd(Animator animation) {
-                    overlay.setVisibility(View.GONE);
-                }
-            });
-            fadeAnim.start();
-            */
         }
     }
 
-    Menu mOptionsMenu;
-    MenuItem mSearchItem;
-    SearchView mSearchView;
+    ///////////////////////////////////////
+    // OPTIONS MENU
+    ///////////////////////////////////////
+
+    private Menu mMenu;
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        mMenu = menu;
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
-        mOptionsMenu = menu;
-        if (mOptionsMenu != null) {
-            mSearchItem = menu.findItem(R.id.search_participants);
-            mSearchView = (SearchView) MenuItemCompat.getActionView(mSearchItem);
+        if (menu != null) {
+            MenuItem mSearchItem = menu.findItem(R.id.search_participants);
+            SearchView mSearchView = (SearchView) MenuItemCompat.getActionView(mSearchItem);
             mSearchView.setOnQueryTextListener(this);
             mSearchView.setQueryHint("Search");
             MenuItemCompat.setOnActionExpandListener(mSearchItem, new MenuItemCompat.OnActionExpandListener() {
@@ -219,23 +247,25 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
-        active = true;
-        mDataManager.connect();
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        switch (id) {
+            case R.id.action_refresh_data:
+                mDataManager.refreshData();
+                return true;
+            case R.id.action_delete_steps:
+                mDataManager.deleteData();
+                return true;
+            case android.R.id.home:
+                getSupportFragmentManager().popBackStack();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        active = false;
-        mDataManager.disconnect();
-    }
-
-    @Override
-    protected int getLayoutResource() {
-        return R.layout.activity_main;
-    }
+    ///////////////////////////////////////
+    // SEARCH CALLBACKS
+    ///////////////////////////////////////
 
     @Override
     public boolean onQueryTextSubmit(String query) {
@@ -245,8 +275,53 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     @Override
     public boolean onQueryTextChange(String newText) {
         //mAdapter.filter(newText);
+        mAdapter.getFragment(mViewPager.getCurrentItem()).filter(newText);
         Log.d("MainActivity", "Query test: " + newText);
         return false;
+    }
+
+    @OnClick({R.id.step_button, R.id.bike_button, R.id.run_button, R.id.other_button})
+    void showAddEntryFragment(View view) {
+        int activityType;
+        switch (view.getId()) {
+            case R.id.step_button:
+                activityType = 0;
+                break;
+            case R.id.run_button:
+                activityType = 1;
+                break;
+            case R.id.bike_button:
+                activityType = 2;
+                break;
+            default:
+                activityType = 3;
+        }
+
+
+        AddEntryActivity.launch(MainActivity.this, activityType);
+        /*
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        transaction.setCustomAnimations(R.anim.enter_anim, R.anim.exit_anim, R.anim.enter_anim, R.anim.exit_anim);
+        transaction.add(R.id.top_container, AddEntryFragment.create(activityType), AddEntryFragment.TAG);
+        transaction.addToBackStack("add_entry");
+        transaction.commit();
+
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        */
+    }
+
+    ///////////////////////////////////////
+    // ACTIVITY CALLBACKS - IMainActivity
+    ///////////////////////////////////////
+
+    @Override
+    public void insertData(Workout workout) {
+        mDataManager.insertData(workout);
+    }
+
+    @Override
+    public Activity getActivity() {
+        return this;
     }
 
     @Override
@@ -259,99 +334,9 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
         return mCacheManager.getReport(timeFrame);
     }
 
-    private void writeActivityDataToWorkout(DataReadResult dataReadResult) {
-        for (Bucket bucket : dataReadResult.getBuckets()) {
-            for (DataSet dataSet : bucket.getDataSets()) {
-                parseDataSet(dataSet);
-            }
-        }
-    }
-
-    /**
-     * Count step data for a bucket of step count deltas.
-     *
-     * @param dataReadResult Read result from the step count estimate Google Fit call.
-     * @return Step count for data read.
-     */
-    private int countStepData(DataReadResult dataReadResult) {
-        int stepCount = 0;
-        for (Bucket bucket : dataReadResult.getBuckets()) {
-            for (DataSet dataSet : bucket.getDataSets()) {
-                stepCount += parseDataSet(dataSet);
-            }
-        }
-        return stepCount;
-    }
-
-    @OnClick({R.id.step_button, R.id.bike_button, R.id.run_button, R.id.other_button})
-    void showAddEntryFragment() {
-        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-        transaction.setCustomAnimations(R.anim.enter_anim, R.anim.exit_anim, R.anim.enter_anim, R.anim.exit_anim);
-        transaction.add(R.id.top_container, new AddEntryFragment(), AddEntryFragment.TAG);
-        transaction.addToBackStack("add_entry");
-        transaction.commit();
-    }
-
-    /**
-     * Walk through all fields in a step_count dataset and return the sum of steps. Used to
-     * calculate step counts.
-     *
-     * @param dataSet
-     */
-    private int parseDataSet(DataSet dataSet) {
-        int dataSteps = 0;
-        for (DataPoint dp : dataSet.getDataPoints()) {
-            // Accumulate step count for estimate
-
-            if(dp.getDataType().getName().equals("com.google.step_count.delta")) {
-                for (Field field : dp.getDataType().getFields()) {
-                    if (dp.getValue(field).asInt() > 0) {
-                        dataSteps += dp.getValue(field).asInt();
-                    }
-                }
-            }else {
-                Workout workout = new Workout();
-                workout.start = 0;
-                workout.stepCount = 0;
-                for (Field field : dp.getDataType().getFields()) {
-
-                    String fieldName = field.getName();
-                    if(fieldName.equals("activity")) {
-                        workout.type = dp.getValue(field).asInt();
-                    }else if(fieldName.equals("duration")) {
-                        workout.duration = dp.getValue(field).asInt();
-                    }
-                }
-                report.addWorkoutData(workout);
-            }
-        }
-        return dataSteps;
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == R.id.action_refresh_data) {
-            mDataManager.refreshData();
-            return true;
-        } else if (id == R.id.action_delete_steps) {
-            mDataManager.deleteData();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public void insertData(Workout workout) {
-        mDataManager.insertData(workout);
-    }
+    ///////////////////////////////////////
+    // FLOATING MENU
+    ///////////////////////////////////////
 
     @Override
     public void onMenuExpanded() {
@@ -370,7 +355,7 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
         overlay.clearAnimation();
         float viewAlpha = overlay.getAlpha();
         ValueAnimator fadeAnim = ObjectAnimator.ofFloat(overlay, "alpha", viewAlpha, 0f);
-        fadeAnim.setDuration(200L);
+        fadeAnim.setDuration(300L);
         fadeAnim.addListener(new AnimatorListenerAdapter() {
             public void onAnimationEnd(Animator animation) {
                 overlay.setVisibility(View.GONE);

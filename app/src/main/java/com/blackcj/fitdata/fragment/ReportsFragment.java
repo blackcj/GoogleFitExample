@@ -1,9 +1,7 @@
 package com.blackcj.fitdata.fragment;
 
-
 import android.app.Activity;
 import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -18,29 +16,23 @@ import com.blackcj.fitdata.database.CupboardSQLiteOpenHelper;
 import com.blackcj.fitdata.model.Workout;
 import com.blackcj.fitdata.R;
 import com.blackcj.fitdata.model.WorkoutTypes;
+import com.blackcj.fitdata.reports.BaseReportGraph;
+import com.blackcj.fitdata.reports.MultipleLineGraphs;
+import com.blackcj.fitdata.reports.SingleBarGraphWithGoal;
 
-import org.achartengine.ChartFactory;
 import org.achartengine.GraphicalView;
-import org.achartengine.chart.BarChart;
-import org.achartengine.chart.PointStyle;
-import org.achartengine.model.XYMultipleSeriesDataset;
-import org.achartengine.model.XYSeries;
-import org.achartengine.renderer.XYMultipleSeriesRenderer;
-import org.achartengine.renderer.XYSeriesRenderer;
 import org.achartengine.tools.PanListener;
 import org.achartengine.tools.ZoomEvent;
 import org.achartengine.tools.ZoomListener;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
+import butterknife.Bind;
 import butterknife.ButterKnife;
-import butterknife.InjectView;
 import nl.qbusict.cupboard.QueryResultIterable;
 
 import static nl.qbusict.cupboard.CupboardFactory.cupboard;
@@ -51,18 +43,15 @@ import static nl.qbusict.cupboard.CupboardFactory.cupboard;
 @SuppressWarnings("WeakerAccess") // Butterknife requires public reference of injected views
 public class ReportsFragment extends BaseFragment {
 
+    public static final String ARG_WORKOUT_TYPE = "workout_type";
+    public static final String ARG_GROUP_COUNT = "group_count";
     public static final String TAG = "ReportsFragment";
 
-    protected DisplayMetrics metrics;
-    /** The main dataset that includes all the series that go into a chart. */
-    private XYMultipleSeriesDataset mDataset;
-    /** The main renderer that includes all the renderers customizing a chart. */
-    private XYMultipleSeriesRenderer mRenderer = new XYMultipleSeriesRenderer();
-    /** The most recently added series. */
-    private XYSeries mCurrentSeries;
-    /** The most recently created renderer, customizing the current series. */
-    private XYSeriesRenderer mCurrentRenderer;
-    private List<Workout> mReportData = new ArrayList<>();
+    private BaseReportGraph reportGraph;
+    private int multiplier = 1;
+    private int numDays = 60;
+    private int numSegments;
+    private long millisecondsInSegment;
 
     private CupboardSQLiteOpenHelper dbHelper;
     private SQLiteDatabase db;
@@ -71,40 +60,71 @@ public class ReportsFragment extends BaseFragment {
     private GraphicalView mChartView;
 
     private int workoutType;
-    @InjectView(R.id.chart)
+    @Bind(R.id.chart)
     LinearLayout mChartLayout;
 
-    public static ReportsFragment newInstance(int sectionNumber) {
+    public static ReportsFragment newInstance(int workoutType, int groupCount) {
         ReportsFragment f = new ReportsFragment();
         Bundle args = new Bundle();
-        args.putInt(ARG_SECTION_NUMBER, sectionNumber);
+        args.putInt(ARG_WORKOUT_TYPE, workoutType);
+        args.putInt(ARG_GROUP_COUNT, groupCount);
         f.setArguments(args);
         return f;
     }
 
+    int densityDpi = 0;
+
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        metrics = new DisplayMetrics();
+        DisplayMetrics metrics = new DisplayMetrics();
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        densityDpi = metrics.densityDpi;
+        if (reportGraph != null) {
+            reportGraph.setDisplayMetrics(metrics.densityDpi);
+        }
     }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        workoutType = getArguments() != null ? getArguments().getInt(ARG_WORKOUT_TYPE) : 0;
+        multiplier = getArguments() != null ? getArguments().getInt(ARG_GROUP_COUNT) : 1;
+        numSegments = (int)Math.ceil((double)numDays / (double)multiplier);
+        millisecondsInSegment = 1000*60*60*24*multiplier;
+        Log.i(TAG, "Workout type:" + workoutType);
+        if (workoutType == WorkoutTypes.TIME.getValue()) {
+            reportGraph = new MultipleLineGraphs();
+        } else {
+            reportGraph = new SingleBarGraphWithGoal();
+        }
+        if (workoutType == WorkoutTypes.STEP_COUNT.getValue()) {
+            reportGraph.setGoal(9500 * multiplier);
+        } else {
+            // TODO: Create system for managing goals
+            reportGraph.setGoal(100 * multiplier);
+        }
+        reportGraph.setDisplayMetrics(densityDpi);
+    }
+
+    long currentTimeStamp;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_report, container, false);
 
-
-
-        ButterKnife.inject(this, view);
+        Calendar cal = Calendar.getInstance();
+        Date now = new Date();
+        cal.setTime(now);
+        currentTimeStamp = cal.getTimeInMillis();
+        ButterKnife.bind(this, view);
         dbHelper = new CupboardSQLiteOpenHelper(this.getActivity());
         db = dbHelper.getWritableDatabase();
 
-        setUpRenderer();
-        mCurrentSeries = new XYSeries(getString(R.string.series_title));
-        mDataset = new XYMultipleSeriesDataset();
-        mDataset.addSeries(mCurrentSeries);
-        mChartView = ChartFactory.getBarChartView(getActivity(), mDataset, mRenderer, BarChart.Type.DEFAULT);
+        mChartView = reportGraph.getChartGraph(getActivity());
+
+        //mChartView = ChartFactory.getBarChartView(getActivity(), mDataset, mRenderer, BarChart.Type.DEFAULT);
         mChartView.addZoomListener(new ZoomListener() {
             public void zoomApplied(ZoomEvent e) {
                 updateLabels();
@@ -126,13 +146,6 @@ public class ReportsFragment extends BaseFragment {
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        workoutType = getArguments() != null ? getArguments().getInt(ARG_SECTION_NUMBER) : 0;
-        Log.i(TAG, "Workout type:" + workoutType);
-    }
-
-    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
@@ -141,54 +154,38 @@ public class ReportsFragment extends BaseFragment {
         return super.onOptionsItemSelected(item);
     }
 
+    public void setGroupCount(int groupCount) {
+        Log.d(TAG, "GroupCount: " + groupCount);
+        multiplier = groupCount;
+        numSegments = (int)Math.ceil((double)numDays / (double)multiplier);
+        millisecondsInSegment = 1000*60*60*24*multiplier;
+        if (workoutType == WorkoutTypes.STEP_COUNT.getValue()) {
+            reportGraph.setGoal(9500 * multiplier);
+        } else {
+            // TODO: Create system for managing goals
+            reportGraph.setGoal(100 * multiplier);
+        }
+        showData();
+    }
+
     private void updateLabels() {
-        double start = mRenderer.getXAxisMin();
-        double stop = mRenderer.getXAxisMax();
+        double start = reportGraph.getRenderer().getXAxisMin();
+        double stop = reportGraph.getRenderer().getXAxisMax();
         double quarterStep = (stop - start) / 8;
         double halfStep = (stop - start) / 2;
-        mRenderer.clearXTextLabels();
-        int index = normalize((int) (start + quarterStep));
-        mRenderer.addXTextLabel(start + quarterStep, Utilities.getDayString(mReportData.get(index).start));
-        index = normalize((int) (start + halfStep));
-        mRenderer.addXTextLabel(start + halfStep, Utilities.getDayString(mReportData.get(index).start));
-        index = normalize((int) (stop - quarterStep));
-        mRenderer.addXTextLabel(stop - quarterStep, Utilities.getDayString(mReportData.get(index).start));
+        reportGraph.getRenderer().clearXTextLabels();
+        long index = numSegments - normalize((int) (start + quarterStep)) - 1;
+        reportGraph.getRenderer().addXTextLabel(start + quarterStep, Utilities.getDayString(currentTimeStamp - index * millisecondsInSegment));
+        index = numSegments - normalize((int) (start + halfStep)) - 1;
+        reportGraph.getRenderer().addXTextLabel(start + halfStep, Utilities.getDayString(currentTimeStamp - index * millisecondsInSegment));
+        index = numSegments - normalize((int) (stop - quarterStep)) - 1;
+        reportGraph.getRenderer().addXTextLabel(stop - quarterStep, Utilities.getDayString(currentTimeStamp - index * millisecondsInSegment));
     }
 
     private int normalize(int index) {
         int result = index > 0 ? index : 0;
-        result = result < mReportData.size() ? result : mReportData.size() - 1;
+        result = result < numSegments ? result : numSegments - 1;
         return result;
-    }
-
-    private void setUpRenderer() {
-        // Now we create the renderer
-        mCurrentRenderer = new XYSeriesRenderer();
-        mCurrentRenderer.setLineWidth(getDPI(2, metrics));
-        mCurrentRenderer.setColor(getResources().getColor(R.color.colorBarGraph));
-        // Include low and max value
-        mCurrentRenderer.setDisplayBoundingPoints(true);
-        // we add point markers
-        mCurrentRenderer.setPointStyle(PointStyle.CIRCLE);
-        mCurrentRenderer.setPointStrokeWidth(getDPI(5, metrics));
-        mCurrentRenderer.setShowLegendItem(false);
-
-        mRenderer = new XYMultipleSeriesRenderer();
-        mRenderer.addSeriesRenderer(mCurrentRenderer);
-        // We want to avoid black border
-        mRenderer.setMarginsColor(Color.argb(0x00, 0xff, 0x00, 0x00)); // transparent margins
-        // Disable Pan on two axis
-        mRenderer.setPanEnabled(true, false);
-        mRenderer.setZoomEnabled(true, false);
-        mRenderer.setLabelsTextSize(getDPI(15, metrics));
-        mRenderer.setXLabelsColor(getResources().getColor(R.color.colorWhite));
-        mRenderer.setYLabelsColor(0, getResources().getColor(R.color.colorWhite));
-        mRenderer.setLabelsColor(getResources().getColor(R.color.colorWhite));
-        mRenderer.setAxesColor(getResources().getColor(R.color.colorWhite));
-        mRenderer.setBarSpacing(0.2);
-
-        mRenderer.setShowGrid(true); // we show the grid
-        mRenderer.setXLabels(0);
     }
 
     @Override
@@ -215,10 +212,7 @@ public class ReportsFragment extends BaseFragment {
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         // save the current data, for instance when changing screen orientation
-        outState.putSerializable("dataset", mDataset);
-        outState.putSerializable("renderer", mRenderer);
-        outState.putSerializable("current_series", mCurrentSeries);
-        outState.putSerializable("current_renderer", mCurrentRenderer);
+        outState.putSerializable("reportGraph", reportGraph);
     }
 
     @Override
@@ -226,33 +220,14 @@ public class ReportsFragment extends BaseFragment {
         super.onActivityCreated(savedInstanceState);
         if (savedInstanceState != null) {
             // Restore last state for checked position.
-            mDataset = (XYMultipleSeriesDataset) savedInstanceState.getSerializable("dataset");
-            mRenderer = (XYMultipleSeriesRenderer) savedInstanceState.getSerializable("renderer");
-            mCurrentSeries = (XYSeries) savedInstanceState.getSerializable("current_series");
-            mCurrentRenderer = (XYSeriesRenderer) savedInstanceState.getSerializable("current_renderer");
+            reportGraph = (BaseReportGraph) savedInstanceState.getSerializable("reportGraph");
         }
     }
 
-    /**
-     * Baseline an int to the correct pixel density.
-     *
-     * @param size int to convert
-     * @param metrics display metrics of current view
-     * @return
-     */
-    public static int getDPI(int size, DisplayMetrics metrics){
-        return (size * metrics.densityDpi) / DisplayMetrics.DENSITY_DEFAULT;
-    }
-
-
-
     public void showData() {
-        Map<Long,Workout> map =  new HashMap<>();
-        mReportData.clear();
-        int hour = 0;
-        mCurrentSeries.clear();
+        Map<Integer, Integer[]> map = new HashMap<>();
+        reportGraph.clearData();
 
-        // TODO: START Move this logic into it's own class
         Calendar cal = Calendar.getInstance();
         Date now = new Date();
         cal.setTime(now);
@@ -260,75 +235,77 @@ public class ReportsFragment extends BaseFragment {
         cal.set(Calendar.MINUTE, 0);
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
-        cal.add(Calendar.DAY_OF_YEAR, -30);        // 30 days of history
+        cal.add(Calendar.DAY_OF_YEAR, -numDays + 1);        // 30 days of history
         long startTime = cal.getTimeInMillis();
-        QueryResultIterable<Workout> itr = cupboard().withDatabase(db).query(Workout.class).withSelection("start > ?", "" + startTime).query();
+        long baseline = (startTime - startTime % millisecondsInSegment) / millisecondsInSegment;
+        QueryResultIterable<Workout> itr = cupboard().withDatabase(db).query(Workout.class).withSelection("start >= ?", "" + startTime).query();
         for (Workout workout : itr) {
-            long id = workout.start - workout.start % (1000*60*60*24);
-            //Log.d(TAG, workout.toString());
-            if(workout.type == workoutType) {
-
-                if(map.get(id) == null) {
-                    map.put(id, workout);
-                }else {
-                    Workout w = map.get(id);
-                    w.stepCount += workout.stepCount;
-                    w.duration += workout.duration;
+            long id = (workout.start - workout.start % millisecondsInSegment) / millisecondsInSegment - baseline;
+            if (workoutType == WorkoutTypes.TIME.getValue() && workout.type != WorkoutTypes.STEP_COUNT.getValue() && workout.type != WorkoutTypes.STILL.getValue() && workout.type != WorkoutTypes.IN_VEHICLE.getValue()) {
+                // Put all data here to show totals
+                if (map.get(workoutType) == null) {
+                    Integer[] dataMap = new Integer[numSegments];
+                    Arrays.fill(dataMap, 0);
+                    dataMap[(int)id] = (int)(workout.duration / 1000 / 60);
+                    map.put(workoutType, dataMap);
+                } else {
+                    Integer[] dataMap = map.get(workoutType);
+                    dataMap[(int)id] += (int)(workout.duration / 1000 / 60);
                 }
 
-            } else {
-                if(map.get(id) == null) {
-                    Workout placeholder = new Workout();
-                    placeholder.type = workoutType;
-                    placeholder.start = id;
-                    placeholder.stepCount = 1;
-                    map.put(id, placeholder);
+                if (map.get(workout.type) == null) {
+                    Integer[] dataMap = new Integer[numSegments];
+                    Arrays.fill(dataMap, 0);
+                    dataMap[(int)id] = (int)(workout.duration / 1000 / 60);
+                    map.put(workout.type, dataMap);
+                } else {
+                    Integer[] dataMap = map.get(workout.type);
+                    dataMap[(int)id] += (int)(workout.duration / 1000 / 60);
+                }
+            } else if (workout.type == workoutType) {
+                if (map.get(workout.type) == null) {
+                    Integer[] dataMap = new Integer[numSegments];
+                    Arrays.fill(dataMap, 0);
+                    if (workout.type == WorkoutTypes.STEP_COUNT.getValue()) {
+                        dataMap[(int)id] = workout.stepCount;
+                    } else {
+                        dataMap[(int)id] = (int)(workout.duration / 1000 / 60);
+                    }
+
+                    map.put(workout.type, dataMap);
+                } else {
+                    Integer[] dataMap = map.get(workout.type);
+                    if (workout.type == WorkoutTypes.STEP_COUNT.getValue()) {
+                        dataMap[(int)id] += workout.stepCount;
+                    } else {
+                        dataMap[(int)id] += (int)(workout.duration / 1000 / 60);
+                    }
                 }
             }
         }
         itr.close();
 
-        // Convert to ArrayList and sort
-        mReportData = new ArrayList<>(map.values());
-
-        Collections.sort(mReportData);
-
         // TODO: END
-
-        double maxData = 70;
-        double minData = 70;
-        for (Workout workout : mReportData) {
-            //Log.d(TAG, workout.toString());
-            if(workoutType == WorkoutTypes.STEP_COUNT.getValue()) {
-                if (workout.stepCount > maxData) maxData = workout.stepCount;
-                if (workout.stepCount < minData) minData = workout.stepCount;
-                mCurrentSeries.add(hour++, workout.stepCount);
-            }else {
-                double duration = Math.floor(workout.duration / 1000 / 60);
-                if (duration > maxData) maxData = duration;
-                if (duration < minData) minData = duration;
-                mCurrentSeries.add(hour++, duration);
+        int series = 0;
+        for (Integer workoutType : map.keySet()) {
+            int color = getResources().getColor(R.color.other_graph);
+            if (workoutType == WorkoutTypes.WALKING.getValue()) {
+                color = getResources().getColor(R.color.walking_graph);
+            } else if (workoutType == WorkoutTypes.RUNNING.getValue()) {
+                color = getResources().getColor(R.color.running_graph);
+            } else if (workoutType == WorkoutTypes.BIKING.getValue()) {
+                color = getResources().getColor(R.color.biking_graph);
             }
+            reportGraph.addRenderer(series, getActivity(), color);
+            Integer[] dataMap = map.get(workoutType);
+            for (int n = 0; n < numSegments; n++) {
+                reportGraph.addWorkout(series, dataMap[n], n);
+            }
+            series++;
         }
 
-
-        mRenderer.clearXTextLabels();
-        if(workoutType == WorkoutTypes.STEP_COUNT.getValue()) {
-            mRenderer.setYAxisMax(Math.round(maxData) + 200);
-            mRenderer.setYAxisMin(-500);
-        }
-        mRenderer.setXAxisMin(mCurrentSeries.getItemCount() - 7);
-        mRenderer.setXAxisMax(mCurrentSeries.getItemCount());
-        mRenderer.setPanLimits(new double[]{-5, mCurrentSeries.getItemCount() + 5, 0, 0});
-        mRenderer.setZoomLimits(new double [] {-5, mCurrentSeries.getItemCount() + 5, 0, 0});
-        // An array containing the margin size values, in this order: top, left, bottom, right
-        mRenderer.setMargins(new int [] {5,0,5,0});
-
-        mRenderer.setYLabelsPadding(-getDPI(35, metrics));
-
+        reportGraph.updateRenderer();
         updateLabels();
-        mDataset.clear();
-        mDataset.addSeries(mCurrentSeries);
         mChartView.repaint();
     }
 }

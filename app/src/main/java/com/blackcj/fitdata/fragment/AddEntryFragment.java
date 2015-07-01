@@ -3,14 +3,23 @@ package com.blackcj.fitdata.fragment;
 import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.Spinner;
@@ -25,8 +34,8 @@ import com.blackcj.fitdata.model.WorkoutTypes;
 
 import java.util.Calendar;
 
+import butterknife.Bind;
 import butterknife.ButterKnife;
-import butterknife.InjectView;
 import butterknife.OnClick;
 
 /**
@@ -34,37 +43,50 @@ import butterknife.OnClick;
  */
 public class AddEntryFragment extends Fragment {
 
+    public static final String ARG_ACTIVITY_TYPE = "ARG_ACTIVITY_TYPE";
     public static final String TAG = "AddEntryFragment";
 
     protected DataManager.IDataManager mCallback;
     Calendar cal = Calendar.getInstance();
 
-    @InjectView(R.id.timeTextView)
+    @Bind(R.id.timeTextView)
     TextView timeTextView;
 
-    @InjectView(R.id.dateTextView)
+    @Bind(R.id.dateTextView)
     TextView dateTextView;
 
-    @InjectView(R.id.activitySpinner)
+    @Bind(R.id.activitySpinner)
     Spinner activitySpinner;
 
-    @InjectView(R.id.editTextMinutes)
+    @Bind(R.id.editTextMinutes)
     EditText editTextMinutes;
 
-    @InjectView(R.id.editTextSteps)
+    @Bind(R.id.editTextSteps)
     EditText editTextSteps;
 
-    @InjectView(R.id.editInputLayout)
+    @Bind(R.id.editInputLayout)
     TextInputLayout editInputLayout;
 
-    public static AddEntryFragment create() {
+    @Bind(R.id.editInputLayout2)
+    TextInputLayout editInputLayout2;
+
+    @Bind(R.id.labelText2)
+    TextView labelText2;
+
+    private int mActivityType;
+
+    public static AddEntryFragment create(int activityType) {
+        Bundle args = new Bundle();
+        args.putInt(ARG_ACTIVITY_TYPE, activityType);
         AddEntryFragment fragment = new AddEntryFragment();
+        fragment.setArguments(args);
         return fragment;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mActivityType = getArguments().getInt(ARG_ACTIVITY_TYPE);
     }
 
     @Override
@@ -72,31 +94,88 @@ public class AddEntryFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_add_entry, container, false);
 
-        ButterKnife.inject(this, view);
+        ButterKnife.bind(this, view);
+/*
+        final Toolbar toolbar = (Toolbar) view.findViewById(R.id.fragment_toolbar);
+        toolbar.setTitle("Add Entry");
+        toolbar.setNavigationIcon(getResources().getDrawable(R.drawable.ic_arrow_back_white));
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                hideKeyboard();
+                getActivity().getSupportFragmentManager().popBackStack();
+            }
+        });
+
+*/
+
+        editTextSteps.addTextChangedListener(new TextWatcher(){
+            public void afterTextChanged(Editable s) {
+                if(!editTextSteps.getText().toString().equals("")) {
+                    editTextMinutes.setText("" + (Double.parseDouble(editTextSteps.getText().toString()) / 1000.0 * 10));
+                }
+            }
+            public void beforeTextChanged(CharSequence s, int start, int count, int after){}
+            public void onTextChanged(CharSequence s, int start, int before, int count){}
+        });
 
         Calendar mcurrentTime = Calendar.getInstance();
+        mcurrentTime.add(Calendar.MINUTE, -30);
         year = mcurrentTime.get(Calendar.YEAR);
         month = mcurrentTime.get(Calendar.MONTH);
         day = mcurrentTime.get(Calendar.DAY_OF_MONTH);
-
         hour = mcurrentTime.get(Calendar.HOUR_OF_DAY);
         minute = mcurrentTime.get(Calendar.MINUTE);
-
-
         cal.set(year, month, day, hour, minute);
 
         timeTextView.setText(Utilities.getTimeString(cal.getTimeInMillis()));
         dateTextView.setText(Utilities.getDateString(cal.getTimeInMillis()));
 
-        view.setOnTouchListener(new View.OnTouchListener() {
+
+        activitySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                return true;
+            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+                updateView();
             }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parentView) {
+                // your code here
+            }
+
         });
+
+        if (mActivityType < 3) {
+            activitySpinner.setSelection(mActivityType);
+            updateView();
+        }
 
         return view;
     }
+
+    private void updateView() {
+        int selectedIndex = activitySpinner.getSelectedItemPosition();
+        switch (selectedIndex) {
+            case 0:
+            case 1:
+            case 3:
+            case 5:
+                editInputLayout2.setVisibility(View.VISIBLE);
+                labelText2.setVisibility(View.VISIBLE);
+                break;
+            case 2:
+            case 4:
+            case 6:
+                editInputLayout2.setVisibility(View.GONE);
+                labelText2.setVisibility(View.GONE);
+                break;
+            default:
+                editInputLayout2.setVisibility(View.VISIBLE);
+                labelText2.setVisibility(View.VISIBLE);
+                break;
+        }
+    }
+
 
     @Override
     public void onAttach(Activity activity) {
@@ -154,11 +233,7 @@ public class AddEntryFragment extends Fragment {
         mTimePicker.show();
     }
 
-    @OnClick(R.id.cancel_button) void onCancel() {
-        getActivity().getSupportFragmentManager().popBackStack();
-    }
-
-    @OnClick(R.id.save_button) void onSave() {
+    public Workout getWorkout() {
         // need validation
         Workout workout = new Workout();
 
@@ -167,6 +242,7 @@ public class AddEntryFragment extends Fragment {
         cal.add(Calendar.MINUTE, -(Integer.parseInt(editTextMinutes.getText().toString())));
         workout.start = cal.getTimeInMillis();
         workout.duration = endTime - workout.start;
+        workout.stepCount = Integer.parseInt(editTextSteps.getText().toString());
         int selectedIndex = activitySpinner.getSelectedItemPosition();
         switch (selectedIndex) {
             case 0:
@@ -177,34 +253,31 @@ public class AddEntryFragment extends Fragment {
                 break;
             case 2:
                 workout.type = WorkoutTypes.BIKING.getValue();
+                workout.stepCount = 0;
                 break;
             case 3:
                 workout.type = WorkoutTypes.GOLF.getValue();
                 break;
             case 4:
                 workout.type = WorkoutTypes.KAYAKING.getValue();
+                workout.stepCount = 0;
                 break;
             case 5:
                 workout.type = WorkoutTypes.STRENGTH_TRAINING.getValue();
                 break;
             case 6:
                 workout.type = WorkoutTypes.IN_VEHICLE.getValue();
+                workout.stepCount = 0;
                 break;
         }
-        workout.stepCount = Integer.parseInt(editTextSteps.getText().toString());
 
-        boolean valid = true;
         if (workout.type == WorkoutTypes.WALKING.getValue()) {
             if ((workout.stepCount / 1000) * 10 > workout.duration / (1000 * 60)) {
-                valid = false;
+                workout = null;
                 editInputLayout.setError("Maximum of 1000 steps per 10 minutes walking");
             }
         }
 
-        if (valid) {
-            mCallback.insertData(workout);
-            Log.d(TAG, workout.toString());
-            getActivity().getSupportFragmentManager().popBackStack();
-        }
+        return workout;
     }
 }

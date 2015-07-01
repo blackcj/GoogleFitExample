@@ -24,6 +24,7 @@ import com.blackcj.fitdata.model.WorkoutReport;
 import com.blackcj.fitdata.model.WorkoutTypes;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -33,13 +34,15 @@ import java.util.Locale;
  */
 public class RecyclerViewAdapter extends RecyclerView.Adapter<WorkoutViewHolder> implements View.OnClickListener {
 
+    private List<Workout> filteredItems;
     private List<Workout> items;
     private OnItemClickListener onItemClickListener;
     private String timeDesc = "Today";
-    private boolean animate = true;
+    private boolean filtering = false;
 
     public RecyclerViewAdapter(List<Workout> items, Context context, final String time) {
         this.items = items;
+        this.filteredItems = new ArrayList<>();
         this.context = context;
         this.timeDesc = time;
     }
@@ -97,18 +100,19 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<WorkoutViewHolder>
     // Filter Class
     public void filter(String charText) {
         charText = charText.toLowerCase(Locale.getDefault());
-        /*
-        worldpopulationlist.clear();
+
+        filteredItems.clear();
         if (charText.length() == 0) {
-            worldpopulationlist.addAll(arraylist);
+            filtering = false;
         } else {
-            for (WorldPopulation wp : arraylist) {
-                if (wp.getCountry().toLowerCase(Locale.getDefault())
+            for (Workout wp : items) {
+                if (WorkoutTypes.getWorkOutTextById(wp.type).toLowerCase(Locale.getDefault())
                         .contains(charText)) {
-                    worldpopulationlist.add(wp);
+                    filteredItems.add(wp);
                 }
             }
-        }*/
+            filtering = true;
+        }
         notifyDataSetChanged();
     }
 
@@ -126,7 +130,11 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<WorkoutViewHolder>
     @Override
     public void onBindViewHolder(WorkoutViewHolder holder, int position) {
         Workout item;
-        item = items.get(position);
+        if(filtering) {
+            item = filteredItems.get(position);
+        } else {
+            item = items.get(position);
+        }
 
         if(item.type == WorkoutTypes.TIME.getValue()) {
             holder.text.setText(timeDesc);
@@ -186,7 +194,11 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<WorkoutViewHolder>
 
     @Override
     public int getItemCount() {
-        return items.size();
+        if (filtering) {
+            return filteredItems.size();
+        } else {
+            return items.size();
+        }
     }
 
     @Override

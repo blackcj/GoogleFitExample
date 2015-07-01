@@ -1,9 +1,7 @@
 package com.blackcj.fitdata.fragment;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -22,8 +20,8 @@ import com.blackcj.fitdata.model.WorkoutTypes;
 
 import java.util.List;
 
+import butterknife.Bind;
 import butterknife.ButterKnife;
-import butterknife.InjectView;
 
 /**
  * Created by chris.black on 6/19/15.
@@ -35,7 +33,7 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
     private RecyclerViewAdapter adapter;
     private int mPage;
 
-    @InjectView(R.id.recyclerView)
+    @Bind(R.id.recyclerView)
     RecyclerView mRecyclerView;
 
     public static PageFragment create(int page) {
@@ -57,7 +55,7 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_page, container, false);
 
-        ButterKnife.inject(this, view);
+        ButterKnife.bind(this, view);
         mRecyclerView.setLayoutManager(new GridLayoutManager(this.getActivity(), 2));
 
         List<Workout> items = mCallback.getData(Utilities.TimeFrame.values()[mPage - 1]);
@@ -85,6 +83,10 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
         });
         mSwipeRefreshLayout.setEnabled(false);
         return view;
+    }
+
+    public void filter(String filterText) {
+        adapter.filter(filterText);
     }
 
     @Override

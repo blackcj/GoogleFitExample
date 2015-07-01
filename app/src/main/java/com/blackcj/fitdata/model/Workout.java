@@ -40,6 +40,7 @@ public class Workout implements Comparable<Workout> {
     public String toString() {
         return "You went " + WorkoutTypes.getWorkOutTextById(type) +
                 " on " + Utilities.getDateString(start) +
+                " at " + Utilities.getTimeString(start) +
                 " for " + WorkoutReport.getDurationBreakdown(duration) +
                 " with " + stepCount + " steps";
     }

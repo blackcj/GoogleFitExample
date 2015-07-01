@@ -7,7 +7,6 @@ import android.support.v7.widget.Toolbar;
 
 import com.blackcj.fitdata.R;
 
-import butterknife.InjectView;
 
 /**
  * Created by chris.black on 5/2/15.

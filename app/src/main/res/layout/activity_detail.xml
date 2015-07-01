@@ -15,7 +15,17 @@
         app:layout_scrollFlags="scroll|enterAlways"
         android:background="?attr/colorPrimaryDark"
         app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
+            <Spinner
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="right"
+                android:layout_marginRight="15dp"
+                android:dropDownVerticalOffset="40dp"
+                android:id="@+id/spinner"
+                app:theme="@style/ThemeOverlay.AppCompat.Dark"
+                tools:background="@color/semiBlack"/>
+        </android.support.v7.widget.Toolbar>
 
     <ImageView
         android:id="@+id/image"
@@ -30,6 +40,7 @@
         android:id="@+id/chart_container"
         android:layout_width="match_parent"
         android:layout_height="200dp"
-        android:layout_below="@+id/image"/>
+        android:layout_below="@+id/image"
+        tools:background="@color/semiWhite"/>
 
 </RelativeLayout>

@@ -38,4 +38,9 @@
         <item>Strength Training</item>
         <item>In Vehicle</item>
     </string-array>
+
+    <string-array name="graph_types">
+        <item>Day</item>
+        <item>Week</item>
+    </string-array>
 </resources>
