@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 
 import com.blackcj.fitdata.Utilities;
@@ -53,7 +54,6 @@ public class ReportsFragment extends BaseFragment {
     private int numSegments;
     private long millisecondsInSegment;
 
-    private CupboardSQLiteOpenHelper dbHelper;
     private SQLiteDatabase db;
 
     /** The chart view that displays the data. */
@@ -61,7 +61,7 @@ public class ReportsFragment extends BaseFragment {
 
     private int workoutType;
     @Bind(R.id.chart)
-    LinearLayout mChartLayout;
+    FrameLayout mChartLayout;
 
     public static ReportsFragment newInstance(int workoutType, int groupCount) {
         ReportsFragment f = new ReportsFragment();
@@ -119,12 +119,11 @@ public class ReportsFragment extends BaseFragment {
         cal.setTime(now);
         currentTimeStamp = cal.getTimeInMillis();
         ButterKnife.bind(this, view);
-        dbHelper = new CupboardSQLiteOpenHelper(this.getActivity());
+        CupboardSQLiteOpenHelper dbHelper = new CupboardSQLiteOpenHelper(this.getActivity());
         db = dbHelper.getWritableDatabase();
 
         mChartView = reportGraph.getChartGraph(getActivity());
 
-        //mChartView = ChartFactory.getBarChartView(getActivity(), mDataset, mRenderer, BarChart.Type.DEFAULT);
         mChartView.addZoomListener(new ZoomListener() {
             public void zoomApplied(ZoomEvent e) {
                 updateLabels();
@@ -155,9 +154,16 @@ public class ReportsFragment extends BaseFragment {
     }
 
     public void setGroupCount(int groupCount) {
-        Log.d(TAG, "GroupCount: " + groupCount);
+        Calendar calendar = Calendar.getInstance();
+        int day = calendar.get(Calendar.DAY_OF_WEEK);
+        if (groupCount == 1) {
+            numDays = 60;
+        } else {
+            numDays = 60 + day;
+        }
+        Log.d(TAG, "GroupCount: " + groupCount + " Number of days: " + numDays);
         multiplier = groupCount;
-        numSegments = (int)Math.ceil((double)numDays / (double)multiplier);
+        numSegments = (int)Math.ceil((double) (numDays) / (double) multiplier);
         millisecondsInSegment = 1000*60*60*24*multiplier;
         if (workoutType == WorkoutTypes.STEP_COUNT.getValue()) {
             reportGraph.setGoal(9500 * multiplier);
@@ -224,6 +230,7 @@ public class ReportsFragment extends BaseFragment {
         }
     }
 
+    // TODO: Fix this ugly function
     public void showData() {
         Map<Integer, Integer[]> map = new HashMap<>();
         reportGraph.clearData();
@@ -231,6 +238,10 @@ public class ReportsFragment extends BaseFragment {
         Calendar cal = Calendar.getInstance();
         Date now = new Date();
         cal.setTime(now);
+        int week_of_year = cal.get(Calendar.WEEK_OF_YEAR);
+        if (multiplier == 7) {
+            cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+        }
         cal.set(Calendar.HOUR_OF_DAY, 0);
         cal.set(Calendar.MINUTE, 0);
         cal.set(Calendar.SECOND, 0);
@@ -240,45 +251,55 @@ public class ReportsFragment extends BaseFragment {
         long baseline = (startTime - startTime % millisecondsInSegment) / millisecondsInSegment;
         QueryResultIterable<Workout> itr = cupboard().withDatabase(db).query(Workout.class).withSelection("start >= ?", "" + startTime).query();
         for (Workout workout : itr) {
+            cal.setTimeInMillis(workout.start);
             long id = (workout.start - workout.start % millisecondsInSegment) / millisecondsInSegment - baseline;
-            if (workoutType == WorkoutTypes.TIME.getValue() && workout.type != WorkoutTypes.STEP_COUNT.getValue() && workout.type != WorkoutTypes.STILL.getValue() && workout.type != WorkoutTypes.IN_VEHICLE.getValue()) {
-                // Put all data here to show totals
-                if (map.get(workoutType) == null) {
-                    Integer[] dataMap = new Integer[numSegments];
-                    Arrays.fill(dataMap, 0);
-                    dataMap[(int)id] = (int)(workout.duration / 1000 / 60);
-                    map.put(workoutType, dataMap);
-                } else {
-                    Integer[] dataMap = map.get(workoutType);
-                    dataMap[(int)id] += (int)(workout.duration / 1000 / 60);
-                }
+            if (multiplier == 7) {
+                id = numSegments - 1 - (week_of_year - cal.get(Calendar.WEEK_OF_YEAR));
+            }
+            if (workout.type == workoutType) {
+                //Log.d(TAG, id + " | " + numSegments + " | " + workout.toString());
+            }
+            if (id < numSegments) {
 
-                if (map.get(workout.type) == null) {
-                    Integer[] dataMap = new Integer[numSegments];
-                    Arrays.fill(dataMap, 0);
-                    dataMap[(int)id] = (int)(workout.duration / 1000 / 60);
-                    map.put(workout.type, dataMap);
-                } else {
-                    Integer[] dataMap = map.get(workout.type);
-                    dataMap[(int)id] += (int)(workout.duration / 1000 / 60);
-                }
-            } else if (workout.type == workoutType) {
-                if (map.get(workout.type) == null) {
-                    Integer[] dataMap = new Integer[numSegments];
-                    Arrays.fill(dataMap, 0);
-                    if (workout.type == WorkoutTypes.STEP_COUNT.getValue()) {
-                        dataMap[(int)id] = workout.stepCount;
+                if (workoutType == WorkoutTypes.TIME.getValue() && workout.type != WorkoutTypes.STEP_COUNT.getValue() && workout.type != WorkoutTypes.STILL.getValue() && workout.type != WorkoutTypes.IN_VEHICLE.getValue()) {
+                    // Put all data here to show totals
+                    if (map.get(workoutType) == null) {
+                        Integer[] dataMap = new Integer[numSegments];
+                        Arrays.fill(dataMap, 0);
+                        dataMap[(int) id] = (int) (workout.duration / 1000 / 60);
+                        map.put(workoutType, dataMap);
                     } else {
-                        dataMap[(int)id] = (int)(workout.duration / 1000 / 60);
+                        Integer[] dataMap = map.get(workoutType);
+                        dataMap[(int) id] += (int) (workout.duration / 1000 / 60);
                     }
 
-                    map.put(workout.type, dataMap);
-                } else {
-                    Integer[] dataMap = map.get(workout.type);
-                    if (workout.type == WorkoutTypes.STEP_COUNT.getValue()) {
-                        dataMap[(int)id] += workout.stepCount;
+                    if (map.get(workout.type) == null) {
+                        Integer[] dataMap = new Integer[numSegments];
+                        Arrays.fill(dataMap, 0);
+                        dataMap[(int) id] = (int) (workout.duration / 1000 / 60);
+                        map.put(workout.type, dataMap);
                     } else {
-                        dataMap[(int)id] += (int)(workout.duration / 1000 / 60);
+                        Integer[] dataMap = map.get(workout.type);
+                        dataMap[(int) id] += (int) (workout.duration / 1000 / 60);
+                    }
+                } else if (workout.type == workoutType) {
+                    if (map.get(workout.type) == null) {
+                        Integer[] dataMap = new Integer[numSegments];
+                        Arrays.fill(dataMap, 0);
+                        if (workout.type == WorkoutTypes.STEP_COUNT.getValue()) {
+                            dataMap[(int) id] = workout.stepCount;
+                        } else {
+                            dataMap[(int) id] = (int) (workout.duration / 1000 / 60);
+                        }
+
+                        map.put(workout.type, dataMap);
+                    } else {
+                        Integer[] dataMap = map.get(workout.type);
+                        if (workout.type == WorkoutTypes.STEP_COUNT.getValue()) {
+                            dataMap[(int) id] += workout.stepCount;
+                        } else {
+                            dataMap[(int) id] += (int) (workout.duration / 1000 / 60);
+                        }
                     }
                 }
             }

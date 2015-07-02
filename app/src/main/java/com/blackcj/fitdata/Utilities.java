@@ -53,8 +53,8 @@ public class Utilities {
         BEGINNING_OF_DAY,
         BEGINNING_OF_WEEK,
         BEGINNING_OF_MONTH,
-        BEGINNING_OF_YEAR,
-        LAST_MONTH;
+        LAST_MONTH,
+        BEGINNING_OF_YEAR;
         private static TimeFrame[] vals = values();
         public TimeFrame next()
         {

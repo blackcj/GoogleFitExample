@@ -65,6 +65,9 @@ public class CacheManager {
                     case BEGINNING_OF_MONTH: // 1 month
                         report = MockData.getMonthlyMockData().getWorkoutData();
                         break;
+                    case LAST_MONTH: // 1 month
+                        report = MockData.getMonthlyMockData().getWorkoutData();
+                        break;
                     default:
                         report = MockData.getDailyMockData().getWorkoutData();
                         break;
@@ -86,6 +89,7 @@ public class CacheManager {
             if (callbackRef != null) {
                 ICacheCallback callback = callbackRef.get();
                 if (callback != null) {
+                    //Log.i(TAG, report.toString());
                     callback.loadData(report);
                 }
             }

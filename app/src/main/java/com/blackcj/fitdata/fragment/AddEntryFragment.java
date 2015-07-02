@@ -95,24 +95,11 @@ public class AddEntryFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_add_entry, container, false);
 
         ButterKnife.bind(this, view);
-/*
-        final Toolbar toolbar = (Toolbar) view.findViewById(R.id.fragment_toolbar);
-        toolbar.setTitle("Add Entry");
-        toolbar.setNavigationIcon(getResources().getDrawable(R.drawable.ic_arrow_back_white));
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                hideKeyboard();
-                getActivity().getSupportFragmentManager().popBackStack();
-            }
-        });
-
-*/
 
         editTextSteps.addTextChangedListener(new TextWatcher(){
             public void afterTextChanged(Editable s) {
                 if(!editTextSteps.getText().toString().equals("")) {
-                    editTextMinutes.setText("" + (Double.parseDouble(editTextSteps.getText().toString()) / 1000.0 * 10));
+                    editTextMinutes.setText("" + (int)(Double.parseDouble(editTextSteps.getText().toString()) / 1000.0 * 10));
                 }
             }
             public void beforeTextChanged(CharSequence s, int start, int count, int after){}
@@ -238,10 +225,10 @@ public class AddEntryFragment extends Fragment {
         Workout workout = new Workout();
 
         cal.set(year, month, day, hour, minute);
-        long endTime = cal.getTimeInMillis();
-        cal.add(Calendar.MINUTE, -(Integer.parseInt(editTextMinutes.getText().toString())));
-        workout.start = cal.getTimeInMillis();
-        workout.duration = endTime - workout.start;
+        long startTime = cal.getTimeInMillis();
+        workout.start = startTime;
+        cal.add(Calendar.MINUTE, Integer.parseInt(editTextMinutes.getText().toString()));
+        workout.duration = cal.getTimeInMillis() - startTime;
         workout.stepCount = Integer.parseInt(editTextSteps.getText().toString());
         int selectedIndex = activitySpinner.getSelectedItemPosition();
         switch (selectedIndex) {

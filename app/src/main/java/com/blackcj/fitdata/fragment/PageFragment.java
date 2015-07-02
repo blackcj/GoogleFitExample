@@ -111,7 +111,7 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
     @Override
     public void onPause() {
         super.onPause();
-        if (mSwipeRefreshLayout!=null) {
+        if (mSwipeRefreshLayout != null) {
             mSwipeRefreshLayout.setRefreshing(false);
             mSwipeRefreshLayout.setEnabled(false);
             mSwipeRefreshLayout.destroyDrawingCache();
@@ -125,7 +125,7 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
 
     @Override
     public void onItemClick(View view, Workout viewModel) {
-        if(viewModel.type == WorkoutTypes.TIME.getValue()) {
+        if (viewModel.type == WorkoutTypes.TIME.getValue()) {
             //cancelTimer();
             //timeFrame = timeFrame.next();
             //adapter.setNeedsAnimate();
@@ -138,14 +138,19 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
 
     @Override
     public void loadData(final List<Workout> workoutList) {
-
+        // Update the UI
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                // Update the UI
                 adapter.setItems(workoutList, Utilities.getTimeFrameText(Utilities.TimeFrame.values()[mPage - 1]));
-                Log.d(TAG, "Data " + mPage);
-                mSwipeRefreshLayout.setRefreshing(false);
+                Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.d(TAG, "Data " + mPage);
+                        mSwipeRefreshLayout.setRefreshing(false);
+                    }
+                }, 700);
             }
         });
 

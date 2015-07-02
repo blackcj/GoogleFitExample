@@ -21,6 +21,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -70,7 +71,7 @@ public class DetailActivity extends BaseActivity {
         }
         image.setBackgroundColor(Utilities.lighter(vibrant, 0.4f));
 
-        RelativeLayout container = (RelativeLayout) findViewById(R.id.container);
+        View container = findViewById(R.id.container);
         container.setBackgroundColor(vibrant);
 
         final ActionBar actionBar = getSupportActionBar();

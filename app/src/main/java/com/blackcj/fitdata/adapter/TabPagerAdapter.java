@@ -21,7 +21,8 @@ public class TabPagerAdapter extends FragmentPagerAdapter {
             "Today",
             "Week",
             "Month",
-            "Last Month"
+            "Last Month",
+            "Year"
     };
 
     public static final int NUM_TITLES = TITLES.length;

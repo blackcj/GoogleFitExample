@@ -6,13 +6,13 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.Intent;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.view.ViewPager;
@@ -22,8 +22,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.WindowManager;
-import android.widget.TableLayout;
 
 import com.blackcj.fitdata.Utilities;
 import com.blackcj.fitdata.adapter.TabPagerAdapter;
@@ -35,8 +33,6 @@ import com.blackcj.fitdata.fragment.PageFragment;
 import com.blackcj.fitdata.model.Workout;
 import com.getbase.floatingactionbutton.FloatingActionsMenu;
 import com.google.android.gms.fitness.data.DataSet;
-
-import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -254,6 +250,9 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         switch (id) {
+            case R.id.action_settings:
+                RecentActivity.launch(MainActivity.this, 0);
+                break;
             case R.id.action_refresh_data:
                 mDataManager.refreshData();
                 return true;
@@ -336,6 +335,11 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     @Override
     public void getData(Utilities.TimeFrame timeFrame, CacheManager.ICacheCallback callback) {
         mCacheManager.getReport(timeFrame, callback, this);
+    }
+
+    @Override
+    public Cursor getCursor() {
+        return null;
     }
 
     ///////////////////////////////////////

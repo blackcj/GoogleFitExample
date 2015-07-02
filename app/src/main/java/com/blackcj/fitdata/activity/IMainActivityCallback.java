@@ -1,5 +1,6 @@
 package com.blackcj.fitdata.activity;
 
+import android.database.Cursor;
 import android.view.View;
 
 import com.blackcj.fitdata.Utilities;
@@ -14,4 +15,5 @@ import java.util.List;
 public interface IMainActivityCallback {
     public void launch(View transitionView, Workout workout);
     public void getData(Utilities.TimeFrame timeFrame, CacheManager.ICacheCallback callback);
+    public Cursor getCursor();
 }

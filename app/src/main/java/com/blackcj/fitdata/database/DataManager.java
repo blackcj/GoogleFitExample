@@ -89,7 +89,7 @@ public class DataManager {
         Date now = new Date();
         cal.setTime(now);
         long endTime = cal.getTimeInMillis();
-        cal.add(Calendar.DAY_OF_YEAR, -1);
+        cal.add(Calendar.DAY_OF_YEAR, -2);
         long startTime = cal.getTimeInMillis();
 
         cupboard().withDatabase(mDb).delete(Workout.class, "start >= ?", "" + startTime);
@@ -174,7 +174,7 @@ public class DataManager {
                     // At this point, the session has been inserted and can be read.
                     Log.i(TAG, "Session insert was successful!");
 
-                    cupboard().withDatabase(mDb).put(workout);
+                    //cupboard().withDatabase(mDb).put(workout);
                     UserPreferences.setBackgroundLoadComplete(context.getActivity().getApplicationContext(), false);
                     UserPreferences.setLastSync(context.getActivity().getApplicationContext(), workout.start - (1000 * 60 * 60 * 24));
 

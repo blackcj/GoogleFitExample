@@ -153,8 +153,20 @@ public enum WorkoutTypes {
             case 8:
                 result = R.drawable.running_icon_color;
                 break;
+            case 7:
+                result = R.drawable.walk_icon_color;
+                break;
             case 32:
                 result = R.drawable.flag_icon;
+                break;
+            case 40:
+                result = R.drawable.paddle_icon_color;
+                break;
+            case 80:
+                result = R.drawable.weights_icon_color;
+                break;
+            case 97:
+                result = R.drawable.weights_icon_color;
                 break;
         }
         return result;
