@@ -135,6 +135,22 @@ public enum WorkoutTypes {
             R.drawable.running_icon_color
     };
 
+    public static int getColorById(int id) {
+        int result = R.color.other;
+        switch (id) {
+            case 1:
+                result = R.color.biking;
+                break;
+            case 8:
+                result = R.color.running;
+                break;
+            case 7:
+                result = R.color.walking;
+                break;
+        }
+        return result;
+    }
+
     public static int getImageById(int id) {
         int result = R.drawable.heart_icon_gray;
         switch (id) {

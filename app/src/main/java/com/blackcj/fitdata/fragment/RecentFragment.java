@@ -1,5 +1,6 @@
 package com.blackcj.fitdata.fragment;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
@@ -10,10 +11,13 @@ import android.view.ViewGroup;
 
 import com.blackcj.fitdata.R;
 import com.blackcj.fitdata.Utilities;
+import com.blackcj.fitdata.activity.IMainActivityCallback;
 import com.blackcj.fitdata.adapter.CursorRecyclerViewAdapter;
 import com.blackcj.fitdata.adapter.RecyclerViewAdapter;
 import com.blackcj.fitdata.adapter.WorkoutListViewAdapter;
 import com.blackcj.fitdata.animation.ItemAnimator;
+import com.blackcj.fitdata.database.DataManager;
+import com.blackcj.fitdata.model.Workout;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -21,14 +25,16 @@ import butterknife.ButterKnife;
 /**
  * Created by chris.black on 7/2/15.
  */
-public class RecentFragment extends BaseFragment {
+public class RecentFragment extends BaseFragment implements WorkoutListViewAdapter.OnItemClickListener {
 
     public static final String TAG = "RecentFragment";
+
+    public DataManager.IDataManager dataReceiver;
 
     @Bind(R.id.recyclerView)
     RecyclerView mRecyclerView;
 
-    private CursorRecyclerViewAdapter adapter;
+    private WorkoutListViewAdapter adapter;
 
     public static RecentFragment create() {
         RecentFragment fragment = new RecentFragment();
@@ -45,10 +51,37 @@ public class RecentFragment extends BaseFragment {
         mRecyclerView.setLayoutManager(new GridLayoutManager(this.getActivity(), 1));
 
         adapter = new WorkoutListViewAdapter(this.getActivity(), mCallback.getCursor());
+        adapter.setOnItemClickListener(this);
 
         mRecyclerView.setItemAnimator(new ItemAnimator());
         mRecyclerView.setAdapter(adapter);
 
         return view;
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        if(activity instanceof DataManager.IDataManager) {
+            dataReceiver = (DataManager.IDataManager)activity;
+        }
+    }
+
+    /**
+     * Clear callback on detach to prevent null reference errors after the view has been
+     */
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        dataReceiver = null;
+    }
+
+    @Override
+    public void onItemClick(View view, Workout viewModel) {
+        if (dataReceiver != null) {
+            dataReceiver.removeData(viewModel);
+            adapter.swapCursor(mCallback.getCursor());
+            adapter.notifyDataSetChanged();
+        }
     }
 }

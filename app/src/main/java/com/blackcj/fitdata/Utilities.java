@@ -34,6 +34,8 @@ public class Utilities {
 
     public static final String TIME_FORMAT = "h:mm a";
 
+    public static final String TIME_DATE_FORMAT = "MM/dd at h:mm a";
+
     public static String getDayString(Long ms) {
         SimpleDateFormat dateFormat = new SimpleDateFormat(DAY_FORMAT);
         return dateFormat.format(ms);
@@ -46,6 +48,11 @@ public class Utilities {
 
     public static String getTimeString(Long ms) {
         SimpleDateFormat dateFormat = new SimpleDateFormat(TIME_FORMAT);
+        return dateFormat.format(ms);
+    }
+
+    public static String getTimeDateString(Long ms) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(TIME_DATE_FORMAT);
         return dateFormat.format(ms);
     }
 

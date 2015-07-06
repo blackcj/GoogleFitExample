@@ -47,7 +47,7 @@ public class DataManager {
     public static final String DATE_FORMAT = "MM.dd h:mm a";
 
     private WeakReference<SQLiteDatabase> mDb;
-    private WeakReference<IDataManager> mContext;    // Switch to weak reference
+    private WeakReference<IDataManager> mContext;
     private GoogleApiClient mClient;
 
     public DataManager(SQLiteDatabase db, IDataManager context) {
@@ -72,7 +72,7 @@ public class DataManager {
     public void close() {
         if (mDb != null) {
             SQLiteDatabase db = mDb.get();
-            if (db != null) {
+            if (db != null && db.isOpen()) {
                 db.close();
             }
         }
@@ -92,19 +92,15 @@ public class DataManager {
         }
     }
 
-    public void deleteData() {
+    public void deleteWorkout(Workout workout) {
         // Set a start and end time for our data, using a start time of 1 day before this moment.
-        Calendar cal = Calendar.getInstance();
-        Date now = new Date();
-        cal.setTime(now);
-        long endTime = cal.getTimeInMillis();
-        cal.add(Calendar.DAY_OF_YEAR, -2);
-        long startTime = cal.getTimeInMillis();
+        long endTime = workout.start + workout.duration;
+        long startTime = workout.start;
 
         if (mDb != null) {
             SQLiteDatabase db = mDb.get();
             if (db != null) {
-                cupboard().withDatabase(db).delete(Workout.class, "start >= ?", "" + startTime);
+                cupboard().withDatabase(db).delete(Workout.class, "start = ?", "" + workout.start);
             } else {
                 Log.w(TAG, "Warning: db is null");
             }
@@ -192,11 +188,12 @@ public class DataManager {
                     // At this point, the session has been inserted and can be read.
                     Log.i(TAG, "Session insert was successful!");
 
+
                     //cupboard().withDatabase(mDb).put(workout);
                     UserPreferences.setBackgroundLoadComplete(context.getActivity().getApplicationContext(), false);
                     UserPreferences.setLastSync(context.getActivity().getApplicationContext(), workout.start - (1000 * 60 * 60 * 24));
 
-                    populateHistoricalData();
+                    //populateHistoricalData();
                 }
             }
 
@@ -236,7 +233,7 @@ public class DataManager {
                     UserPreferences.setBackgroundLoadComplete(context.getActivity().getApplicationContext(), false);
                     UserPreferences.setLastSync(context.getActivity().getApplicationContext(), workout.start - (1000 * 60 * 60 * 24));
 
-                    populateHistoricalData();
+                    //populateHistoricalData();
                 }
             }
 
@@ -600,6 +597,7 @@ public class DataManager {
 
     public interface IDataManager {
         void insertData(Workout workout);
+        void removeData(Workout workout);
         Activity getActivity();
     }
 }

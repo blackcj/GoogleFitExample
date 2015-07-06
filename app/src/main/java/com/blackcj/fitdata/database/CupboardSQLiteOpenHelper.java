@@ -17,7 +17,7 @@ public class CupboardSQLiteOpenHelper extends SQLiteOpenHelper {
     }
 
     public CupboardSQLiteOpenHelper(Context context) {
-        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        super(context.getApplicationContext(), DATABASE_NAME, null, DATABASE_VERSION);
     }
 
     @Override

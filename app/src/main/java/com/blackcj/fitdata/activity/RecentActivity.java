@@ -6,10 +6,12 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.os.ResultReceiver;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 
@@ -23,6 +25,7 @@ import com.blackcj.fitdata.fragment.RecentFragment;
 import com.blackcj.fitdata.model.Workout;
 import com.blackcj.fitdata.service.CacheResultReceiver;
 
+import butterknife.Bind;
 import butterknife.ButterKnife;
 
 import static nl.qbusict.cupboard.CupboardFactory.cupboard;
@@ -37,7 +40,10 @@ public class RecentActivity extends BaseActivity implements DataManager.IDataMan
     RecentFragment fragment;
     public static final String ARG_ACTIVITY_TYPE = "ARG_ACTIVITY_TYPE";
     private CupboardSQLiteOpenHelper mHelper;
+    private DataManager mDataManager;
     private Cursor mCursor;
+
+    @Bind(R.id.container) View container;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +57,7 @@ public class RecentActivity extends BaseActivity implements DataManager.IDataMan
 
         mHelper = new CupboardSQLiteOpenHelper(this);
         mDb = mHelper.getWritableDatabase();
+        mDataManager = new DataManager(mDb, this);
 
         int activityType = getIntent().getExtras().getInt(ARG_ACTIVITY_TYPE);
 
@@ -64,20 +71,23 @@ public class RecentActivity extends BaseActivity implements DataManager.IDataMan
     }
 
     @Override
-    protected void onDestroy() {
-        mCursor.close();
-        mHelper.close();
-        super.onDestroy();
-    }
-
-    @Override
     public void onStart() {
         super.onStart();
+        mDataManager.connect();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
+        mDataManager.disconnect();
+    }
+
+    @Override
+    protected void onDestroy() {
+        mCursor.close();
+        mHelper.close();
+        mDataManager.close();
+        super.onDestroy();
     }
 
     @Override
@@ -124,6 +134,14 @@ public class RecentActivity extends BaseActivity implements DataManager.IDataMan
     @Override
     public void insertData(Workout workout) {
 
+    }
+
+    @Override
+    public void removeData(Workout workout) {
+        Snackbar.make(container, "Removed: " + workout.toString(), Snackbar.LENGTH_LONG).show();
+        Log.d(TAG, "Removed: " + workout.toString());
+        mDataManager.deleteWorkout(workout);
+        mCursor = cupboard().withDatabase(mDb).query(Workout.class).withSelection("type != ?", "" + 3).orderBy("start DESC").query().getCursor();
     }
 
     @Override

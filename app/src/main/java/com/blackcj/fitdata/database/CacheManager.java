@@ -42,4 +42,21 @@ public class CacheManager {
         intentService.putExtra(MainActivity.RECEIVER_TAG, callback);
         context.startService(intentService);
     }
+
+    public static boolean checkConflict(Context context, Workout inWorkout) {
+        boolean overlap = false;
+        final CupboardSQLiteOpenHelper dbHelper = new CupboardSQLiteOpenHelper(context);
+        final SQLiteDatabase mDb = dbHelper.getWritableDatabase();
+        long rangeStart = inWorkout.start - 1000 * 60 * 60 * 24;
+        long rangeEnd = inWorkout.start + inWorkout.duration;
+        QueryResultIterable<Workout> itr = cupboard().withDatabase(mDb).query(Workout.class).withSelection("start BETWEEN ? AND ?", "" + rangeStart, "" + rangeEnd).query();
+        for (Workout workout : itr) {
+            Log.d(TAG, workout.toString());
+            if (workout.overlaps(inWorkout)) {
+                overlap = true;
+            }
+        }
+        itr.close();
+        return overlap;
+    }
 }

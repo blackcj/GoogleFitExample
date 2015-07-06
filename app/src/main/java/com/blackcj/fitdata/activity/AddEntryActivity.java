@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.FragmentTransaction;
@@ -15,11 +16,13 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
 import com.blackcj.fitdata.R;
+import com.blackcj.fitdata.database.CacheManager;
 import com.blackcj.fitdata.database.CupboardSQLiteOpenHelper;
 import com.blackcj.fitdata.database.DataManager;
 import com.blackcj.fitdata.fragment.AddEntryFragment;
 import com.blackcj.fitdata.model.Workout;
 
+import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
@@ -33,6 +36,9 @@ public class AddEntryActivity extends BaseActivity implements DataManager.IDataM
     AddEntryFragment fragment;
     public static final String ARG_ACTIVITY_TYPE = "ARG_ACTIVITY_TYPE";
     private DataManager mDataManager;
+    private CupboardSQLiteOpenHelper mHelper;
+
+    @Bind(R.id.container) View container;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,8 +50,8 @@ public class AddEntryActivity extends BaseActivity implements DataManager.IDataM
             actionBar.setTitle("Add Entry");
         }
 
-        CupboardSQLiteOpenHelper dbHelper = new CupboardSQLiteOpenHelper(this);
-        final SQLiteDatabase db = dbHelper.getWritableDatabase();
+        mHelper = new CupboardSQLiteOpenHelper(this);
+        final SQLiteDatabase db = mHelper.getWritableDatabase();
         mDataManager = new DataManager(db, this);
 
         int activityType = getIntent().getExtras().getInt(ARG_ACTIVITY_TYPE);
@@ -67,6 +73,13 @@ public class AddEntryActivity extends BaseActivity implements DataManager.IDataM
         mDataManager.disconnect();
     }
 
+    @Override
+    protected void onDestroy() {
+        mHelper.close();
+        mDataManager.close();
+        Log.w(TAG, "Closing db");
+        super.onDestroy();
+    }
 
     @Override
     protected int getLayoutResource() {
@@ -103,10 +116,14 @@ public class AddEntryActivity extends BaseActivity implements DataManager.IDataM
         Workout workout = fragment.getWorkout();
         if (workout != null) {
             Log.d(TAG, "Added: " + workout.toString());
-            // TODO: Validate workout doesn't overlap
-            mDataManager.insertData(workout);
-
-            finishAfterTransition();
+            // Validate workout doesn't overlap
+            if (CacheManager.checkConflict(this, workout)) {
+                Log.d(TAG, "Overlap detected!");
+                Snackbar.make(container, "Overlap detected. Please change start time.", Snackbar.LENGTH_LONG).show();
+            } else {
+                mDataManager.insertData(workout);
+                finishAfterTransition();
+            }
         }
     }
 
@@ -126,6 +143,11 @@ public class AddEntryActivity extends BaseActivity implements DataManager.IDataM
     @Override
     public void insertData(Workout workout) {
         mDataManager.insertData(workout);
+    }
+
+    @Override
+    public void removeData(Workout workout) {
+        mDataManager.deleteWorkout(workout);
     }
 
     @Override

@@ -35,6 +35,20 @@ public class Workout implements Comparable<Workout>, Parcelable {
         stepCount = in.readInt();
     }
 
+    public boolean overlaps(Workout another) {
+        boolean result = false;
+
+        if (another.start > start && another.start < start + duration) {
+            result = true;
+        }
+
+        if (start > another.start && start < another.start + another.duration) {
+            result = true;
+        }
+
+        return result;
+    }
+
     @Override
     public int compareTo(Workout another) {
         int result = 0;
@@ -65,6 +79,12 @@ public class Workout implements Comparable<Workout>, Parcelable {
                 " at " + Utilities.getTimeString(start) +
                 " for " + WorkoutReport.getDurationBreakdown(duration) +
                 " with " + stepCount + " steps";
+    }
+
+    public String shortText() {
+        return "" + Utilities.getDayString(start) +
+                " at " + Utilities.getTimeString(start) +
+                " for " + WorkoutReport.getDurationBreakdown(duration);
     }
 
     public int describeContents() {

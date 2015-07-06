@@ -50,7 +50,6 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     public final static String RECEIVER_TAG = "MainActivityReceiver";
     public static boolean active = false;
 
-    private CacheManager mCacheManager;
     private DataManager mDataManager;
     private CupboardSQLiteOpenHelper mHelper;
     private TabPagerAdapter mAdapter;
@@ -74,7 +73,6 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
 
         mHelper = new CupboardSQLiteOpenHelper(this);
         final SQLiteDatabase db = mHelper.getWritableDatabase();
-        mCacheManager = new CacheManager();
         mDataManager = new DataManager(db, this);
         mAdapter = new TabPagerAdapter(this.getSupportFragmentManager());
 
@@ -261,7 +259,7 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
                 mDataManager.refreshData();
                 return true;
             case R.id.action_delete_steps:
-                mDataManager.deleteData();
+                //mDataManager.deleteData();
                 return true;
             case android.R.id.home:
                 getSupportFragmentManager().popBackStack();
@@ -324,6 +322,11 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     @Override
     public void insertData(Workout workout) {
         mDataManager.insertData(workout);
+    }
+
+    @Override
+    public void removeData(Workout workout) {
+
     }
 
     @Override
