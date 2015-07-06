@@ -103,15 +103,14 @@ public class AddEntryActivity extends BaseActivity implements DataManager.IDataM
         Workout workout = fragment.getWorkout();
         if (workout != null) {
             Log.d(TAG, "Added: " + workout.toString());
+            // TODO: Validate workout doesn't overlap
             mDataManager.insertData(workout);
 
-            //hideKeyboard();
             finishAfterTransition();
         }
     }
 
     @OnClick(R.id.cancel_button) void onCancel() {
-        //hideKeyboard();
         finishAfterTransition();
     }
 

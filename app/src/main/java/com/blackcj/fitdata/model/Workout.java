@@ -1,5 +1,8 @@
 package com.blackcj.fitdata.model;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.blackcj.fitdata.Utilities;
 
 import java.io.Serializable;
@@ -7,13 +10,30 @@ import java.io.Serializable;
 /**
  * Created by chris.black on 5/1/15.
  */
-public class Workout implements Comparable<Workout>, Serializable {
+public class Workout implements Comparable<Workout>, Parcelable {
 
     public long _id;            // same as start
     public long duration = 0;   // length of activity
     public long start = 0;      // activity start time
     public int type;            // type of activity
     public int stepCount = 0;   // number of steps for activity
+
+
+    public Workout() {
+        _id = 0L;
+        duration = 0L;
+        start = 0L;
+        type = 0;
+        stepCount = 0;
+    }
+
+    public Workout(Parcel in) {
+        _id = in.readLong();
+        duration = in.readLong();
+        start = in.readLong();
+        type = in.readInt();
+        stepCount = in.readInt();
+    }
 
     @Override
     public int compareTo(Workout another) {
@@ -46,4 +66,29 @@ public class Workout implements Comparable<Workout>, Serializable {
                 " for " + WorkoutReport.getDurationBreakdown(duration) +
                 " with " + stepCount + " steps";
     }
+
+    public int describeContents() {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeLong(_id);
+        dest.writeLong(duration);
+        dest.writeLong(start);
+        dest.writeInt(type);
+        dest.writeInt(stepCount);
+    }
+
+    public static final Parcelable.Creator<Workout> CREATOR = new Parcelable.Creator<Workout>()
+    {
+        public Workout createFromParcel(Parcel in)
+        {
+            return new Workout(in);
+        }
+        public Workout[] newArray(int size)
+        {
+            return new Workout[size];
+        }
+    };
 }

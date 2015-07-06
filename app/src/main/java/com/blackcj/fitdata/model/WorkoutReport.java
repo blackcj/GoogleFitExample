@@ -41,13 +41,13 @@ public class WorkoutReport {
         map.clear();
     }
 
-    public List<Workout> getWorkoutData() {
+    public ArrayList<Workout> getWorkoutData() {
         Workout summary = new Workout();
         summary.type = WorkoutTypes.TIME.getValue();
         summary.duration = getTotalDuration();
         summary.start = -1;
         replaceWorkout(summary);
-        List<Workout> result = new ArrayList<>(map.values());
+        ArrayList<Workout> result = new ArrayList<>(map.values());
         Collections.sort(result);
         return result;
     }

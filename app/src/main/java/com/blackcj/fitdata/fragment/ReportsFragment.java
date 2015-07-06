@@ -254,7 +254,7 @@ public class ReportsFragment extends BaseFragment {
             cal.setTimeInMillis(workout.start);
             long id = (workout.start - workout.start % millisecondsInSegment) / millisecondsInSegment - baseline;
             if (multiplier == 7) {
-                id = numSegments - 1 - (week_of_year - cal.get(Calendar.WEEK_OF_YEAR));
+                id = numSegments - (week_of_year - cal.get(Calendar.WEEK_OF_YEAR));
             }
             if (workout.type == workoutType) {
                 //Log.d(TAG, id + " | " + numSegments + " | " + workout.toString());

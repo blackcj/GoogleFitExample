@@ -46,12 +46,12 @@ public class DataManager {
     public static final String TAG = "DataManager";
     public static final String DATE_FORMAT = "MM.dd h:mm a";
 
-    final private SQLiteDatabase mDb;
+    private WeakReference<SQLiteDatabase> mDb;
     private WeakReference<IDataManager> mContext;    // Switch to weak reference
     private GoogleApiClient mClient;
 
     public DataManager(SQLiteDatabase db, IDataManager context) {
-        mDb = db;
+        mDb = new WeakReference<>(db);
         mContext = new WeakReference<>(context);
         buildFitnessClient();
     }
@@ -66,6 +66,15 @@ public class DataManager {
         if (mClient.isConnected()) {
             mClient.disconnect();
             connected = false;
+        }
+    }
+
+    public void close() {
+        if (mDb != null) {
+            SQLiteDatabase db = mDb.get();
+            if (db != null) {
+                db.close();
+            }
         }
     }
 
@@ -92,7 +101,16 @@ public class DataManager {
         cal.add(Calendar.DAY_OF_YEAR, -2);
         long startTime = cal.getTimeInMillis();
 
-        cupboard().withDatabase(mDb).delete(Workout.class, "start >= ?", "" + startTime);
+        if (mDb != null) {
+            SQLiteDatabase db = mDb.get();
+            if (db != null) {
+                cupboard().withDatabase(db).delete(Workout.class, "start >= ?", "" + startTime);
+            } else {
+                Log.w(TAG, "Warning: db is null");
+            }
+        } else {
+            Log.w(TAG, "Warning: db is null");
+        }
 
         // https://developers.google.com/android/reference/com/google/android/gms/fitness/request/DataDeleteRequest
         //  Create a delete request object, providing a data type and a time interval
@@ -345,7 +363,20 @@ public class DataManager {
                 if (context != null) {
                     if (UserPreferences.getBackgroundLoadComplete(context.getActivity().getApplicationContext())) {
                         Log.i(TAG, "Fast data read");
-                        Workout w = cupboard().withDatabase(mDb).query(Workout.class).orderBy("start DESC").get();
+                        Workout w;
+                        if (mDb != null) {
+                            SQLiteDatabase db = mDb.get();
+                            if (db != null) {
+                                w = cupboard().withDatabase(db).query(Workout.class).orderBy("start DESC").get();
+                            } else {
+                                Log.w(TAG, "Warning: db is null");
+                                return null;
+                            }
+                        } else {
+                            Log.w(TAG, "Warning: db is null");
+                            return null;
+                        }
+
                         startTime = w.start - 1000 * 60 * 60 * 8; // Go back 8 hours just to be safe
                     } else {
                         Log.i(TAG, "Slow data read");
@@ -419,7 +450,18 @@ public class DataManager {
                         workout.stepCount = stepCount;
                         //workout.duration = 1000*60*10;
                         Log.i(TAG, "Step count: " + stepCount);
-                        cupboard().withDatabase(mDb).put(workout);
+                        if (mDb != null) {
+                            SQLiteDatabase db = mDb.get();
+                            if (db != null) {
+                                cupboard().withDatabase(db).put(workout);
+                            } else {
+                                Log.w(TAG, "Warning: db is null");
+                                return null;
+                            }
+                        } else {
+                            Log.w(TAG, "Warning: db is null");
+                            return null;
+                        }
 
                         endTime = startTime;
                         cal.add(Calendar.DAY_OF_YEAR, -1);
@@ -461,7 +503,20 @@ public class DataManager {
                 if(field.getName().equals("activity") && dp.getDataType().getName().equals("com.google.activity.segment")) {
                     long startTime = dp.getStartTime(TimeUnit.MILLISECONDS);
                     int activity = dp.getValue(field).asInt();
-                    Workout workout = cupboard().withDatabase(mDb).get(Workout.class, startTime);
+                    Workout workout;
+                    if (mDb != null) {
+                        SQLiteDatabase db = mDb.get();
+                        if (db != null) {
+                            workout = cupboard().withDatabase(db).get(Workout.class, startTime);
+                        } else {
+                            Log.w(TAG, "Warning: db is null");
+                            return false;
+                        }
+                    } else {
+                        Log.w(TAG, "Warning: db is null");
+                        return false;
+                    }
+
 
                     // When the workout is null, we need to cache it. If the background task has completed,
                     // then we have at most 8 - 12 hours of data. Recent data is likely to change so over-
@@ -481,7 +536,17 @@ public class DataManager {
                                 workout.stepCount = stepCount;
                                 workout.type = activity;
                                 //Log.v("MainActivity", "Put Cache: " + WorkoutTypes.getWorkOutTextById(workout.type) + " " + workout.duration);
-                                cupboard().withDatabase(mDb).put(workout);
+                                if (mDb != null) {
+                                    SQLiteDatabase db = mDb.get();
+                                    if (db != null) {
+                                        cupboard().withDatabase(db).put(workout);
+                                    } else {
+                                        Log.w(TAG, "Warning: db is null");
+                                    }
+                                } else {
+                                    Log.w(TAG, "Warning: db is null");
+                                }
+
                                 wroteDataToCache = true;
                             } else {
                                 // Do not overwrite data if the initial load is in progress. This would take too

@@ -2,6 +2,7 @@ package com.blackcj.fitdata.fragment;
 
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.ResultReceiver;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -18,6 +19,7 @@ import com.blackcj.fitdata.animation.ItemAnimator;
 import com.blackcj.fitdata.database.CacheManager;
 import com.blackcj.fitdata.model.Workout;
 import com.blackcj.fitdata.model.WorkoutTypes;
+import com.blackcj.fitdata.service.CacheResultReceiver;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,13 +30,14 @@ import butterknife.ButterKnife;
 /**
  * Created by chris.black on 6/19/15.
  */
-public class PageFragment extends BaseFragment implements RecyclerViewAdapter.OnItemClickListener, CacheManager.ICacheCallback {
+public class PageFragment extends BaseFragment implements RecyclerViewAdapter.OnItemClickListener, CacheResultReceiver.Receiver {
 
     public static final String TAG = "PageFragment";
     public static final String ARG_PAGE = "ARG_PAGE";
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private RecyclerViewAdapter adapter;
     private int mPage;
+    private CacheResultReceiver mReciever;
 
     @Bind(R.id.recyclerView)
     RecyclerView mRecyclerView;
@@ -51,6 +54,8 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mPage = getArguments().getInt(ARG_PAGE);
+        mReciever = new CacheResultReceiver(new Handler());
+
     }
 
     @Override
@@ -69,31 +74,17 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
         mRecyclerView.setItemAnimator(new ItemAnimator());
         mRecyclerView.setAdapter(adapter);
 
-        final PageFragment pageFragment = this;
-
         mSwipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.contentView);
         mSwipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary);
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                mCallback.getData(Utilities.TimeFrame.values()[mPage - 1], pageFragment);
-
-                /*
-                Handler handler = new Handler();
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        List<Workout> items = mCallback.getData(Utilities.TimeFrame.values()[mPage - 1]);
-                        adapter.setItems(items, Utilities.getTimeFrameText(Utilities.TimeFrame.values()[mPage - 1]));
-                        mSwipeRefreshLayout.setRefreshing(false);
-                    }
-                }, 1000);
-                */
+                CacheManager.getReport(Utilities.TimeFrame.values()[mPage - 1], mReciever, getActivity());
             }
         });
         mSwipeRefreshLayout.setEnabled(false);
         Log.d(TAG, "Requesting: " + mPage);
-        mCallback.getData(Utilities.TimeFrame.values()[mPage - 1], this);
+        CacheManager.getReport(Utilities.TimeFrame.values()[mPage - 1], mReciever, getActivity());
         return view;
     }
 
@@ -104,13 +95,13 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
     @Override
     public void onResume() {
         super.onResume();
-
-        //mSwipeRefreshLayout.setEnabled(true);
+        mReciever.setReceiver(this);
     }
 
     @Override
     public void onPause() {
         super.onPause();
+        mReciever.setReceiver(null);
         if (mSwipeRefreshLayout != null) {
             mSwipeRefreshLayout.setRefreshing(false);
             mSwipeRefreshLayout.setEnabled(false);
@@ -125,19 +116,12 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
 
     @Override
     public void onItemClick(View view, Workout viewModel) {
-        if (viewModel.type == WorkoutTypes.TIME.getValue()) {
-            //cancelTimer();
-            //timeFrame = timeFrame.next();
-            //adapter.setNeedsAnimate();
-            //populateReport();
-        } else {
-            //DetailActivity.launch(MainActivity.this, view.findViewById(R.id.image), viewModel);
-        }
         mCallback.launch(view.findViewById(R.id.image), viewModel);
     }
 
     @Override
-    public void loadData(final List<Workout> workoutList) {
+    public void onReceiveResult(int resultCode, Bundle resultData) {
+        final List<Workout> workoutList = resultData.getParcelableArrayList("workoutList");
         // Update the UI
         getActivity().runOnUiThread(new Runnable() {
             @Override

@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.os.ResultReceiver;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.FragmentTransaction;
@@ -20,6 +21,7 @@ import com.blackcj.fitdata.database.DataManager;
 import com.blackcj.fitdata.fragment.AddEntryFragment;
 import com.blackcj.fitdata.fragment.RecentFragment;
 import com.blackcj.fitdata.model.Workout;
+import com.blackcj.fitdata.service.CacheResultReceiver;
 
 import butterknife.ButterKnife;
 
@@ -34,7 +36,8 @@ public class RecentActivity extends BaseActivity implements DataManager.IDataMan
 
     RecentFragment fragment;
     public static final String ARG_ACTIVITY_TYPE = "ARG_ACTIVITY_TYPE";
-    private DataManager mDataManager;
+    private CupboardSQLiteOpenHelper mHelper;
+    private Cursor mCursor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,8 +49,8 @@ public class RecentActivity extends BaseActivity implements DataManager.IDataMan
             actionBar.setTitle("Recent History");
         }
 
-        CupboardSQLiteOpenHelper dbHelper = new CupboardSQLiteOpenHelper(this);
-        mDb= dbHelper.getWritableDatabase();
+        mHelper = new CupboardSQLiteOpenHelper(this);
+        mDb = mHelper.getWritableDatabase();
 
         int activityType = getIntent().getExtras().getInt(ARG_ACTIVITY_TYPE);
 
@@ -56,6 +59,15 @@ public class RecentActivity extends BaseActivity implements DataManager.IDataMan
         transaction.replace(R.id.placeholder, fragment, RecentFragment.TAG);
         transaction.commit();
 
+        mCursor = cupboard().withDatabase(mDb).query(Workout.class).withSelection("type != ?", "" + 3).orderBy("start DESC").query().getCursor();
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        mCursor.close();
+        mHelper.close();
+        super.onDestroy();
     }
 
     @Override
@@ -74,13 +86,8 @@ public class RecentActivity extends BaseActivity implements DataManager.IDataMan
     }
 
     @Override
-    public void getData(Utilities.TimeFrame timeFrame, CacheManager.ICacheCallback callback) {
-
-    }
-
-    @Override
     public Cursor getCursor() {
-        return cupboard().withDatabase(mDb).query(Workout.class).withSelection("type != ?", "" + 3).orderBy("start DESC").query().getCursor();
+        return mCursor;
     }
 
     @Override

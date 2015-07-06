@@ -1,4 +1,4 @@
-package com.blackcj.fitdata.database;
+package com.blackcj.fitdata.service;
 
 import android.os.Bundle;
 import android.os.Handler;
@@ -8,7 +8,7 @@ import android.util.Log;
 import java.lang.ref.WeakReference;
 
 /**
- * Created by chris.black on 7/1/15.
+ * Created by chris.black on 7/6/15.
  */
 public class CacheResultReceiver extends ResultReceiver {
 

@@ -23,7 +23,6 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 
-import com.blackcj.fitdata.Utilities;
 import com.blackcj.fitdata.adapter.TabPagerAdapter;
 import com.blackcj.fitdata.database.CacheManager;
 import com.blackcj.fitdata.database.CupboardSQLiteOpenHelper;
@@ -48,10 +47,12 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
         IMainActivityCallback, DataManager.IDataManager, FloatingActionsMenu.OnFloatingActionsMenuUpdateListener {
 
     public static final String TAG = "MainActivity";
+    public final static String RECEIVER_TAG = "MainActivityReceiver";
     public static boolean active = false;
 
     private CacheManager mCacheManager;
     private DataManager mDataManager;
+    private CupboardSQLiteOpenHelper mHelper;
     private TabPagerAdapter mAdapter;
 
     @Bind(R.id.coordinatorLayout) CoordinatorLayout coordinatorLayout;
@@ -71,13 +72,13 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
         setActionBarIcon(R.drawable.barchart_icon);
         ButterKnife.bind(this);
 
-        CupboardSQLiteOpenHelper dbHelper = new CupboardSQLiteOpenHelper(this);
-        final SQLiteDatabase db = dbHelper.getWritableDatabase();
-        mCacheManager = new CacheManager(db);
+        mHelper = new CupboardSQLiteOpenHelper(this);
+        final SQLiteDatabase db = mHelper.getWritableDatabase();
+        mCacheManager = new CacheManager();
         mDataManager = new DataManager(db, this);
         mAdapter = new TabPagerAdapter(this.getSupportFragmentManager());
 
-        TabLayout tabLayout = (TabLayout) findViewById(R.id.tabLayout);
+        final TabLayout tabLayout = (TabLayout) findViewById(R.id.tabLayout);
         tabLayout.setTabsFromPagerAdapter(mAdapter);
         tabLayout.setTabMode(TabLayout.MODE_SCROLLABLE);
 
@@ -126,8 +127,6 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     @Override
     protected void onResume() {
         super.onResume();
-        appBarLayout.addOnOffsetChangedListener(this);
-        getSupportFragmentManager().addOnBackStackChangedListener(this);
         overlay.setAlpha(0f);
         floatingActionMenu.collapse();
     }
@@ -136,6 +135,8 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     public void onStart() {
         super.onStart();
         active = true;
+        appBarLayout.addOnOffsetChangedListener(this);
+        getSupportFragmentManager().addOnBackStackChangedListener(this);
         mDataManager.connect();
     }
 
@@ -143,20 +144,23 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     protected void onStop() {
         active = false;
         mDataManager.disconnect();
+        appBarLayout.removeOnOffsetChangedListener(this);
+        getSupportFragmentManager().removeOnBackStackChangedListener(this);
         super.onStop();
     }
 
     @Override
     protected void onPause() {
         floatingActionMenu.collapse();
-        appBarLayout.removeOnOffsetChangedListener(this);
-        getSupportFragmentManager().removeOnBackStackChangedListener(this);
         super.onPause();
     }
 
     @Override
     protected void onDestroy() {
         mAdapter.destroy();
+        mHelper.close();
+        mDataManager.close();
+        Log.w(TAG, "Closing db");
         super.onDestroy();
     }
 
@@ -330,11 +334,6 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     @Override
     public void launch(View transitionView, Workout workout) {
         DetailActivity.launch(MainActivity.this, transitionView, workout);
-    }
-
-    @Override
-    public void getData(Utilities.TimeFrame timeFrame, CacheManager.ICacheCallback callback) {
-        mCacheManager.getReport(timeFrame, callback, this);
     }
 
     @Override
