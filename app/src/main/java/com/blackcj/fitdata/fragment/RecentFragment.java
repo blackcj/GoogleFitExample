@@ -88,8 +88,6 @@ public class RecentFragment extends BaseFragment implements WorkoutListViewAdapt
     public void onItemClick(View view, Workout viewModel) {
         if (dataReceiver != null) {
             dataReceiver.removeData(viewModel);
-            adapter.swapCursor(mCallback.getCursor());
-            adapter.notifyDataSetChanged();
         }
     }
 }

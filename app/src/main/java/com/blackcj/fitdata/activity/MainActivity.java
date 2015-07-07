@@ -4,10 +4,8 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
-import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CoordinatorLayout;
@@ -24,8 +22,6 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import com.blackcj.fitdata.adapter.TabPagerAdapter;
-import com.blackcj.fitdata.database.CacheManager;
-import com.blackcj.fitdata.database.CupboardSQLiteOpenHelper;
 import com.blackcj.fitdata.R;
 import com.blackcj.fitdata.database.DataManager;
 import com.blackcj.fitdata.fragment.PageFragment;
@@ -51,7 +47,6 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     public static boolean active = false;
 
     private DataManager mDataManager;
-    private CupboardSQLiteOpenHelper mHelper;
     private TabPagerAdapter mAdapter;
 
     @Bind(R.id.coordinatorLayout) CoordinatorLayout coordinatorLayout;
@@ -71,9 +66,8 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
         setActionBarIcon(R.drawable.barchart_icon);
         ButterKnife.bind(this);
 
-        mHelper = new CupboardSQLiteOpenHelper(this);
-        final SQLiteDatabase db = mHelper.getWritableDatabase();
-        mDataManager = new DataManager(db, this);
+        mDataManager = DataManager.getInstance(this);
+
         mAdapter = new TabPagerAdapter(this.getSupportFragmentManager());
 
         final TabLayout tabLayout = (TabLayout) findViewById(R.id.tabLayout);
@@ -112,9 +106,6 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
         });
 
         floatingActionMenu.setOnFloatingActionsMenuUpdateListener(this);
-
-        //appBarLayout.addOnOffsetChangedListener();
-
     }
 
     @Override
@@ -133,15 +124,16 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     public void onStart() {
         super.onStart();
         active = true;
+        mDataManager.connect();
         appBarLayout.addOnOffsetChangedListener(this);
         getSupportFragmentManager().addOnBackStackChangedListener(this);
-        mDataManager.connect();
+        mDataManager.addListener(this);
     }
 
     @Override
     protected void onStop() {
         active = false;
-        mDataManager.disconnect();
+        mDataManager.removeListener(this);
         appBarLayout.removeOnOffsetChangedListener(this);
         getSupportFragmentManager().removeOnBackStackChangedListener(this);
         super.onStop();
@@ -156,8 +148,7 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     @Override
     protected void onDestroy() {
         mAdapter.destroy();
-        mHelper.close();
-        mDataManager.close();
+        mDataManager.disconnect();
         Log.w(TAG, "Closing db");
         super.onDestroy();
     }
@@ -215,11 +206,8 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     // OPTIONS MENU
     ///////////////////////////////////////
 
-    private Menu mMenu;
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        mMenu = menu;
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
@@ -303,15 +291,6 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
 
 
         AddEntryActivity.launch(MainActivity.this, activityType);
-        /*
-        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-        transaction.setCustomAnimations(R.anim.enter_anim, R.anim.exit_anim, R.anim.enter_anim, R.anim.exit_anim);
-        transaction.add(R.id.top_container, AddEntryFragment.create(activityType), AddEntryFragment.TAG);
-        transaction.addToBackStack("add_entry");
-        transaction.commit();
-
-        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
-        */
     }
 
     ///////////////////////////////////////
@@ -325,12 +304,28 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
 
     @Override
     public void removeData(Workout workout) {
-
+        mDataManager.deleteWorkout(workout);
     }
 
     @Override
-    public Activity getActivity() {
-        return this;
+    public void dataChanged() {
+        Log.d(TAG, "DATA CHANGED");
+        // TODO: Refresh prev / next page too
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (mAdapter.getFragment(mViewPager.getCurrentItem()) != null) {
+                    mAdapter.getFragment(mViewPager.getCurrentItem()).refreshData();
+                }
+                if (mAdapter.getFragment(mViewPager.getCurrentItem() + 1) != null) {
+                    mAdapter.getFragment(mViewPager.getCurrentItem() + 1).refreshData();
+                }
+                if (mAdapter.getFragment(mViewPager.getCurrentItem() - 1) != null) {
+                    mAdapter.getFragment(mViewPager.getCurrentItem() - 1).refreshData();
+                }
+            }
+        });
+
     }
 
     @Override

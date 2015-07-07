@@ -48,6 +48,8 @@ import static nl.qbusict.cupboard.CupboardFactory.cupboard;
  */
 public class DataManager {
 
+    private static DataManager _instance;
+
     public static final String TAG = "DataManager";
     public static final String DATE_FORMAT = "MM.dd h:mm a";
 
@@ -56,19 +58,31 @@ public class DataManager {
     private GoogleApiClient mClient;
     private final List<WeakReference<IDataManager>> mListeners;
 
-    public DataManager(SQLiteDatabase db, Activity context) {
-        mDb = new WeakReference<>(db);
+    private DataManager(Activity context) {
         mApplicationContext = new WeakReference<>(context.getApplicationContext());
         this.mListeners = new ArrayList<>();
         buildFitnessClient(context);
+    }
+
+    public static DataManager getInstance(Activity context)
+    {
+        if (_instance == null)
+        {
+            _instance = new DataManager(context);
+        }
+        // TODO: Re-init context?
+        return _instance;
     }
 
     private void notifyListeners() {
         int i = 0;
         for(int z = this.mListeners.size(); i < z; ++i) {
             WeakReference<IDataManager> ref = this.mListeners.get(i);
-            if(ref != null) {
-                // Do something
+            if (ref != null) {
+                IDataManager dataManager = ref.get();
+                if (dataManager != null) {
+                    dataManager.dataChanged();
+                }
             }
         }
     }
@@ -90,14 +104,14 @@ public class DataManager {
         Iterator i = this.mListeners.iterator();
 
         while(true) {
-            AppBarLayout.OnOffsetChangedListener item;
+            IDataManager item;
             do {
                 if(!i.hasNext()) {
                     return;
                 }
 
                 WeakReference ref = (WeakReference)i.next();
-                item = (AppBarLayout.OnOffsetChangedListener)ref.get();
+                item = (IDataManager)ref.get();
             } while(item != listener && item != null);
 
             i.remove();
@@ -111,7 +125,7 @@ public class DataManager {
     }
 
     public void disconnect() {
-        if (mClient.isConnected()) {
+        if (mClient.isConnected() && mListeners.size() == 0) {
             mClient.disconnect();
             connected = false;
         }
@@ -124,6 +138,26 @@ public class DataManager {
                 db.close();
             }
         }
+    }
+
+    private SQLiteDatabase getDatabase() {
+
+        if (mDb != null) {
+            SQLiteDatabase db = mDb.get();
+            if (db != null) {
+                return db;
+            }
+        }
+
+        Context context = getApplicationContext();
+        if (context != null) {
+            final CupboardSQLiteOpenHelper mHelper = new CupboardSQLiteOpenHelper(context);
+            final SQLiteDatabase db = mHelper.getWritableDatabase();
+            mDb = new WeakReference<>(db);
+            return db;
+        }
+
+        return null;
     }
 
     private Context getApplicationContext() {
@@ -140,7 +174,7 @@ public class DataManager {
         if (mClient.isConnected()) {
             Context context = getApplicationContext();
             if (context != null) {
-                //mDb.execSQL("DELETE FROM " + Workout.class.getSimpleName());
+                //mDb.execSQL("DELETE FROM " + Workout.class.getSimpleName()); // This deletes all data
                 UserPreferences.setBackgroundLoadComplete(context, false);
                 UserPreferences.setLastSync(context, 0);
                 populateHistoricalData();
@@ -153,13 +187,9 @@ public class DataManager {
         long endTime = workout.start + workout.duration;
         long startTime = workout.start;
 
-        if (mDb != null) {
-            SQLiteDatabase db = mDb.get();
-            if (db != null) {
-                cupboard().withDatabase(db).delete(Workout.class, "start = ?", "" + workout.start);
-            } else {
-                Log.w(TAG, "Warning: db is null");
-            }
+        SQLiteDatabase db = getDatabase();
+        if (db != null) {
+            cupboard().withDatabase(db).delete(Workout.class, "start = ?", "" + workout.start);
         } else {
             Log.w(TAG, "Warning: db is null");
         }
@@ -194,7 +224,7 @@ public class DataManager {
         populateHistoricalData();
     }
 
-    public void populateHistoricalData() {
+    private void populateHistoricalData() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
             // Run on executer to allow both tasks to run at the same time.
             // This task writes to the DB and the other reads so we shouldn't run into any issues.
@@ -480,14 +510,9 @@ public class DataManager {
                     workout.stepCount = stepCount;
                     //workout.duration = 1000*60*10;
                     Log.i(TAG, "Step count: " + stepCount);
-                    if (mDb != null) {
-                        SQLiteDatabase db = mDb.get();
-                        if (db != null && db.isOpen()) {
-                            cupboard().withDatabase(db).put(workout);
-                        } else {
-                            Log.w(TAG, "Warning: db is null");
-                            return null;
-                        }
+                    SQLiteDatabase db = getDatabase();
+                    if (db != null && db.isOpen()) {
+                        cupboard().withDatabase(db).put(workout);
                     } else {
                         Log.w(TAG, "Warning: db is null");
                         return null;
@@ -504,7 +529,7 @@ public class DataManager {
                 } else {
                     UserPreferences.setBackgroundLoadComplete(context, true);
                 }
-
+                notifyListeners();
 
                 // Read cached data and calculate real time step estimates
                 //populateReport();
@@ -538,14 +563,9 @@ public class DataManager {
                     long startTime = dp.getStartTime(TimeUnit.MILLISECONDS);
                     int activity = dp.getValue(field).asInt();
                     Workout workout;
-                    if (mDb != null) {
-                        SQLiteDatabase db = mDb.get();
-                        if (db != null && db.isOpen()) {
-                            workout = cupboard().withDatabase(db).get(Workout.class, startTime);
-                        } else {
-                            Log.w(TAG, "Warning: db is null");
-                            return false;
-                        }
+                    SQLiteDatabase db = getDatabase();
+                    if (db != null && db.isOpen()) {
+                        workout = cupboard().withDatabase(db).get(Workout.class, startTime);
                     } else {
                         Log.w(TAG, "Warning: db is null");
                         return false;
@@ -569,13 +589,8 @@ public class DataManager {
                             workout.stepCount = stepCount;
                             workout.type = activity;
                             //Log.v("MainActivity", "Put Cache: " + WorkoutTypes.getWorkOutTextById(workout.type) + " " + workout.duration);
-                            if (mDb != null) {
-                                SQLiteDatabase db = mDb.get();
-                                if (db != null) {
-                                    cupboard().withDatabase(db).put(workout);
-                                } else {
-                                    Log.w(TAG, "Warning: db is null");
-                                }
+                            if (db != null) {
+                                cupboard().withDatabase(db).put(workout);
                             } else {
                                 Log.w(TAG, "Warning: db is null");
                             }
@@ -634,6 +649,6 @@ public class DataManager {
     public interface IDataManager {
         void insertData(Workout workout);
         void removeData(Workout workout);
-        Activity getActivity();
+        void dataChanged();
     }
 }

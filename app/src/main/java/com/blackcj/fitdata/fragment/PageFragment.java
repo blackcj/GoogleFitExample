@@ -83,9 +83,12 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
             }
         });
         mSwipeRefreshLayout.setEnabled(false);
-        Log.d(TAG, "Requesting: " + mPage);
-        CacheManager.getReport(Utilities.TimeFrame.values()[mPage - 1], mReciever, getActivity());
         return view;
+    }
+
+    public void refreshData() {
+        mSwipeRefreshLayout.setRefreshing(true);
+        CacheManager.getReport(Utilities.TimeFrame.values()[mPage - 1], mReciever, getActivity());
     }
 
     public void filter(String filterText) {
@@ -96,6 +99,7 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
     public void onResume() {
         super.onResume();
         mReciever.setReceiver(this);
+        CacheManager.getReport(Utilities.TimeFrame.values()[mPage - 1], mReciever, getActivity());
     }
 
     @Override
@@ -131,7 +135,6 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        Log.d(TAG, "Data " + mPage);
                         mSwipeRefreshLayout.setRefreshing(false);
                     }
                 }, 700);

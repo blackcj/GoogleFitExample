@@ -36,7 +36,6 @@ public class AddEntryActivity extends BaseActivity implements DataManager.IDataM
     AddEntryFragment fragment;
     public static final String ARG_ACTIVITY_TYPE = "ARG_ACTIVITY_TYPE";
     private DataManager mDataManager;
-    private CupboardSQLiteOpenHelper mHelper;
 
     @Bind(R.id.container) View container;
 
@@ -50,10 +49,8 @@ public class AddEntryActivity extends BaseActivity implements DataManager.IDataM
             actionBar.setTitle("Add Entry");
         }
 
-        mHelper = new CupboardSQLiteOpenHelper(this);
-        final SQLiteDatabase db = mHelper.getWritableDatabase();
-        mDataManager = new DataManager(db, this);
-
+        mDataManager = DataManager.getInstance(this);
+        mDataManager.connect();
         int activityType = getIntent().getExtras().getInt(ARG_ACTIVITY_TYPE);
         fragment = AddEntryFragment.create(activityType);
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
@@ -65,18 +62,18 @@ public class AddEntryActivity extends BaseActivity implements DataManager.IDataM
     public void onStart() {
         super.onStart();
         mDataManager.connect();
+        mDataManager.addListener(this);
     }
 
     @Override
     protected void onStop() {
+        mDataManager.removeListener(this);
         super.onStop();
-        mDataManager.disconnect();
     }
 
     @Override
     protected void onDestroy() {
-        mHelper.close();
-        mDataManager.close();
+        mDataManager.disconnect();
         Log.w(TAG, "Closing db");
         super.onDestroy();
     }
@@ -151,7 +148,7 @@ public class AddEntryActivity extends BaseActivity implements DataManager.IDataM
     }
 
     @Override
-    public Activity getActivity() {
-        return this;
+    public void dataChanged() {
+
     }
 }

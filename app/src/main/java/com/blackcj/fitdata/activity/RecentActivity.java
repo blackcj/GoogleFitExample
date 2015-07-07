@@ -59,7 +59,7 @@ public class RecentActivity extends BaseActivity implements DataManager.IDataMan
 
         mHelper = new CupboardSQLiteOpenHelper(this);
         mDb = mHelper.getWritableDatabase();
-        mDataManager = new DataManager(mDb, this);
+        mDataManager = DataManager.getInstance(this);
 
         int activityType = getIntent().getExtras().getInt(ARG_ACTIVITY_TYPE);
 
@@ -75,20 +75,21 @@ public class RecentActivity extends BaseActivity implements DataManager.IDataMan
     @Override
     public void onStart() {
         super.onStart();
+        mDataManager.addListener(this);
         mDataManager.connect();
     }
 
     @Override
     protected void onStop() {
+        mDataManager.removeListener(this);
         super.onStop();
-        mDataManager.disconnect();
     }
 
     @Override
     protected void onDestroy() {
         mCursor.close();
         mHelper.close();
-        mDataManager.close();
+        mDataManager.disconnect();
         super.onDestroy();
     }
 
@@ -137,29 +138,28 @@ public class RecentActivity extends BaseActivity implements DataManager.IDataMan
     @Override
     public void removeData(Workout workout) {
         lastWorkout = workout;
-        Snackbar.make(container, workout.removeText(), Snackbar.LENGTH_LONG).setAction("UNDO", clickListener).show();
+        Snackbar.make(container, "Removed entry", Snackbar.LENGTH_LONG).setAction("UNDO", clickListener).show();
         Log.d(TAG, "Removed: " + workout.toString());
         mDataManager.deleteWorkout(workout);
-        mCursor = cupboard().withDatabase(mDb).query(Workout.class).withSelection("type != ? AND type != ?", "3", "-2").orderBy("start DESC").limit(200).query().getCursor();
+        dataChanged();
     }
 
     final View.OnClickListener clickListener = new View.OnClickListener() {
         public void onClick(View v) {
             mDataManager.insertData(lastWorkout);
-            Handler handler = new Handler();
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    mCursor = cupboard().withDatabase(mDb).query(Workout.class).withSelection("type != ? AND type != ?", "3", "-2").orderBy("start DESC").limit(200).query().getCursor();
-                    fragment.swapCursor(mCursor);
-                    Log.d(TAG, "Refresh cursor");
-                }
-            }, 500);
         }
     };
 
     @Override
-    public Activity getActivity() {
-        return this;
+    public void dataChanged() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mCursor = cupboard().withDatabase(mDb).query(Workout.class).withSelection("type != ? AND type != ?", "3", "-2").orderBy("start DESC").limit(200).query().getCursor();
+                fragment.swapCursor(mCursor);
+                Log.d(TAG, "Refresh cursor");
+            }
+        });
+
     }
 }

@@ -53,6 +53,7 @@ public class ReportsFragment extends BaseFragment {
     private int numDays = 60;
     private int numSegments;
     private long millisecondsInSegment;
+    private CupboardSQLiteOpenHelper mHelper;
 
     private SQLiteDatabase db;
 
@@ -60,8 +61,7 @@ public class ReportsFragment extends BaseFragment {
     private GraphicalView mChartView;
 
     private int workoutType;
-    @Bind(R.id.chart)
-    FrameLayout mChartLayout;
+    @Bind(R.id.chart) FrameLayout mChartLayout;
 
     public static ReportsFragment newInstance(int workoutType, int groupCount) {
         ReportsFragment f = new ReportsFragment();
@@ -119,8 +119,8 @@ public class ReportsFragment extends BaseFragment {
         cal.setTime(now);
         currentTimeStamp = cal.getTimeInMillis();
         ButterKnife.bind(this, view);
-        CupboardSQLiteOpenHelper dbHelper = new CupboardSQLiteOpenHelper(this.getActivity());
-        db = dbHelper.getWritableDatabase();
+        mHelper = new CupboardSQLiteOpenHelper(this.getActivity());
+        db = mHelper.getWritableDatabase();
 
         mChartView = reportGraph.getChartGraph(getActivity());
 
@@ -211,7 +211,13 @@ public class ReportsFragment extends BaseFragment {
     @Override
     public void onStop() {
         super.onStop();
-        //mDataSource.removeListeners();
+
+    }
+
+    @Override
+    public void onDestroy() {
+        mHelper.close();
+        super.onDestroy();
     }
 
     @Override
@@ -254,12 +260,12 @@ public class ReportsFragment extends BaseFragment {
             cal.setTimeInMillis(workout.start);
             long id = (workout.start - workout.start % millisecondsInSegment) / millisecondsInSegment - baseline;
             if (multiplier == 7) {
-                id = numSegments - (week_of_year - cal.get(Calendar.WEEK_OF_YEAR));
+                id = numSegments - (week_of_year - cal.get(Calendar.WEEK_OF_YEAR)) - 1;
             }
             if (workout.type == workoutType) {
                 //Log.d(TAG, id + " | " + numSegments + " | " + workout.toString());
             }
-            if (id < numSegments) {
+            if (id < numSegments && id >= 0) {
 
                 if (workoutType == WorkoutTypes.TIME.getValue() && workout.type != WorkoutTypes.STEP_COUNT.getValue() && workout.type != WorkoutTypes.STILL.getValue() && workout.type != WorkoutTypes.IN_VEHICLE.getValue()) {
                     // Put all data here to show totals

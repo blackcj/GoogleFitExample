@@ -103,7 +103,7 @@ public class SingleBarGraphWithGoal extends BaseReportGraph {
         mRenderer.setPanLimits(new double[]{-5, mCurrentSeries.getItemCount() + 5, 0, 0});
         mRenderer.setZoomLimits(new double[]{-5, mCurrentSeries.getItemCount() + 5, 0, 0});
         // An array containing the margin size values, in this order: top, left, bottom, right
-        mRenderer.setMargins(new int [] {getDPI(10),0,getDPI(5),0});
+        mRenderer.setMargins(new int [] {getDPI(12),0,getDPI(10),0});
 
         mRenderer.setYLabelsPadding(-getDPI(35));
 
