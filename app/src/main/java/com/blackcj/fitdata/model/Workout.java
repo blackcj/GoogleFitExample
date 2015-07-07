@@ -81,6 +81,12 @@ public class Workout implements Comparable<Workout>, Parcelable {
                 " with " + stepCount + " steps";
     }
 
+    public String removeText() {
+        return "Removed: " + WorkoutTypes.getWorkOutTextById(type) +
+                " on " + Utilities.getDayString(start) +
+                " for " + WorkoutReport.getDurationBreakdown(duration);
+    }
+
     public String shortText() {
         return "" + Utilities.getDayString(start) +
                 " at " + Utilities.getTimeString(start) +

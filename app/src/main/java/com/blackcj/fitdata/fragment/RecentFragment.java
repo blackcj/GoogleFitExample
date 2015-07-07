@@ -1,6 +1,7 @@
 package com.blackcj.fitdata.fragment;
 
 import android.app.Activity;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
@@ -12,6 +13,7 @@ import android.view.ViewGroup;
 import com.blackcj.fitdata.R;
 import com.blackcj.fitdata.Utilities;
 import com.blackcj.fitdata.activity.IMainActivityCallback;
+import com.blackcj.fitdata.adapter.AnimatedLayoutManager;
 import com.blackcj.fitdata.adapter.CursorRecyclerViewAdapter;
 import com.blackcj.fitdata.adapter.RecyclerViewAdapter;
 import com.blackcj.fitdata.adapter.WorkoutListViewAdapter;
@@ -48,9 +50,10 @@ public class RecentFragment extends BaseFragment implements WorkoutListViewAdapt
 
         ButterKnife.bind(this, view);
 
-        mRecyclerView.setLayoutManager(new GridLayoutManager(this.getActivity(), 1));
+        mRecyclerView.setLayoutManager(new AnimatedLayoutManager(this.getActivity(), 1));
 
         adapter = new WorkoutListViewAdapter(this.getActivity(), mCallback.getCursor());
+        adapter.setHasStableIds(true);
         adapter.setOnItemClickListener(this);
 
         mRecyclerView.setItemAnimator(new ItemAnimator());
@@ -65,6 +68,11 @@ public class RecentFragment extends BaseFragment implements WorkoutListViewAdapt
         if(activity instanceof DataManager.IDataManager) {
             dataReceiver = (DataManager.IDataManager)activity;
         }
+    }
+
+    public void swapCursor(Cursor cursor) {
+        adapter.swapCursor(cursor);
+        adapter.notifyDataSetChanged();
     }
 
     /**

@@ -8,8 +8,8 @@
         android:title="Search"
         app:actionViewClass="android.support.v7.widget.SearchView"
         app:showAsAction="collapseActionView|always"/>
-    <item android:id="@+id/action_settings"
-        android:title="@string/action_settings"
+    <item android:id="@+id/action_history"
+        android:title="@string/action_history"
         android:orderInCategory="100"
         app:showAsAction="never" />
 
@@ -17,8 +17,8 @@
         android:title="@string/action_load_data"
         android:orderInCategory="100"
         app:showAsAction="never" />
-    <item android:id="@+id/action_delete_steps"
-        android:title="@string/action_delete_steps"
+    <item android:id="@+id/action_settings"
+        android:title="@string/action_settings"
         android:orderInCategory="100"
         app:showAsAction="never" />
 </menu>

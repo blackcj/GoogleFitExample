@@ -25,12 +25,12 @@ import static nl.qbusict.cupboard.CupboardFactory.cupboard;
 /**
  * Created by chris.black on 7/6/15.
  */
-public class ReadHistoricalService extends IntentService {
+public class ReadCacheIntentService extends IntentService {
 
     private WorkoutReport workoutReport = new WorkoutReport();
     public final static String TAG = "ReadHistoricalService";
     private WeakReference<ResultReceiver> mReceiver;
-    public ReadHistoricalService() {
+    public ReadCacheIntentService() {
         super(TAG);
     }
     private boolean mockData = false;

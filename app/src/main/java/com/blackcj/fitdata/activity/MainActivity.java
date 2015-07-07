@@ -252,14 +252,13 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         switch (id) {
-            case R.id.action_settings:
+            case R.id.action_history:
                 RecentActivity.launch(MainActivity.this, 0);
                 break;
             case R.id.action_refresh_data:
                 mDataManager.refreshData();
                 return true;
-            case R.id.action_delete_steps:
-                //mDataManager.deleteData();
+            case R.id.action_settings:
                 return true;
             case android.R.id.home:
                 getSupportFragmentManager().popBackStack();

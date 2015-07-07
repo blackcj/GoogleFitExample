@@ -34,7 +34,7 @@ public class Utilities {
 
     public static final String TIME_FORMAT = "h:mm a";
 
-    public static final String TIME_DATE_FORMAT = "MM/dd at h:mm a";
+    public static final String TIME_DATE_FORMAT = "MM/dd h:mm a";
 
     public static String getDayString(Long ms) {
         SimpleDateFormat dateFormat = new SimpleDateFormat(DAY_FORMAT);
@@ -82,8 +82,11 @@ public class Utilities {
             case BEGINNING_OF_MONTH: // 1 month
                 result = "This Month";
                 break;
-            case LAST_MONTH: // 1 month
+            case LAST_MONTH: // Last month
                 result = "Last Month";
+                break;
+            case BEGINNING_OF_YEAR: // Year to date
+                result = "This Year";
                 break;
         }
         return result;

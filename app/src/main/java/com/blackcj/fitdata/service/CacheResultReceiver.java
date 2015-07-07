@@ -29,11 +29,13 @@ public class CacheResultReceiver extends ResultReceiver {
 
     @Override
     protected void onReceiveResult(int resultCode, Bundle resultData) {
-        Receiver receiver = mReceiver.get();
-        if (receiver != null) {
-            receiver.onReceiveResult(resultCode, resultData);
-        }else {
-            Log.d(TAG, "Weak listener is NULL: " + resultData.getString("ResultTag"));
+        if (mReceiver != null) {
+            Receiver receiver = mReceiver.get();
+            if (receiver != null) {
+                receiver.onReceiveResult(resultCode, resultData);
+            } else {
+                Log.d(TAG, "Weak listener is NULL: " + resultData.getString("ResultTag"));
+            }
         }
     }
 }

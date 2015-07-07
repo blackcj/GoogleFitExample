@@ -29,7 +29,7 @@ public class WorkoutListViewAdapter extends CursorRecyclerViewAdapter<WorkoutLis
     private OnItemClickListener onItemClickListener;
 
     public WorkoutListViewAdapter(Context context, Cursor cursor){
-        super(context,cursor);
+        super(context, cursor);
     }
 
     @Override
@@ -37,7 +37,7 @@ public class WorkoutListViewAdapter extends CursorRecyclerViewAdapter<WorkoutLis
         View itemView = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.recent_item, parent, false);
         ListViewHolder vh = new ListViewHolder(itemView);
-        vh.container.setOnClickListener(this);
+        vh.deleteButton.setOnClickListener(this);
         return vh;
     }
 
@@ -59,7 +59,7 @@ public class WorkoutListViewAdapter extends CursorRecyclerViewAdapter<WorkoutLis
 
     @Override
     public void onClick(final View v) {
-        
+
         if (onItemClickListener != null && v.getId() == R.id.close_button) {
             onItemClickListener.onItemClick(v, (Workout) v.getTag());
         }
@@ -69,13 +69,13 @@ public class WorkoutListViewAdapter extends CursorRecyclerViewAdapter<WorkoutLis
         public TextView text;
         public ImageView image;
         public ImageView deleteButton;
-        public LinearLayout container;
+        public View container;
 
         public ListViewHolder(View itemView) {
             super(itemView);
             text = (TextView) itemView.findViewById(R.id.text);
             image = (ImageView) itemView.findViewById(R.id.image);
-            container = (LinearLayout) itemView.findViewById(R.id.container);
+            container = itemView.findViewById(R.id.container);
             deleteButton = (ImageView) itemView.findViewById(R.id.close_button);
         }
     }

@@ -1,11 +1,13 @@
 package com.blackcj.fitdata.database;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.IntentSender;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.design.widget.AppBarLayout;
 import android.util.Log;
 
 import com.blackcj.fitdata.Utilities;
@@ -30,8 +32,11 @@ import com.google.android.gms.fitness.result.DataReadResult;
 
 import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static nl.qbusict.cupboard.CupboardFactory.cupboard;
@@ -47,13 +52,56 @@ public class DataManager {
     public static final String DATE_FORMAT = "MM.dd h:mm a";
 
     private WeakReference<SQLiteDatabase> mDb;
-    private WeakReference<IDataManager> mContext;
+    private WeakReference<Context> mApplicationContext;
     private GoogleApiClient mClient;
+    private final List<WeakReference<IDataManager>> mListeners;
 
-    public DataManager(SQLiteDatabase db, IDataManager context) {
+    public DataManager(SQLiteDatabase db, Activity context) {
         mDb = new WeakReference<>(db);
-        mContext = new WeakReference<>(context);
-        buildFitnessClient();
+        mApplicationContext = new WeakReference<>(context.getApplicationContext());
+        this.mListeners = new ArrayList<>();
+        buildFitnessClient(context);
+    }
+
+    private void notifyListeners() {
+        int i = 0;
+        for(int z = this.mListeners.size(); i < z; ++i) {
+            WeakReference<IDataManager> ref = this.mListeners.get(i);
+            if(ref != null) {
+                // Do something
+            }
+        }
+    }
+
+    public void addListener(IDataManager listener) {
+        int i = 0;
+
+        for(int z = this.mListeners.size(); i < z; ++i) {
+            WeakReference ref = (WeakReference)this.mListeners.get(i);
+            if(ref != null && ref.get() == listener) {
+                return;
+            }
+        }
+
+        this.mListeners.add(new WeakReference<>(listener));
+    }
+
+    public void removeListener(IDataManager listener) {
+        Iterator i = this.mListeners.iterator();
+
+        while(true) {
+            AppBarLayout.OnOffsetChangedListener item;
+            do {
+                if(!i.hasNext()) {
+                    return;
+                }
+
+                WeakReference ref = (WeakReference)i.next();
+                item = (AppBarLayout.OnOffsetChangedListener)ref.get();
+            } while(item != listener && item != null);
+
+            i.remove();
+        }
     }
 
     public void connect() {
@@ -78,21 +126,29 @@ public class DataManager {
         }
     }
 
+    private Context getApplicationContext() {
+        if (mApplicationContext != null) {
+            Context context = mApplicationContext.get();
+            if (context != null) {
+                return context;
+            }
+        }
+        return null;
+    }
+
     public void refreshData() {
         if (mClient.isConnected()) {
-            if (mContext != null) {
-                IDataManager context = mContext.get();
-                if (context != null) {
-                    //mDb.execSQL("DELETE FROM " + Workout.class.getSimpleName());
-                    UserPreferences.setBackgroundLoadComplete(context.getActivity().getApplicationContext(), false);
-                    UserPreferences.setLastSync(context.getActivity().getApplicationContext(), 0);
-                    populateHistoricalData();
-                }
+            Context context = getApplicationContext();
+            if (context != null) {
+                //mDb.execSQL("DELETE FROM " + Workout.class.getSimpleName());
+                UserPreferences.setBackgroundLoadComplete(context, false);
+                UserPreferences.setLastSync(context, 0);
+                populateHistoricalData();
             }
         }
     }
 
-    public void deleteWorkout(Workout workout) {
+    public void deleteWorkout(final Workout workout) {
         // Set a start and end time for our data, using a start time of 1 day before this moment.
         long endTime = workout.start + workout.duration;
         long startTime = workout.start;
@@ -123,20 +179,19 @@ public class DataManager {
                     @Override
                     public void onResult(Status status) {
                         if (status.isSuccess()) {
-                            Log.i(TAG, "Successfully deleted all data");
+                            Log.i(TAG, "Successfully deleted: " + workout.toString());
                         } else {
                             // The deletion will fail if the requesting app tries to delete data
                             // that it did not insert.
-                            Log.i(TAG, "Failed to delete all data");
+                            Log.i(TAG, "Failed to delete workout");
                         }
                     }
                 });
-        if (mContext != null) {
-            IDataManager context = mContext.get();
-            if(context != null) {
-                UserPreferences.setLastSync(context.getActivity().getApplicationContext(), 0);
-            }
+        Context context = getApplicationContext();
+        if(context != null) {
+            UserPreferences.setLastSync(context, workout.start - (1000 * 60 * 60 * 24));
         }
+        populateHistoricalData();
     }
 
     public void populateHistoricalData() {
@@ -171,30 +226,28 @@ public class DataManager {
             // await() to prevent hanging that can occur from the service being shutdown because
             // of low memory or other conditions.
             Log.i(TAG, "Inserting the session in the History API");
-            if (mContext != null) {
-                IDataManager context = mContext.get();
-                if(context != null) {
-                    com.google.android.gms.common.api.Status insertStatus =
-                            Fitness.SessionsApi.insertSession(mClient, DataQueries.createSession(workout.start, workout.start + workout.duration, workout.stepCount, activityName, context.getActivity().getPackageName()))
-                                    .await(1, TimeUnit.MINUTES);
+            Context context = getApplicationContext();
+            if(context != null) {
+                com.google.android.gms.common.api.Status insertStatus =
+                        Fitness.SessionsApi.insertSession(mClient, DataQueries.createSession(workout.start, workout.start + workout.duration, workout.stepCount, activityName, context.getPackageName()))
+                                .await(1, TimeUnit.MINUTES);
 
-                    // Before querying the session, check to see if the insertion succeeded.
-                    if (!insertStatus.isSuccess()) {
-                        Log.i(TAG, "There was a problem inserting the session: " +
-                                insertStatus.getStatusMessage());
-                        return null;
-                    }
-
-                    // At this point, the session has been inserted and can be read.
-                    Log.i(TAG, "Session insert was successful!");
-
-
-                    //cupboard().withDatabase(mDb).put(workout);
-                    UserPreferences.setBackgroundLoadComplete(context.getActivity().getApplicationContext(), false);
-                    UserPreferences.setLastSync(context.getActivity().getApplicationContext(), workout.start - (1000 * 60 * 60 * 24));
-
-                    //populateHistoricalData();
+                // Before querying the session, check to see if the insertion succeeded.
+                if (!insertStatus.isSuccess()) {
+                    Log.i(TAG, "There was a problem inserting the session: " +
+                            insertStatus.getStatusMessage());
+                    return null;
                 }
+
+                // At this point, the session has been inserted and can be read.
+                Log.i(TAG, "Session insert was successful!");
+
+
+                //cupboard().withDatabase(mDb).put(workout);
+                UserPreferences.setBackgroundLoadComplete(context, false);
+                UserPreferences.setLastSync(context, workout.start - (1000 * 60 * 60 * 24));
+
+                populateHistoricalData();
             }
 
             return  null;
@@ -213,28 +266,26 @@ public class DataManager {
             // await() to prevent hanging that can occur from the service being shutdown because
             // of low memory or other conditions.
             Log.i(TAG, "Inserting the dataset in the History API");
-            if (mContext != null) {
-                IDataManager context = mContext.get();
-                if (context != null) {
-                    com.google.android.gms.common.api.Status insertStatus =
-                            Fitness.HistoryApi.insertData(mClient, DataQueries.createActivityDataSet(workout.start, workout.start + workout.duration, activityName, context.getActivity().getPackageName()))
-                                    .await(1, TimeUnit.MINUTES);
+            Context context = getApplicationContext();
+            if (context != null) {
+                com.google.android.gms.common.api.Status insertStatus =
+                        Fitness.HistoryApi.insertData(mClient, DataQueries.createActivityDataSet(workout.start, workout.start + workout.duration, activityName, context.getPackageName()))
+                                .await(1, TimeUnit.MINUTES);
 
-                    // Before querying the session, check to see if the insertion succeeded.
-                    if (!insertStatus.isSuccess()) {
-                        Log.i(TAG, "There was a problem inserting the dataset: " +
-                                insertStatus.getStatusMessage());
-                        return null;
-                    }
-
-                    // At this point, the session has been inserted and can be read.
-                    Log.i(TAG, "Data insert was successful!");
-
-                    UserPreferences.setBackgroundLoadComplete(context.getActivity().getApplicationContext(), false);
-                    UserPreferences.setLastSync(context.getActivity().getApplicationContext(), workout.start - (1000 * 60 * 60 * 24));
-
-                    //populateHistoricalData();
+                // Before querying the session, check to see if the insertion succeeded.
+                if (!insertStatus.isSuccess()) {
+                    Log.i(TAG, "There was a problem inserting the dataset: " +
+                            insertStatus.getStatusMessage());
+                    return null;
                 }
+
+                // At this point, the session has been inserted and can be read.
+                Log.i(TAG, "Data insert was successful!");
+
+                UserPreferences.setBackgroundLoadComplete(context, false);
+                UserPreferences.setLastSync(context, workout.start - (1000 * 60 * 60 * 24));
+
+                //populateHistoricalData();
             }
 
             return  null;
@@ -260,85 +311,81 @@ public class DataManager {
      *  can address. Examples of this include the user never having signed in before, or
      *  having multiple accounts on the device and needing to specify which account to use, etc.
      */
-    private void buildFitnessClient() {
-        if (mContext != null) {
-            IDataManager context = mContext.get();
-            if (context != null) {
-                // Create the Google API Client
-                mClient = new GoogleApiClient.Builder(context.getActivity())
-                        .addApi(Fitness.HISTORY_API)
-                        .addApi(Fitness.SESSIONS_API)
-                        .addScope(new Scope(Scopes.FITNESS_ACTIVITY_READ_WRITE))
-                        .addConnectionCallbacks(
-                                new GoogleApiClient.ConnectionCallbacks() {
-                                    @Override
-                                    public void onConnected(Bundle bundle) {
-                                        Log.i(TAG, "Connected!!!");
-                                        // Now you can make calls to the Fitness APIs.  What to do?
-                                        // Look at some data!!
+    private void buildFitnessClient(final Activity context) {
+        if (context != null) {
+            // Create the Google API Client
+            mClient = new GoogleApiClient.Builder(context)
+                    .addApi(Fitness.HISTORY_API)
+                    .addApi(Fitness.SESSIONS_API)
+                    .addScope(new Scope(Scopes.FITNESS_ACTIVITY_READ_WRITE))
+                    .addConnectionCallbacks(
+                            new GoogleApiClient.ConnectionCallbacks() {
+                                @Override
+                                public void onConnected(Bundle bundle) {
+                                    Log.i(TAG, "Connected!!!");
+                                    // Now you can make calls to the Fitness APIs.  What to do?
+                                    // Look at some data!!
 
-                                        connected = true;
-                                        onConnect();
+                                    connected = true;
+                                    onConnect();
 
-                                    }
-
-                                    @Override
-                                    public void onConnectionSuspended(int i) {
-                                        // If your connection to the sensor gets lost at some point,
-                                        // you'll be able to determine the reason and react to it here.
-                                        if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_NETWORK_LOST) {
-                                            Log.i(TAG, "Connection lost.  Cause: Network Lost.");
-                                        } else if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_SERVICE_DISCONNECTED) {
-                                            Log.i(TAG, "Connection lost.  Reason: Service Disconnected");
-                                        }
-                                        connected = false;
-                                    }
                                 }
-                        )
-                        .addOnConnectionFailedListener(
-                                new GoogleApiClient.OnConnectionFailedListener() {
-                                    // Called whenever the API client fails to connect.
-                                    @Override
-                                    public void onConnectionFailed(ConnectionResult result) {
-                                        Log.i(TAG, "Connection failed. Cause: " + result.toString());
-                                        if (!result.hasResolution()) {
-                                            // Show the localized error dialog
-                                            IDataManager context = mContext.get();
+
+                                @Override
+                                public void onConnectionSuspended(int i) {
+                                    // If your connection to the sensor gets lost at some point,
+                                    // you'll be able to determine the reason and react to it here.
+                                    if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_NETWORK_LOST) {
+                                        Log.i(TAG, "Connection lost.  Cause: Network Lost.");
+                                    } else if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_SERVICE_DISCONNECTED) {
+                                        Log.i(TAG, "Connection lost.  Reason: Service Disconnected");
+                                    }
+                                    connected = false;
+                                }
+                            }
+                    )
+                    .addOnConnectionFailedListener(
+                            new GoogleApiClient.OnConnectionFailedListener() {
+                                // Called whenever the API client fails to connect.
+                                @Override
+                                public void onConnectionFailed(ConnectionResult result) {
+                                    Log.i(TAG, "Connection failed. Cause: " + result.toString());
+                                    if (!result.hasResolution()) {
+                                        // Show the localized error dialog
+                                        if (context != null) {
+                                            GooglePlayServicesUtil.getErrorDialog(result.getErrorCode(),
+                                                    context, 0).show();
+
+                                        }
+                                        return;
+                                    }
+                                    // The failure has a resolution. Resolve it.
+                                    // Called typically when the app is not yet authorized, and an
+                                    // authorization dialog is displayed to the user.
+                                    if (!authInProgress) {
+                                        try {
+                                            Log.i(TAG, "Attempting to resolve failed connection");
                                             if (context != null) {
-                                                GooglePlayServicesUtil.getErrorDialog(result.getErrorCode(),
-                                                        context.getActivity(), 0).show();
-
+                                                authInProgress = true;
+                                                result.startResolutionForResult(context,
+                                                        REQUEST_OAUTH);
                                             }
-                                            return;
-                                        }
-                                        // The failure has a resolution. Resolve it.
-                                        // Called typically when the app is not yet authorized, and an
-                                        // authorization dialog is displayed to the user.
-                                        if (!authInProgress) {
-                                            try {
-                                                Log.i(TAG, "Attempting to resolve failed connection");
-                                                IDataManager context = mContext.get();
-                                                if (context != null) {
-                                                    authInProgress = true;
-                                                    result.startResolutionForResult(context.getActivity(),
-                                                            REQUEST_OAUTH);
-                                                }
-                                            } catch (IntentSender.SendIntentException e) {
-                                                Log.e(TAG,
-                                                        "Exception while starting resolution activity", e);
-                                            }
+                                        } catch (IntentSender.SendIntentException e) {
+                                            Log.e(TAG,
+                                                    "Exception while starting resolution activity", e);
                                         }
                                     }
                                 }
-                        )
-                        .build();
-            }
+                            }
+                    )
+                    .build();
         }
+
     }
 
     public void onConnect() {
-        // Grabs 30 days worth of data
-        populateHistoricalData();
+        // TODO: Only populate history data on first load.
+        //populateHistoricalData();
         // Data load not complete, could take a while so lets show some data
         //populateReport();
     }
@@ -355,124 +402,114 @@ public class DataManager {
             //cal.add(Calendar.HOUR_OF_DAY, -2);
             long endTime = cal.getTimeInMillis();
             long startTime;
-            if (mContext != null) {
-                IDataManager context = mContext.get();
-                if (context != null) {
-                    if (UserPreferences.getBackgroundLoadComplete(context.getActivity().getApplicationContext())) {
-                        Log.i(TAG, "Fast data read");
-                        Workout w;
-                        if (mDb != null) {
-                            SQLiteDatabase db = mDb.get();
-                            if (db != null) {
-                                w = cupboard().withDatabase(db).query(Workout.class).orderBy("start DESC").get();
-                            } else {
-                                Log.w(TAG, "Warning: db is null");
-                                return null;
-                            }
-                        } else {
-                            Log.w(TAG, "Warning: db is null");
-                            return null;
-                        }
+            Context context = getApplicationContext();
+            if (context != null) {
+                long lastSync = UserPreferences.getLastSync(context);
+                if (lastSync != 0) {
+                    Log.i(TAG, "Fast data read starting: " + Utilities.getTimeDateString(lastSync));
+                    startTime = lastSync; // Go back 8 hours just to be safe
+                } else {
+                    Log.i(TAG, "Slow data read");
+                    cal.add(Calendar.DAY_OF_YEAR, -90);
+                    startTime = cal.getTimeInMillis();
+                }
 
-                        startTime = w.start - 1000 * 60 * 60 * 8; // Go back 8 hours just to be safe
-                    } else {
-                        Log.i(TAG, "Slow data read");
-                        cal.add(Calendar.DAY_OF_YEAR, -90);
-                        startTime = cal.getTimeInMillis();
-                    }
+                SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
 
-                    SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
+                Log.i(TAG, "Range Start: " + dateFormat.format(startTime));
+                Log.i(TAG, "Range End: " + dateFormat.format(endTime));
 
-                    Log.i(TAG, "Range Start: " + dateFormat.format(startTime));
-                    Log.i(TAG, "Range End: " + dateFormat.format(endTime));
-
-                    // Load today
-                    long dayStart = Utilities.getTimeFrameStart(Utilities.TimeFrame.BEGINNING_OF_DAY);
-                    if(startTime < dayStart) {
-                        Log.i(TAG, "Loading today");
-                        // Estimated steps and duration by Activity
-                        DataReadRequest activitySegmentRequest = DataQueries.queryActivitySegment(dayStart, endTime);
-                        DataReadResult dataReadResult = Fitness.HistoryApi.readData(mClient, activitySegmentRequest).await(1, TimeUnit.MINUTES);
-                        writeActivityDataToCache(dataReadResult);
-                        endTime = dayStart;
-                    }
-                    // Load week
-                    long weekStart = Utilities.getTimeFrameStart(Utilities.TimeFrame.BEGINNING_OF_WEEK);
-                    if(startTime < weekStart) {
-                        Log.i(TAG, "Loading week");
-                        // Estimated steps and duration by Activity
-                        DataReadRequest activitySegmentRequest = DataQueries.queryActivitySegment(weekStart, endTime);
-                        DataReadResult dataReadResult = Fitness.HistoryApi.readData(mClient, activitySegmentRequest).await(1, TimeUnit.MINUTES);
-                        writeActivityDataToCache(dataReadResult);
-                        endTime = weekStart;
-                    }
-
-                    Log.i(TAG, "Loading month");
-                    // Load rest
-                    DataReadRequest activitySegmentRequest = DataQueries.queryActivitySegment(startTime, endTime);
+                // Load today
+                long dayStart = Utilities.getTimeFrameStart(Utilities.TimeFrame.BEGINNING_OF_DAY);
+                if(startTime < dayStart) {
+                    Log.i(TAG, "Loading today");
+                    // Estimated steps and duration by Activity
+                    DataReadRequest activitySegmentRequest = DataQueries.queryActivitySegment(dayStart, endTime);
                     DataReadResult dataReadResult = Fitness.HistoryApi.readData(mClient, activitySegmentRequest).await(1, TimeUnit.MINUTES);
                     writeActivityDataToCache(dataReadResult);
+                    endTime = dayStart;
+                }
+                // Load week
+                long weekStart = Utilities.getTimeFrameStart(Utilities.TimeFrame.BEGINNING_OF_WEEK);
+                if(startTime < weekStart) {
+                    Log.i(TAG, "Loading week");
+                    // Estimated steps and duration by Activity
+                    DataReadRequest activitySegmentRequest = DataQueries.queryActivitySegment(weekStart, endTime);
+                    DataReadResult dataReadResult = Fitness.HistoryApi.readData(mClient, activitySegmentRequest).await(1, TimeUnit.MINUTES);
+                    writeActivityDataToCache(dataReadResult);
+                    endTime = weekStart;
+                }
+
+                Log.i(TAG, "Loading month");
+                // Load rest
+                DataReadRequest activitySegmentRequest = DataQueries.queryActivitySegment(startTime, endTime);
+                DataReadResult dataReadResult = Fitness.HistoryApi.readData(mClient, activitySegmentRequest).await(1, TimeUnit.MINUTES);
+                writeActivityDataToCache(dataReadResult);
 
 
-                    cal.setTime(now);
-                    endTime = cal.getTimeInMillis();
-                    cal.set(Calendar.HOUR_OF_DAY, 1);
-                    cal.set(Calendar.MINUTE, 0);
-                    cal.set(Calendar.SECOND, 0);
-                    cal.set(Calendar.MILLISECOND, 0);
-                    startTime = cal.getTimeInMillis();
+                cal.setTime(now);
+                endTime = cal.getTimeInMillis();
+                cal.set(Calendar.HOUR_OF_DAY, 1);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                startTime = cal.getTimeInMillis();
 
-                    int numberOfDays = 90;
-                    long lastSync = UserPreferences.getLastSync(context.getActivity().getApplicationContext());
-                    if (lastSync != 0) {
-                        if (lastSync < startTime) {
-                            double diff =  startTime - lastSync;
-                            if (diff / (1000 * 60 * 60 * 24) < 30) {
-                                numberOfDays = (int)Math.floor(diff / (1000 * 60 * 60 * 24));
-                                numberOfDays += 1;
-                            }
-                        } else {
-                            numberOfDays = 2;
+                int numberOfDays = 90;
+
+                if (lastSync != 0) {
+                    if (lastSync < startTime) {
+                        double diff =  startTime - lastSync;
+                        if (diff / (1000 * 60 * 60 * 24) < 30) {
+                            numberOfDays = (int)Math.floor(diff / (1000 * 60 * 60 * 24));
+                            numberOfDays += 1;
                         }
+                    } else {
+                        numberOfDays = 2;
                     }
-                    Log.i(TAG, "Loading " + numberOfDays + " days step count");
-                    for (int i = 0; i < numberOfDays; i++) {
-                        DataReadRequest stepCountRequest = DataQueries.queryStepEstimate(startTime, endTime);
-                        DataReadResult stepCountReadResult = Fitness.HistoryApi.readData(mClient, stepCountRequest).await(1, TimeUnit.MINUTES);
-                        int stepCount = countStepData(stepCountReadResult);
-                        Workout workout = new Workout();
-                        workout.start = startTime;
-                        workout._id = startTime;
-                        workout.type = WorkoutTypes.STEP_COUNT.getValue();
-                        workout.stepCount = stepCount;
-                        //workout.duration = 1000*60*10;
-                        Log.i(TAG, "Step count: " + stepCount);
-                        if (mDb != null) {
-                            SQLiteDatabase db = mDb.get();
-                            if (db != null) {
-                                cupboard().withDatabase(db).put(workout);
-                            } else {
-                                Log.w(TAG, "Warning: db is null");
-                                return null;
-                            }
+                }
+                Log.i(TAG, "Loading " + numberOfDays + " days step count");
+                for (int i = 0; i < numberOfDays; i++) {
+                    DataReadRequest stepCountRequest = DataQueries.queryStepEstimate(startTime, endTime);
+                    DataReadResult stepCountReadResult = Fitness.HistoryApi.readData(mClient, stepCountRequest).await(1, TimeUnit.MINUTES);
+                    int stepCount = countStepData(stepCountReadResult);
+                    Workout workout = new Workout();
+                    workout.start = startTime;
+                    workout._id = startTime;
+                    workout.type = WorkoutTypes.STEP_COUNT.getValue();
+                    workout.stepCount = stepCount;
+                    //workout.duration = 1000*60*10;
+                    Log.i(TAG, "Step count: " + stepCount);
+                    if (mDb != null) {
+                        SQLiteDatabase db = mDb.get();
+                        if (db != null && db.isOpen()) {
+                            cupboard().withDatabase(db).put(workout);
                         } else {
                             Log.w(TAG, "Warning: db is null");
                             return null;
                         }
-
-                        endTime = startTime;
-                        cal.add(Calendar.DAY_OF_YEAR, -1);
-                        startTime = cal.getTimeInMillis();
+                    } else {
+                        Log.w(TAG, "Warning: db is null");
+                        return null;
                     }
-                    cal.setTime(now);
-                    Log.i(TAG, "Background load complete");
-                    UserPreferences.setBackgroundLoadComplete(context.getActivity().getApplicationContext(), true);
-                    UserPreferences.setLastSync(context.getActivity().getApplicationContext(), cal.getTimeInMillis());
 
-                    // Read cached data and calculate real time step estimates
-                    //populateReport();
+                    endTime = startTime;
+                    cal.add(Calendar.DAY_OF_YEAR, -1);
+                    startTime = cal.getTimeInMillis();
                 }
+                cal.setTime(now);
+                Log.i(TAG, "Background load complete");
+                if (UserPreferences.getBackgroundLoadComplete(context)) {
+                    UserPreferences.setLastSync(context, cal.getTimeInMillis());
+                } else {
+                    UserPreferences.setBackgroundLoadComplete(context, true);
+                }
+
+
+                // Read cached data and calculate real time step estimates
+                //populateReport();
             }
+
             return null;
         }
     }
@@ -503,7 +540,7 @@ public class DataManager {
                     Workout workout;
                     if (mDb != null) {
                         SQLiteDatabase db = mDb.get();
-                        if (db != null) {
+                        if (db != null && db.isOpen()) {
                             workout = cupboard().withDatabase(db).get(Workout.class, startTime);
                         } else {
                             Log.w(TAG, "Warning: db is null");
@@ -518,39 +555,38 @@ public class DataManager {
                     // When the workout is null, we need to cache it. If the background task has completed,
                     // then we have at most 8 - 12 hours of data. Recent data is likely to change so over-
                     // write it.
-                    if (mContext != null) {
-                        IDataManager context = mContext.get();
-                        if (context != null) {
-                            if (workout == null || UserPreferences.getBackgroundLoadComplete(context.getActivity().getApplicationContext())) {
-                                long endTime = dp.getEndTime(TimeUnit.MILLISECONDS);
-                                DataReadRequest readRequest = DataQueries.queryStepCount(startTime, endTime);
-                                DataReadResult dataReadResult = Fitness.HistoryApi.readData(mClient, readRequest).await(1, TimeUnit.MINUTES);
-                                int stepCount = countStepData(dataReadResult);
-                                workout = new Workout();
-                                workout._id = startTime;
-                                workout.start = startTime;
-                                workout.duration = endTime - startTime;
-                                workout.stepCount = stepCount;
-                                workout.type = activity;
-                                //Log.v("MainActivity", "Put Cache: " + WorkoutTypes.getWorkOutTextById(workout.type) + " " + workout.duration);
-                                if (mDb != null) {
-                                    SQLiteDatabase db = mDb.get();
-                                    if (db != null) {
-                                        cupboard().withDatabase(db).put(workout);
-                                    } else {
-                                        Log.w(TAG, "Warning: db is null");
-                                    }
+                    Context context = getApplicationContext();
+                    if (context != null) {
+                        if (workout == null || UserPreferences.getBackgroundLoadComplete(context)) {
+                            long endTime = dp.getEndTime(TimeUnit.MILLISECONDS);
+                            DataReadRequest readRequest = DataQueries.queryStepCount(startTime, endTime);
+                            DataReadResult dataReadResult = Fitness.HistoryApi.readData(mClient, readRequest).await(1, TimeUnit.MINUTES);
+                            int stepCount = countStepData(dataReadResult);
+                            workout = new Workout();
+                            workout._id = startTime;
+                            workout.start = startTime;
+                            workout.duration = endTime - startTime;
+                            workout.stepCount = stepCount;
+                            workout.type = activity;
+                            //Log.v("MainActivity", "Put Cache: " + WorkoutTypes.getWorkOutTextById(workout.type) + " " + workout.duration);
+                            if (mDb != null) {
+                                SQLiteDatabase db = mDb.get();
+                                if (db != null) {
+                                    cupboard().withDatabase(db).put(workout);
                                 } else {
                                     Log.w(TAG, "Warning: db is null");
                                 }
-
-                                wroteDataToCache = true;
                             } else {
-                                // Do not overwrite data if the initial load is in progress. This would take too
-                                // long and prevent us from accumulating a base set of data.
+                                Log.w(TAG, "Warning: db is null");
                             }
+
+                            wroteDataToCache = true;
+                        } else {
+                            // Do not overwrite data if the initial load is in progress. This would take too
+                            // long and prevent us from accumulating a base set of data.
                         }
                     }
+
                 }
             }
         }

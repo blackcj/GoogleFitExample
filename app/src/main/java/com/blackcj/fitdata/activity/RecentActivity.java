@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.ResultReceiver;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
@@ -42,6 +43,7 @@ public class RecentActivity extends BaseActivity implements DataManager.IDataMan
     private CupboardSQLiteOpenHelper mHelper;
     private DataManager mDataManager;
     private Cursor mCursor;
+    private Workout lastWorkout;
 
     @Bind(R.id.container) View container;
 
@@ -66,7 +68,7 @@ public class RecentActivity extends BaseActivity implements DataManager.IDataMan
         transaction.replace(R.id.placeholder, fragment, RecentFragment.TAG);
         transaction.commit();
 
-        mCursor = cupboard().withDatabase(mDb).query(Workout.class).withSelection("type != ?", "" + 3).orderBy("start DESC").query().getCursor();
+        mCursor = cupboard().withDatabase(mDb).query(Workout.class).withSelection("type != ? AND type != ?", "3", "-2").orderBy("start DESC").limit(200).query().getCursor();
 
     }
 
@@ -114,10 +116,6 @@ public class RecentActivity extends BaseActivity implements DataManager.IDataMan
         switch (id) {
             case android.R.id.home:
                 finishAfterTransition();
-                // Reverse the animation back to the previous view.
-                //finish();
-                //push from top to bottom
-                //overridePendingTransition(R.anim.no_anim, R.anim.exit_anim);
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -138,11 +136,27 @@ public class RecentActivity extends BaseActivity implements DataManager.IDataMan
 
     @Override
     public void removeData(Workout workout) {
-        Snackbar.make(container, "Removed: " + workout.toString(), Snackbar.LENGTH_LONG).show();
+        lastWorkout = workout;
+        Snackbar.make(container, workout.removeText(), Snackbar.LENGTH_LONG).setAction("UNDO", clickListener).show();
         Log.d(TAG, "Removed: " + workout.toString());
         mDataManager.deleteWorkout(workout);
-        mCursor = cupboard().withDatabase(mDb).query(Workout.class).withSelection("type != ?", "" + 3).orderBy("start DESC").query().getCursor();
+        mCursor = cupboard().withDatabase(mDb).query(Workout.class).withSelection("type != ? AND type != ?", "3", "-2").orderBy("start DESC").limit(200).query().getCursor();
     }
+
+    final View.OnClickListener clickListener = new View.OnClickListener() {
+        public void onClick(View v) {
+            mDataManager.insertData(lastWorkout);
+            Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    mCursor = cupboard().withDatabase(mDb).query(Workout.class).withSelection("type != ? AND type != ?", "3", "-2").orderBy("start DESC").limit(200).query().getCursor();
+                    fragment.swapCursor(mCursor);
+                    Log.d(TAG, "Refresh cursor");
+                }
+            }, 500);
+        }
+    };
 
     @Override
     public Activity getActivity() {
