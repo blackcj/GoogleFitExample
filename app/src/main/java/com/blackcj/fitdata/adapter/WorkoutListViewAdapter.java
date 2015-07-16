@@ -49,7 +49,7 @@ public class WorkoutListViewAdapter extends CursorRecyclerViewAdapter<WorkoutLis
     public void onBindViewHolder(ListViewHolder holder, Cursor cursor) {
         Workout item = cupboard().withCursor(cursor).get(Workout.class);
 
-        holder.text.setText(item.shortText());
+        holder.text.setText(item.toString());
         holder.deleteButton.setTag(item);
 
         //holder.container.setBackgroundColor(WorkoutTypes.getColorById(item.type));

@@ -12,7 +12,7 @@ import java.lang.ref.WeakReference;
  */
 public class CacheResultReceiver extends ResultReceiver {
 
-    public final static String TAG = "SimpleResultReceiver";
+    public final static String TAG = "CacheResultReceiver";
     private WeakReference<Receiver> mReceiver;
 
     public CacheResultReceiver(Handler handler) {

@@ -1,8 +1,9 @@
 package com.blackcj.fitdata.model;
 
 import com.blackcj.fitdata.R;
-import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.FitnessActivities;
+
+import java.util.ArrayList;
 
 /**
  * Created by chris.black on 5/1/15.
@@ -14,14 +15,19 @@ public enum WorkoutTypes {
     TIME(-1),
     IN_VEHICLE(0),
     BIKING(1),
+    ON_FOOT(2),
     STILL(3),
     UNKNOWN(4),
-    WALKING(7), // We are technically using walking for total estimated "steps"
+    WALKING(7),
     RUNNING(8),
     AEROBICS(9),
     GOLF(32),
     KAYAKING(40),
+    CROSS_COUNTRY_SKIING(67),
+    SLEEP(72),
+    SNOWBOARDING(73),
     STRENGTH_TRAINING(80),
+    TENNIS(87),
     WEIGHT_LIFTING(97);
 
     private final int value;
@@ -34,11 +40,40 @@ public enum WorkoutTypes {
         return value;
     }
 
+    public static boolean isActiveWorkout(int id) {
+        boolean result = true;
+        switch (id) {
+            case 0:
+            case 3:
+            case 4:
+            case 72:
+                result = false;
+                break;
+        }
+        return result;
+    }
+
+    public static String getNonActivQuery() {
+        return "";
+    }
+
     public static String getActivityTextById(int id) {
         String result = "Unknown";
         switch (id) {
+            case 0:
+                result = FitnessActivities.IN_VEHICLE;
+                break;
             case 1:
                 result = FitnessActivities.BIKING;
+                break;
+            case 2:
+                result = FitnessActivities.ON_FOOT;
+                break;
+            case 3:
+                result = FitnessActivities.STILL;
+                break;
+            case 4:
+                result = FitnessActivities.UNKNOWN;
                 break;
             case 7:
                 result = FitnessActivities.WALKING;
@@ -46,14 +81,8 @@ public enum WorkoutTypes {
             case 8:
                 result = FitnessActivities.RUNNING;
                 break;
-            case 97:
-                result = FitnessActivities.WEIGHTLIFTING;
-                break;
             case 9:
                 result = FitnessActivities.AEROBICS;
-                break;
-            case 3:
-                result = FitnessActivities.STILL;
                 break;
             case 32:
                 result = FitnessActivities.GOLF;
@@ -61,14 +90,23 @@ public enum WorkoutTypes {
             case 40:
                 result = FitnessActivities.KAYAKING;
                 break;
+            case 67:
+                result = FitnessActivities.SKIING_CROSS_COUNTRY;
+                break;
+            case 72:
+                result = FitnessActivities.SLEEP;
+                break;
+            case 73:
+                result = FitnessActivities.SNOWBOARDING;
+                break;
             case 80:
                 result = FitnessActivities.STRENGTH_TRAINING;
                 break;
-            case 4:
-                result = FitnessActivities.UNKNOWN;
+            case 87:
+                result = FitnessActivities.TENNIS;
                 break;
-            case 0:
-                result = FitnessActivities.IN_VEHICLE;
+            case 97:
+                result = FitnessActivities.WEIGHTLIFTING;
                 break;
             default:
                 result = "ID: " + id + " not defined";
@@ -113,8 +151,20 @@ public enum WorkoutTypes {
             case 40:
                 result = "Kayaking";
                 break;
+            case 67:
+                result = "Cross Country Skiing";
+                break;
+            case 72:
+                result = "Sleeping";
+                break;
+            case 73:
+                result = "Snowboarding";
+                break;
             case 80:
                 result = "Strength training";
+                break;
+            case 87:
+                result = "Tennis";
                 break;
             case 97:
                 result = "Weightlifting";
@@ -146,6 +196,9 @@ public enum WorkoutTypes {
                 break;
             case 7:
                 result = R.color.walking;
+                break;
+            case 32:
+                result = R.color.golfing;
                 break;
         }
         return result;

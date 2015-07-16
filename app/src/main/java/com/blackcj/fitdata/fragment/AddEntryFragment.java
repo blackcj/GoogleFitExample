@@ -33,10 +33,13 @@ import com.blackcj.fitdata.model.Workout;
 import com.blackcj.fitdata.model.WorkoutTypes;
 
 import java.util.Calendar;
+import java.util.Date;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.OnFocusChange;
+import butterknife.OnTouch;
 
 /**
  * Created by chris.black on 6/19/15.
@@ -69,6 +72,9 @@ public class AddEntryFragment extends Fragment {
 
     @Bind(R.id.editInputLayout2)
     TextInputLayout editInputLayout2;
+
+    @Bind(R.id.editInputLayout3)
+    TextInputLayout editInputLayoutTime;
 
     @Bind(R.id.labelText2)
     TextView labelText2;
@@ -146,13 +152,16 @@ public class AddEntryFragment extends Fragment {
             case 0:
             case 1:
             case 3:
-            case 5:
+            case 6:
+            case 8:
+            case 9:
                 editInputLayout2.setVisibility(View.VISIBLE);
                 labelText2.setVisibility(View.VISIBLE);
                 break;
             case 2:
             case 4:
-            case 6:
+            case 5:
+            case 7:
                 editInputLayout2.setVisibility(View.GONE);
                 labelText2.setVisibility(View.GONE);
                 break;
@@ -204,20 +213,27 @@ public class AddEntryFragment extends Fragment {
     int hour;
     int minute;
 
-    @OnClick(R.id.timeTextView) void onTimeSelect() {
 
-        TimePickerDialog mTimePicker;
-        mTimePicker = new TimePickerDialog(this.getActivity(), new TimePickerDialog.OnTimeSetListener() {
-            @Override
-            public void onTimeSet(TimePicker timePicker, int selectedHour, int selectedMinute) {
-                hour = selectedHour;
-                minute = selectedMinute;
-                cal.set(year, month, day, hour, minute);
-                timeTextView.setText(Utilities.getTimeString(cal.getTimeInMillis()));
+    @OnFocusChange(R.id.timeTextView) void onTimeSelect(View v, boolean hasFocus) {
+        if (hasFocus) {
+            TimePickerDialog mTimePicker;
+            mTimePicker = new TimePickerDialog(this.getActivity(), new TimePickerDialog.OnTimeSetListener() {
+                @Override
+                public void onTimeSet(TimePicker timePicker, int selectedHour, int selectedMinute) {
+                    hour = selectedHour;
+                    minute = selectedMinute;
+                    cal.set(year, month, day, hour, minute);
+                    timeTextView.setText(Utilities.getTimeString(cal.getTimeInMillis()));
+                }
+            }, hour, minute, false);
+            mTimePicker.setTitle("Select Time");
+            mTimePicker.show();
+            if (editTextSteps.getVisibility() == View.VISIBLE) {
+                editTextSteps.requestFocus();
+            } else {
+                editTextMinutes.requestFocus();
             }
-        }, hour, minute, false);
-        mTimePicker.setTitle("Select Time");
-        mTimePicker.show();
+        }
     }
 
     public Workout getWorkout() {
@@ -246,23 +262,40 @@ public class AddEntryFragment extends Fragment {
                 workout.type = WorkoutTypes.GOLF.getValue();
                 break;
             case 4:
-                workout.type = WorkoutTypes.KAYAKING.getValue();
-                workout.stepCount = 0;
-                break;
-            case 5:
-                workout.type = WorkoutTypes.STRENGTH_TRAINING.getValue();
-                break;
-            case 6:
                 workout.type = WorkoutTypes.IN_VEHICLE.getValue();
                 workout.stepCount = 0;
                 break;
+            case 5:
+                workout.type = WorkoutTypes.KAYAKING.getValue();
+                workout.stepCount = 0;
+                break;
+            case 6:
+                workout.type = WorkoutTypes.STRENGTH_TRAINING.getValue();
+                break;
+            case 7:
+                workout.type = WorkoutTypes.SLEEP.getValue();
+                workout.stepCount = 0;
+                break;
+            case 8:
+                workout.type = WorkoutTypes.SNOWBOARDING.getValue();
+                break;
+            case 9:
+                workout.type = WorkoutTypes.TENNIS.getValue();
+                break;
+
         }
 
         if (workout.type == WorkoutTypes.WALKING.getValue()) {
             if ((workout.stepCount / 1000) * 10 > workout.duration / (1000 * 60)) {
                 workout = null;
-                editInputLayout.setError("Maximum of 1000 steps per 10 minutes walking");
+                editInputLayout2.setError("Maximum of 1000 steps per 10 minutes walking");
             }
+        }
+        Date now = new Date();
+        cal.setTime(now);
+        if (workout != null && workout.start + workout.duration > cal.getTimeInMillis()) {
+            workout = null;
+            editInputLayoutTime.setError("Can't add entry in the future");
         }
 
         return workout;

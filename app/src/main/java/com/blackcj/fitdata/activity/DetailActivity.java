@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ActivityOptionsCompat;
@@ -27,13 +28,19 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.SpinnerAdapter;
+import android.widget.TextView;
 
 import com.blackcj.fitdata.R;
 import com.blackcj.fitdata.Utilities;
 import com.blackcj.fitdata.adapter.TabPagerAdapter;
+import com.blackcj.fitdata.database.CacheManager;
 import com.blackcj.fitdata.fragment.ReportsFragment;
+import com.blackcj.fitdata.model.SummaryData;
 import com.blackcj.fitdata.model.Workout;
 import com.blackcj.fitdata.model.WorkoutTypes;
+import com.blackcj.fitdata.service.CacheResultReceiver;
+
+import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -42,14 +49,20 @@ import butterknife.ButterKnife;
 /**
  * Created by chris.black on 5/2/15.
  */
-public class DetailActivity extends BaseActivity {
+public class DetailActivity extends BaseActivity implements CacheResultReceiver.Receiver {
 
     private static final String EXTRA_TYPE = "DetailActivity:type";
     private static final String EXTRA_TITLE = "DetailActivity:title";
     private static final String EXTRA_IMAGE = "DetailActivity:image";
 
     @Bind(R.id.spinner) Spinner navigationSpinner;
+    @Bind(R.id.average_text)
+    TextView averageText;
 
+    @Bind(R.id.current_text)
+    TextView currentText;
+
+    private CacheResultReceiver mReciever;
     private ReportsFragment mReportsFragment;
 
 
@@ -57,6 +70,7 @@ public class DetailActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         ButterKnife.bind(this);
+        mReciever = new CacheResultReceiver(new Handler());
         ImageView image = (ImageView) findViewById(R.id.image);
         ViewCompat.setTransitionName(image, EXTRA_IMAGE);
         image.setImageResource(getIntent().getIntExtra(EXTRA_IMAGE, R.drawable.heart_icon));
@@ -106,6 +120,21 @@ public class DetailActivity extends BaseActivity {
         fragmentManager.beginTransaction()
                        .replace(R.id.chart_container, mReportsFragment)
                        .commit();
+
+
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        mReciever.setReceiver(this);
+        CacheManager.getSummary(-2, mReciever, this);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        mReciever.setReceiver(null);
     }
 
     private void updateReport() {
@@ -156,5 +185,17 @@ public class DetailActivity extends BaseActivity {
         intent.putExtra(EXTRA_TITLE, WorkoutTypes.getWorkOutTextById(workout.type));
         intent.putExtra(EXTRA_TYPE, workout.type);
         ActivityCompat.startActivity(activity, intent, options.toBundle());
+    }
+
+    @Override
+    public void onReceiveResult(int resultCode, Bundle resultData) {
+        final SummaryData data = resultData.getParcelable("workoutSummary");
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                averageText.setText("Average steps per day: " + data.averageDailyData);
+                currentText.setText("Steps today: " + data.todayData);
+            }
+        });
     }
 }

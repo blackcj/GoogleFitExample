@@ -1,20 +1,23 @@
 package com.blackcj.fitdata.adapter;
 
+import android.os.Parcelable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
-import android.view.View;
+import android.support.v4.app.FragmentStatePagerAdapter;
+import android.util.Log;
 
 import com.blackcj.fitdata.fragment.PageFragment;
 
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
 /**
  * Created by chris.black on 6/19/15.
  */
-public class TabPagerAdapter extends FragmentPagerAdapter {
+public class TabPagerAdapter extends FragmentStatePagerAdapter {
+
+    public static final String TAG = "TabPagerAdapter";
+
     private Map<Integer, PageFragment> mPageReferenceMap = new HashMap<>();
 
     private static final String[] TITLES = new String[] {
@@ -29,6 +32,7 @@ public class TabPagerAdapter extends FragmentPagerAdapter {
 
     public TabPagerAdapter(FragmentManager fm) {
         super(fm);
+        Log.d(TAG, "INIT");
     }
 
     @Override
@@ -45,14 +49,28 @@ public class TabPagerAdapter extends FragmentPagerAdapter {
     public Fragment getItem(int position) {
         PageFragment myFragment = PageFragment.create(position + 1);
         mPageReferenceMap.put(position, myFragment);
+        //Log.d(TAG, "PUT: " + position);
         return myFragment;
+    }
+
+    @Override
+    public Parcelable saveState() {
+        Log.d(TAG, "SAVE STATE");
+        return null;
+    }
+
+    @Override
+    public void restoreState(Parcelable state, ClassLoader loader) {
+        Log.d(TAG, "RESTORE STATE");
     }
 
     public void destroy() {
         mPageReferenceMap.clear();
+        Log.d(TAG, "DESTROY");
     }
 
     public PageFragment getFragment(int key) {
+        //Log.d(TAG, "GET: " + key);
         return mPageReferenceMap.get(key);
     }
 }

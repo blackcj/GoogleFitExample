@@ -50,7 +50,7 @@ public class ReportsFragment extends BaseFragment {
 
     private BaseReportGraph reportGraph;
     private int multiplier = 1;
-    private int numDays = 60;
+    private int numDays = 45;
     private int numSegments;
     private long millisecondsInSegment;
     private CupboardSQLiteOpenHelper mHelper;
@@ -157,9 +157,9 @@ public class ReportsFragment extends BaseFragment {
         Calendar calendar = Calendar.getInstance();
         int day = calendar.get(Calendar.DAY_OF_WEEK);
         if (groupCount == 1) {
-            numDays = 60;
+            numDays = 45;
         } else {
-            numDays = 60 + day;
+            numDays = 150 + day;
         }
         Log.d(TAG, "GroupCount: " + groupCount + " Number of days: " + numDays);
         multiplier = groupCount;
@@ -267,7 +267,7 @@ public class ReportsFragment extends BaseFragment {
             }
             if (id < numSegments && id >= 0) {
 
-                if (workoutType == WorkoutTypes.TIME.getValue() && workout.type != WorkoutTypes.STEP_COUNT.getValue() && workout.type != WorkoutTypes.STILL.getValue() && workout.type != WorkoutTypes.IN_VEHICLE.getValue()) {
+                if (workoutType == WorkoutTypes.TIME.getValue() && WorkoutTypes.isActiveWorkout(workout.type)) {
                     // Put all data here to show totals
                     if (map.get(workoutType) == null) {
                         Integer[] dataMap = new Integer[numSegments];
@@ -322,6 +322,10 @@ public class ReportsFragment extends BaseFragment {
                 color = getResources().getColor(R.color.running_graph);
             } else if (workoutType == WorkoutTypes.BIKING.getValue()) {
                 color = getResources().getColor(R.color.biking_graph);
+            } else if (workoutType == WorkoutTypes.GOLF.getValue()) {
+                color = getResources().getColor(R.color.golfing_graph);
+            } else if (workoutType == WorkoutTypes.KAYAKING.getValue()) {
+                color = getResources().getColor(R.color.paddling_graph);
             }
             reportGraph.addRenderer(series, getActivity(), color);
             Integer[] dataMap = map.get(workoutType);

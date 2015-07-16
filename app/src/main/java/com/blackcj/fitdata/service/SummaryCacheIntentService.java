@@ -7,34 +7,25 @@ import android.os.Bundle;
 import android.os.ResultReceiver;
 import android.util.Log;
 
-import com.blackcj.fitdata.Utilities;
 import com.blackcj.fitdata.activity.MainActivity;
-import com.blackcj.fitdata.database.CacheManager;
 import com.blackcj.fitdata.database.CupboardSQLiteOpenHelper;
-import com.blackcj.fitdata.database.MockData;
 import com.blackcj.fitdata.model.SummaryData;
-import com.blackcj.fitdata.model.Workout;
 import com.blackcj.fitdata.model.WorkoutReport;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-
-import nl.qbusict.cupboard.QueryResultIterable;
-
-import static nl.qbusict.cupboard.CupboardFactory.cupboard;
 
 /**
- * Created by chris.black on 7/6/15.
+ * Created by chris.black on 7/8/15.
  */
-public class ReadCacheIntentService extends IntentService {
+public class SummaryCacheIntentService  extends IntentService {
 
     private WorkoutReport workoutReport = new WorkoutReport();
     public final static String TAG = "ReadHistoricalService";
     private WeakReference<ResultReceiver> mReceiver;
-    public ReadCacheIntentService() {
+    public SummaryCacheIntentService() {
         super(TAG);
     }
-    private boolean mockData = false;
+    private boolean mockData = true;
 
     @Override
     protected void onHandleIntent(Intent intent) {
@@ -42,28 +33,16 @@ public class ReadCacheIntentService extends IntentService {
         mReceiver = new WeakReference<>(resultReceiver);
         final CupboardSQLiteOpenHelper dbHelper = new CupboardSQLiteOpenHelper(this);
         final SQLiteDatabase mDb = dbHelper.getWritableDatabase();
-        Utilities.TimeFrame mTimeFrame = (Utilities.TimeFrame) intent.getSerializableExtra("TimeFrame");;
-        ArrayList<Workout> report;
+        int workoutType = intent.getIntExtra("WorkoutType", 0);;
+        SummaryData report = new SummaryData();
         if (mockData) {
-            switch (mTimeFrame) {
-                case BEGINNING_OF_DAY: // 1 day
-                    report = MockData.getDailyMockData().getWorkoutData();
-                    break;
-                case BEGINNING_OF_WEEK: // 1 week
-                    report = MockData.getWeeklyMockData().getWorkoutData();
-                    break;
-                case BEGINNING_OF_MONTH: // 1 month
-                    report = MockData.getMonthlyMockData().getWorkoutData();
-                    break;
-                case LAST_MONTH: // 1 month
-                    report = MockData.getMonthlyMockData().getWorkoutData();
-                    break;
-                default:
-                    report = MockData.getDailyMockData().getWorkoutData();
-                    break;
-            }
+            report.activityType = -2;
+            report.averageDailyData = 10234;
+            report.todayData = 4532;
+            report.averageWeeklyData = 70000;
+            report.weekData = 12430;
         } else {
-            long startTime = Utilities.getTimeFrameStart(mTimeFrame);
+            /*
             workoutReport.clearWorkoutData();
             if (!mDb.isOpen()) {
                 Log.w(TAG, "db is closed!");
@@ -76,13 +55,12 @@ public class ReadCacheIntentService extends IntentService {
                 }
             }
             itr.close();
-            report = workoutReport.getWorkoutData();
-
+            */
         }
         ResultReceiver receiver = mReceiver.get();
         if(receiver != null) {
             Bundle bundle = new Bundle();
-            bundle.putParcelableArrayList("workoutList", report);
+            bundle.putParcelable("workoutSummary", report);
             receiver.send(200, bundle);
         }else {
             Log.w(TAG, "Weak listener is NULL.");

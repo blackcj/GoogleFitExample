@@ -10,6 +10,7 @@ import com.blackcj.fitdata.Utilities;
 import com.blackcj.fitdata.activity.MainActivity;
 import com.blackcj.fitdata.model.Workout;
 import com.blackcj.fitdata.service.ReadCacheIntentService;
+import com.blackcj.fitdata.service.SummaryCacheIntentService;
 
 import nl.qbusict.cupboard.QueryResultIterable;
 
@@ -28,6 +29,13 @@ public class CacheManager {
     public static void getReport(Utilities.TimeFrame timeFrame, ResultReceiver callback, Context context) {
         Intent intentService = new Intent(context.getApplicationContext(), ReadCacheIntentService.class);
         intentService.putExtra("TimeFrame", timeFrame);
+        intentService.putExtra(MainActivity.RECEIVER_TAG, callback);
+        context.startService(intentService);
+    }
+
+    public static void getSummary(int workoutType, ResultReceiver callback, Context context) {
+        Intent intentService = new Intent(context.getApplicationContext(), SummaryCacheIntentService.class);
+        intentService.putExtra("WorkoutType", workoutType);
         intentService.putExtra(MainActivity.RECEIVER_TAG, callback);
         context.startService(intentService);
     }

@@ -35,9 +35,12 @@
         <item>Running</item>
         <item>Biking</item>
         <item>Golfing</item>
+        <item>In Vehicle</item>
         <item>Kayaking</item>
         <item>Strength Training</item>
-        <item>In Vehicle</item>
+        <item>Sleep</item>
+        <item>Snowboarding</item>
+        <item>Tennis</item>
     </string-array>
 
     <string-array name="graph_types">

@@ -68,7 +68,7 @@
     <style name="form_divider">
         <item name="android:layout_width">172dp</item>
         <item name="android:layout_height">1dp</item>
-        <item name="android:layout_marginLeft">30dp</item>
+        <item name="android:layout_marginLeft">34dp</item>
         <item name="android:background">@color/colorAccent</item>
     </style>
 

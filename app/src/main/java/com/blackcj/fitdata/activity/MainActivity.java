@@ -6,9 +6,11 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.MenuItemCompat;
@@ -20,6 +22,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.Animation;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.ScaleAnimation;
 
 import com.blackcj.fitdata.adapter.TabPagerAdapter;
 import com.blackcj.fitdata.R;
@@ -28,6 +34,8 @@ import com.blackcj.fitdata.fragment.PageFragment;
 import com.blackcj.fitdata.model.Workout;
 import com.getbase.floatingactionbutton.FloatingActionsMenu;
 import com.google.android.gms.fitness.data.DataSet;
+
+import java.util.ArrayList;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -54,6 +62,7 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     @Bind(R.id.viewPager) ViewPager mViewPager;
     @Bind(R.id.main_overlay) View overlay;
     @Bind(R.id.floatingActionMenu) FloatingActionsMenu floatingActionMenu;
+    @Bind(R.id.floatingActionButton) FloatingActionButton fab;
 
 
     ///////////////////////////////////////
@@ -70,7 +79,7 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
 
         mAdapter = new TabPagerAdapter(this.getSupportFragmentManager());
 
-        final TabLayout tabLayout = (TabLayout) findViewById(R.id.tabLayout);
+        TabLayout tabLayout = (TabLayout) findViewById(R.id.tabLayout);
         tabLayout.setTabsFromPagerAdapter(mAdapter);
         tabLayout.setTabMode(TabLayout.MODE_SCROLLABLE);
 
@@ -79,6 +88,7 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
                 mViewPager.setCurrentItem(tab.getPosition());
+                //animateFab(tab.getPosition());
             }
 
             @Override
@@ -106,6 +116,10 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
         });
 
         floatingActionMenu.setOnFloatingActionsMenuUpdateListener(this);
+    }
+
+    protected void changeFab(int position) {
+
     }
 
     @Override
@@ -149,7 +163,6 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     protected void onDestroy() {
         mAdapter.destroy();
         mDataManager.disconnect();
-        Log.w(TAG, "Closing db");
         super.onDestroy();
     }
 
@@ -289,8 +302,8 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
                 activityType = 3;
         }
 
-
         AddEntryActivity.launch(MainActivity.this, activityType);
+
     }
 
     ///////////////////////////////////////

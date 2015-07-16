@@ -173,10 +173,15 @@ public class DataManager {
     public void refreshData() {
         if (mClient.isConnected()) {
             Context context = getApplicationContext();
+            long syncStart = Utilities.getTimeFrameStart(Utilities.TimeFrame.THIRTY_DAYS);
             if (context != null) {
-                //mDb.execSQL("DELETE FROM " + Workout.class.getSimpleName()); // This deletes all data
+                SQLiteDatabase db = getDatabase();
+                if (db != null && db.isOpen()) {
+                    //db.execSQL("DELETE FROM " + Workout.class.getSimpleName()); // This deletes all data
+                    cupboard().withDatabase(db).delete(Workout.class, "start >= ?", "" + syncStart);
+                }
                 UserPreferences.setBackgroundLoadComplete(context, false);
-                UserPreferences.setLastSync(context, 0);
+                UserPreferences.setLastSync(context, syncStart);
                 populateHistoricalData();
             }
         }
@@ -186,10 +191,10 @@ public class DataManager {
         // Set a start and end time for our data, using a start time of 1 day before this moment.
         long endTime = workout.start + workout.duration;
         long startTime = workout.start;
-
+        long syncStart = workout.start - (1000 * 60 * 60 * 24);
         SQLiteDatabase db = getDatabase();
         if (db != null) {
-            cupboard().withDatabase(db).delete(Workout.class, "start = ?", "" + workout.start);
+            cupboard().withDatabase(db).delete(Workout.class, "start >= ?", "" + syncStart);
         } else {
             Log.w(TAG, "Warning: db is null");
         }
@@ -219,7 +224,7 @@ public class DataManager {
                 });
         Context context = getApplicationContext();
         if(context != null) {
-            UserPreferences.setLastSync(context, workout.start - (1000 * 60 * 60 * 24));
+            UserPreferences.setLastSync(context, syncStart);
         }
         populateHistoricalData();
     }
@@ -485,7 +490,7 @@ public class DataManager {
                 cal.set(Calendar.MILLISECOND, 0);
                 startTime = cal.getTimeInMillis();
 
-                int numberOfDays = 90;
+                int numberOfDays = 150;
 
                 if (lastSync != 0) {
                     if (lastSync < startTime) {
@@ -560,6 +565,7 @@ public class DataManager {
             // Populate db cache with data
             for(Field field : dp.getDataType().getFields()) {
                 if(field.getName().equals("activity") && dp.getDataType().getName().equals("com.google.activity.segment")) {
+                    dp.getVersionCode();
                     long startTime = dp.getStartTime(TimeUnit.MILLISECONDS);
                     int activity = dp.getValue(field).asInt();
                     Workout workout;

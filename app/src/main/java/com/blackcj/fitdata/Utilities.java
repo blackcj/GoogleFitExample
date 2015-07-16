@@ -61,7 +61,8 @@ public class Utilities {
         BEGINNING_OF_WEEK,
         BEGINNING_OF_MONTH,
         LAST_MONTH,
-        BEGINNING_OF_YEAR;
+        BEGINNING_OF_YEAR,
+        THIRTY_DAYS;
         private static TimeFrame[] vals = values();
         public TimeFrame next()
         {
@@ -155,6 +156,13 @@ public class Utilities {
                 cal.set(Calendar.SECOND, 0);
                 cal.set(Calendar.MILLISECOND, 0);
                 cal.set(Calendar.YEAR, 0);
+                break;
+            case THIRTY_DAYS: // 30 days
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                cal.add(Calendar.DAY_OF_YEAR, -30);
                 break;
         }
         return cal.getTimeInMillis();

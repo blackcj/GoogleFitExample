@@ -26,11 +26,15 @@
     <color name="running_graph">#AADE5F8A</color>
     <color name="biking_graph">#AA76C4C7</color>
     <color name="walking_graph">#AAFFA55B</color>
-    <color name="other_graph">#AAFFFFFF</color>
+    <color name="golfing_graph">#AA9BD2A7</color>
+    <color name="paddling_graph">#AAC8B48F</color>
+    <color name="other_graph">#AAEFEFEF</color>
 
     <color name="running">#DE5F8A</color>
     <color name="biking">#76C4C7</color>
     <color name="walking">#FFA55B</color>
+    <color name="golfing">#56AB75</color>
+    <color name="paddling">#C8B48F</color>
     <color name="other">#808080</color>
 
     <color name="running_pressed">#BF5278</color>
