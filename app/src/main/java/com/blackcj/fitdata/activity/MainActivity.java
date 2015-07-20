@@ -13,6 +13,7 @@ import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.view.ViewPager;
@@ -31,6 +32,7 @@ import com.blackcj.fitdata.adapter.TabPagerAdapter;
 import com.blackcj.fitdata.R;
 import com.blackcj.fitdata.database.DataManager;
 import com.blackcj.fitdata.fragment.PageFragment;
+import com.blackcj.fitdata.fragment.SettingsFragment;
 import com.blackcj.fitdata.model.Workout;
 import com.getbase.floatingactionbutton.FloatingActionsMenu;
 import com.google.android.gms.fitness.data.DataSet;
@@ -53,8 +55,8 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     public static final String TAG = "MainActivity";
     public final static String RECEIVER_TAG = "MainActivityReceiver";
     public static boolean active = false;
+    protected DataManager mDataManager;
 
-    private DataManager mDataManager;
     private TabPagerAdapter mAdapter;
 
     @Bind(R.id.coordinatorLayout) CoordinatorLayout coordinatorLayout;
@@ -260,6 +262,11 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
                 mDataManager.refreshData();
                 return true;
             case R.id.action_settings:
+                FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+                transaction.setCustomAnimations(R.anim.enter_anim, R.anim.exit_anim, R.anim.enter_anim, R.anim.exit_anim);
+                transaction.add(R.id.top_container, new SettingsFragment());
+                transaction.addToBackStack("settings");
+                transaction.commit();
                 return true;
             case android.R.id.home:
                 getSupportFragmentManager().popBackStack();
@@ -339,6 +346,13 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
             }
         });
 
+    }
+
+    @Override
+    public void quickDataRead() {
+        if (mDataManager != null) {
+            mDataManager.quickDataRead();
+        }
     }
 
     @Override

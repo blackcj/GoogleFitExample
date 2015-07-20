@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
 import com.blackcj.fitdata.R;
+import com.blackcj.fitdata.database.DataManager;
 
 
 /**
@@ -13,7 +14,7 @@ import com.blackcj.fitdata.R;
  */
 public abstract class BaseActivity extends AppCompatActivity {
 
-    public Toolbar toolbar;
+    protected Toolbar toolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

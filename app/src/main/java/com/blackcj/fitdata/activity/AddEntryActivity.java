@@ -49,7 +49,7 @@ public class AddEntryActivity extends BaseActivity implements DataManager.IDataM
         if (actionBar != null) {
             actionBar.setTitle("Add Entry");
         }
-
+        toolbar.setNavigationIcon(getResources().getDrawable(R.drawable.ic_close_white, null));
         mDataManager = DataManager.getInstance(this);
         mDataManager.connect();
         int activityType = getIntent().getExtras().getInt(ARG_ACTIVITY_TYPE);

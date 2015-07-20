@@ -24,6 +24,36 @@ public class UserPreferences {
         editor.commit();
     }
 
+    public static boolean getCountSteps(Context context) {
+        SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, 0);
+        boolean complete = settings.getBoolean("shouldCountSteps", false);
+        return complete;
+    }
+
+    public static void setCountSteps(Context context, boolean value) {
+        SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, 0);
+        SharedPreferences.Editor editor = settings.edit();
+        editor.putBoolean("shouldCountSteps", value);
+
+        // Commit the edits!
+        editor.commit();
+    }
+
+    public static boolean getActivityTracking(Context context) {
+        SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, 0);
+        boolean complete = settings.getBoolean("shouldTrackActivity", false);
+        return complete;
+    }
+
+    public static void setActivityTracking(Context context, boolean value) {
+        SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, 0);
+        SharedPreferences.Editor editor = settings.edit();
+        editor.putBoolean("shouldTrackActivity", value);
+
+        // Commit the edits!
+        editor.commit();
+    }
+
     public static long getLastSync(Context context) {
         SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, 0);
         long complete = settings.getLong("lastSuccessfulSync", 0);

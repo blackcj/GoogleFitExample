@@ -17,4 +17,5 @@ import java.util.List;
 public interface IMainActivityCallback {
     public void launch(View transitionView, Workout workout);
     public Cursor getCursor();
+    public void quickDataRead();
 }

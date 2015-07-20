@@ -104,6 +104,11 @@ public class RecentActivity extends BaseActivity implements DataManager.IDataMan
     }
 
     @Override
+    public void quickDataRead() {
+
+    }
+
+    @Override
     protected int getLayoutResource() {
         return R.layout.activity_recent;
     }

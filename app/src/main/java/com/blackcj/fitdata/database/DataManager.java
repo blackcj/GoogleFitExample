@@ -7,7 +7,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.design.widget.AppBarLayout;
 import android.util.Log;
 
 import com.blackcj.fitdata.Utilities;
@@ -22,13 +21,18 @@ import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.fitness.Fitness;
+import com.google.android.gms.fitness.FitnessStatusCodes;
 import com.google.android.gms.fitness.data.Bucket;
 import com.google.android.gms.fitness.data.DataPoint;
 import com.google.android.gms.fitness.data.DataSet;
+import com.google.android.gms.fitness.data.DataSource;
+import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.Field;
+import com.google.android.gms.fitness.data.Subscription;
 import com.google.android.gms.fitness.request.DataDeleteRequest;
 import com.google.android.gms.fitness.request.DataReadRequest;
 import com.google.android.gms.fitness.result.DataReadResult;
+import com.google.android.gms.fitness.result.ListSubscriptionsResult;
 
 import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
@@ -170,6 +174,23 @@ public class DataManager {
         return null;
     }
 
+    public void quickDataRead() {
+        if (mClient.isConnected()) {
+            Context context = getApplicationContext();
+            long syncStart = Utilities.getTimeFrameStart(Utilities.TimeFrame.BEGINNING_OF_WEEK);
+            if (context != null) {
+                SQLiteDatabase db = getDatabase();
+                if (db != null && db.isOpen()) {
+                    //db.execSQL("DELETE FROM " + Workout.class.getSimpleName()); // This deletes all data
+                    cupboard().withDatabase(db).delete(Workout.class, "start >= ?", "" + syncStart);
+                }
+                UserPreferences.setBackgroundLoadComplete(context, false);
+                UserPreferences.setLastSync(context, syncStart);
+                populateHistoricalData();
+            }
+        }
+    }
+
     public void refreshData() {
         if (mClient.isConnected()) {
             Context context = getApplicationContext();
@@ -185,6 +206,52 @@ public class DataManager {
                 populateHistoricalData();
             }
         }
+    }
+
+    public void deleteDay() {
+        Calendar cal = Calendar.getInstance();
+        Date now = new Date();
+        cal.setTime(now);
+        // Set a start and end time for our data, using a start time of 1 day before this moment.
+        long endTime = cal.getTimeInMillis();
+        cal.add(Calendar.DAY_OF_YEAR, -1);
+        long startTime = cal.getTimeInMillis();
+        long syncStart = startTime - (1000 * 60 * 60 * 24);
+        SQLiteDatabase db = getDatabase();
+        if (db != null) {
+            cupboard().withDatabase(db).delete(Workout.class, "start >= ?", "" + syncStart);
+        } else {
+            Log.w(TAG, "Warning: db is null");
+        }
+
+        // https://developers.google.com/android/reference/com/google/android/gms/fitness/request/DataDeleteRequest
+        //  Create a delete request object, providing a data type and a time interval
+        DataDeleteRequest request = new DataDeleteRequest.Builder()
+                .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS)
+                .deleteAllData()
+                .deleteAllSessions()
+                .build();
+
+        // Invoke the History API with the Google API client object and delete request, and then
+        // specify a callback that will check the result.
+        Fitness.HistoryApi.deleteData(mClient, request)
+                .setResultCallback(new ResultCallback<Status>() {
+                    @Override
+                    public void onResult(Status status) {
+                        if (status.isSuccess()) {
+                            Log.i(TAG, "Successfully deleted last day of data.");
+                        } else {
+                            // The deletion will fail if the requesting app tries to delete data
+                            // that it did not insert.
+                            Log.i(TAG, "Failed to delete workout");
+                        }
+                    }
+                });
+        Context context = getApplicationContext();
+        if(context != null) {
+            UserPreferences.setLastSync(context, syncStart);
+        }
+        populateHistoricalData();
     }
 
     public void deleteWorkout(final Workout workout) {
@@ -352,6 +419,7 @@ public class DataManager {
             mClient = new GoogleApiClient.Builder(context)
                     .addApi(Fitness.HISTORY_API)
                     .addApi(Fitness.SESSIONS_API)
+                    .addApi(Fitness.RECORDING_API)
                     .addScope(new Scope(Scopes.FITNESS_ACTIVITY_READ_WRITE))
                     .addConnectionCallbacks(
                             new GoogleApiClient.ConnectionCallbacks() {
@@ -423,6 +491,99 @@ public class DataManager {
         //populateHistoricalData();
         // Data load not complete, could take a while so lets show some data
         //populateReport();
+        subscribeSteps();
+    }
+
+    private void listSubscriptions() {
+        Fitness.RecordingApi.listSubscriptions(mClient).setResultCallback(new ResultCallback<ListSubscriptionsResult>() {
+            @Override
+            public void onResult(ListSubscriptionsResult result) {
+                for (Subscription sc : result.getSubscriptions()) {
+                    DataType dt = sc.getDataType();
+                    Log.i(TAG, "found subscription for data type: " + dt.getName());
+                }
+            }
+        });
+    }
+
+    private void unsubscribeAll() {
+        Fitness.RecordingApi.listSubscriptions(mClient).setResultCallback(new ResultCallback<ListSubscriptionsResult>() {
+            @Override
+            public void onResult(ListSubscriptionsResult result) {
+                for (Subscription sc : result.getSubscriptions()) {
+                    DataType dt = sc.getDataType();
+                    Log.i(TAG, "Unsubscribing: " + dt.getName());
+                    Fitness.RecordingApi.unsubscribe(mClient, sc)
+                            .setResultCallback(new ResultCallback<Status>() {
+                                @Override
+                                public void onResult(Status status) {
+                                    if (status.isSuccess()) {
+                                        Log.i(TAG, "Successfully unsubscribed for data type: step count delta");
+                                    } else {
+                                        // Subscription not removed
+                                        Log.i(TAG, "Failed to unsubscribe for data type: step count delta");
+                                    }
+                                }
+                            });
+                }
+            }
+        });
+    }
+
+    private void unsubscribeStepsAndDeleteData() {
+        Context context = getApplicationContext();
+        if (context != null) {
+            Fitness.RecordingApi.unsubscribe(mClient, DataType.TYPE_STEP_COUNT_DELTA)
+                    .setResultCallback(new ResultCallback<Status>() {
+                        @Override
+                        public void onResult(Status status) {
+                            if (status.isSuccess()) {
+                                Log.i(TAG, "Successfully unsubscribed for data type: step count delta");
+                            } else {
+                                // Subscription not removed
+                                Log.i(TAG, "Failed to unsubscribe for data type: step count delta");
+                            }
+                        }
+                    });
+        }
+    }
+
+    private void subscribeSteps() {
+        Context context = getApplicationContext();
+        if (context != null) {
+            Fitness.RecordingApi.subscribe(mClient, DataType.TYPE_STEP_COUNT_DELTA)
+                    .setResultCallback(new ResultCallback<Status>() {
+                        @Override
+                        public void onResult(Status status) {
+                            if (status.isSuccess()) {
+                                if (status.getStatusCode()
+                                        == FitnessStatusCodes.SUCCESS_ALREADY_SUBSCRIBED) {
+                                    Log.i(TAG, "Existing subscription for activity detected.");
+                                } else {
+                                    Log.i(TAG, "Successfully subscribed!");
+                                }
+                            } else {
+                                Log.i(TAG, "There was a problem subscribing.");
+                            }
+                        }
+                    });
+            Fitness.RecordingApi.subscribe(mClient, DataType.TYPE_ACTIVITY_SEGMENT)
+                    .setResultCallback(new ResultCallback<Status>() {
+                        @Override
+                        public void onResult(Status status) {
+                            if (status.isSuccess()) {
+                                if (status.getStatusCode()
+                                        == FitnessStatusCodes.SUCCESS_ALREADY_SUBSCRIBED) {
+                                    Log.i(TAG, "Existing subscription for activity detected.");
+                                } else {
+                                    Log.i(TAG, "Successfully subscribed!");
+                                }
+                            } else {
+                                Log.i(TAG, "There was a problem subscribing.");
+                            }
+                        }
+                    });
+        }
     }
 
     private class ReadHistoricalDataTask extends AsyncTask<Void, Void, Void> {
@@ -456,7 +617,7 @@ public class DataManager {
 
                 // Load today
                 long dayStart = Utilities.getTimeFrameStart(Utilities.TimeFrame.BEGINNING_OF_DAY);
-                if(startTime < dayStart) {
+                if(startTime < dayStart && dayStart < endTime) {
                     Log.i(TAG, "Loading today");
                     // Estimated steps and duration by Activity
                     DataReadRequest activitySegmentRequest = DataQueries.queryActivitySegment(dayStart, endTime);
@@ -464,9 +625,15 @@ public class DataManager {
                     writeActivityDataToCache(dataReadResult);
                     endTime = dayStart;
                 }
+
+
+
                 // Load week
                 long weekStart = Utilities.getTimeFrameStart(Utilities.TimeFrame.BEGINNING_OF_WEEK);
-                if(startTime < weekStart) {
+
+                Log.i(TAG, "Range Start: " + dateFormat.format(weekStart));
+                Log.i(TAG, "Range End: " + dateFormat.format(endTime));
+                if(startTime < weekStart && weekStart < endTime) {
                     Log.i(TAG, "Loading week");
                     // Estimated steps and duration by Activity
                     DataReadRequest activitySegmentRequest = DataQueries.queryActivitySegment(weekStart, endTime);
@@ -477,10 +644,11 @@ public class DataManager {
 
                 Log.i(TAG, "Loading month");
                 // Load rest
-                DataReadRequest activitySegmentRequest = DataQueries.queryActivitySegment(startTime, endTime);
-                DataReadResult dataReadResult = Fitness.HistoryApi.readData(mClient, activitySegmentRequest).await(1, TimeUnit.MINUTES);
-                writeActivityDataToCache(dataReadResult);
-
+                if (startTime < endTime) {
+                    DataReadRequest activitySegmentRequest = DataQueries.queryActivitySegment(startTime, endTime);
+                    DataReadResult dataReadResult = Fitness.HistoryApi.readData(mClient, activitySegmentRequest).await(1, TimeUnit.MINUTES);
+                    writeActivityDataToCache(dataReadResult);
+                }
 
                 cal.setTime(now);
                 endTime = cal.getTimeInMillis();
@@ -565,6 +733,7 @@ public class DataManager {
             // Populate db cache with data
             for(Field field : dp.getDataType().getFields()) {
                 if(field.getName().equals("activity") && dp.getDataType().getName().equals("com.google.activity.segment")) {
+
                     dp.getVersionCode();
                     long startTime = dp.getStartTime(TimeUnit.MILLISECONDS);
                     int activity = dp.getValue(field).asInt();
@@ -642,6 +811,7 @@ public class DataManager {
             // Accumulate step count for estimate
 
             if(dp.getDataType().getName().equals("com.google.step_count.delta")) {
+
                 for (Field field : dp.getDataType().getFields()) {
                     if (dp.getValue(field).asInt() > 0) {
                         dataSteps += dp.getValue(field).asInt();

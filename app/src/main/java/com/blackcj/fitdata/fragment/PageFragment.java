@@ -79,13 +79,17 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                CacheManager.getReport(Utilities.TimeFrame.values()[mPage - 1], mReciever, getActivity());
+                //CacheManager.getReport(Utilities.TimeFrame.values()[mPage - 1], mReciever, getActivity());
+                mCallback.quickDataRead();
             }
         });
         mSwipeRefreshLayout.setEnabled(false);
         return view;
     }
 
+    /**
+     * Triggered when data changes in the DataManger by calls to quickDataRead
+     */
     public void refreshData() {
         mSwipeRefreshLayout.setRefreshing(true);
         CacheManager.getReport(Utilities.TimeFrame.values()[mPage - 1], mReciever, getActivity());
@@ -99,6 +103,7 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
     public void onResume() {
         super.onResume();
         mReciever.setReceiver(this);
+        //mCallback.quickDataRead(); // TODO: Use timeframe instead
         CacheManager.getReport(Utilities.TimeFrame.values()[mPage - 1], mReciever, getActivity());
     }
 
