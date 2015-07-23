@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by chris.black on 6/19/15.
+ * Created by Chris Black
  */
 public class TabPagerAdapter extends FragmentStatePagerAdapter {
 

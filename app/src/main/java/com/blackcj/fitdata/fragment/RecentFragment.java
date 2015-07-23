@@ -3,21 +3,16 @@ package com.blackcj.fitdata.fragment;
 import android.app.Activity;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.blackcj.fitdata.R;
-import com.blackcj.fitdata.Utilities;
-import com.blackcj.fitdata.activity.IMainActivityCallback;
 import com.blackcj.fitdata.adapter.AnimatedLayoutManager;
-import com.blackcj.fitdata.adapter.CursorRecyclerViewAdapter;
-import com.blackcj.fitdata.adapter.RecyclerViewAdapter;
 import com.blackcj.fitdata.adapter.WorkoutListViewAdapter;
 import com.blackcj.fitdata.animation.ItemAnimator;
+import com.blackcj.fitdata.database.CacheManager;
 import com.blackcj.fitdata.database.DataManager;
 import com.blackcj.fitdata.model.Workout;
 
@@ -25,13 +20,16 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 
 /**
- * Created by chris.black on 7/2/15.
+ * Created by Chris Black
+ *
+ * Displays historical entries in a vertical list.
  */
 public class RecentFragment extends BaseFragment implements WorkoutListViewAdapter.OnItemClickListener {
 
     public static final String TAG = "RecentFragment";
 
     public DataManager.IDataManager dataReceiver;
+    public CacheManager.ICacheManager cacheReceiver;
 
     @Bind(R.id.recyclerView)
     RecyclerView mRecyclerView;
@@ -52,7 +50,7 @@ public class RecentFragment extends BaseFragment implements WorkoutListViewAdapt
 
         mRecyclerView.setLayoutManager(new AnimatedLayoutManager(this.getActivity(), 1));
 
-        adapter = new WorkoutListViewAdapter(this.getActivity(), mCallback.getCursor());
+        adapter = new WorkoutListViewAdapter(this.getActivity(), cacheReceiver.getCursor());
         adapter.setHasStableIds(true);
         adapter.setOnItemClickListener(this);
 
@@ -68,6 +66,9 @@ public class RecentFragment extends BaseFragment implements WorkoutListViewAdapt
         if(activity instanceof DataManager.IDataManager) {
             dataReceiver = (DataManager.IDataManager)activity;
         }
+        if(activity instanceof CacheManager.ICacheManager) {
+            cacheReceiver = (CacheManager.ICacheManager)activity;
+        }
     }
 
     public void swapCursor(Cursor cursor) {
@@ -82,6 +83,7 @@ public class RecentFragment extends BaseFragment implements WorkoutListViewAdapt
     public void onDetach() {
         super.onDetach();
         dataReceiver = null;
+        cacheReceiver = null;
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.blackcj.fitdata.fragment;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
@@ -13,6 +14,7 @@ import android.view.ViewGroup;
 import com.blackcj.fitdata.R;
 
 import com.blackcj.fitdata.Utilities;
+import com.blackcj.fitdata.activity.IMainActivityCallback;
 import com.blackcj.fitdata.adapter.RecyclerViewAdapter;
 import com.blackcj.fitdata.adapter.WorkoutViewHolder;
 import com.blackcj.fitdata.animation.ItemAnimator;
@@ -38,6 +40,7 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
     private RecyclerViewAdapter adapter;
     private int mPage;
     private CacheResultReceiver mReciever;
+    protected IMainActivityCallback mCallback;
 
     @Bind(R.id.recyclerView)
     RecyclerView mRecyclerView;
@@ -85,6 +88,23 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
         });
         mSwipeRefreshLayout.setEnabled(false);
         return view;
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        if(activity instanceof IMainActivityCallback) {
+            mCallback = (IMainActivityCallback)activity;
+        }
+    }
+
+    /**
+     * Clear callback on detach to prevent null reference errors after the view has been
+     */
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mCallback = null;
     }
 
     /**

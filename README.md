@@ -10,6 +10,7 @@ Icons
 Resources
 ---------------------------
 + [Material Everywhere](http://antonioleiva.com/material-design-everywhere/)
++ [Google Fit Tutorial](http://orange.dataart.com/how-to-use-googlefit-api/)
 
 Third Party Libraries
 ---------------------------

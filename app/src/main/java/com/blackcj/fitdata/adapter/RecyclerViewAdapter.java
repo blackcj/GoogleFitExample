@@ -11,26 +11,22 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.DecelerateInterpolator;
-import android.view.animation.Interpolator;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.blackcj.fitdata.R;
 import com.blackcj.fitdata.Utilities;
-import com.blackcj.fitdata.activity.MainActivity;
 import com.blackcj.fitdata.model.Workout;
 import com.blackcj.fitdata.model.WorkoutReport;
 import com.blackcj.fitdata.model.WorkoutTypes;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
 /**
- * Created by chris.black on 5/2/15.
+ * Created by Chris Black
  */
 public class RecyclerViewAdapter extends RecyclerView.Adapter<WorkoutViewHolder> implements View.OnClickListener {
 

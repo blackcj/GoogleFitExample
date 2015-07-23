@@ -9,7 +9,7 @@ import android.widget.TextView;
 import com.blackcj.fitdata.R;
 
 /**
- * Created by chris.black on 6/22/15.
+ * Created by Chris Black
  */
 public class WorkoutViewHolder extends RecyclerView.ViewHolder {
     public ImageView image;

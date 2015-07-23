@@ -18,4 +18,5 @@ public interface IReportGraph {
     public void setGoal(int goalValue);
     public void setDisplayMetrics(int dpi);
     public void addRenderer(int series, Activity activity, int color);
+    public double getDataAtPoint(double xPos);
 }

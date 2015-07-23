@@ -17,7 +17,9 @@ import org.achartengine.renderer.XYSeriesRenderer;
 import java.util.ArrayList;
 
 /**
- * Created by chris.black on 6/29/15.
+ * Created by Chris Black
+ *
+ * Class that renders a line graph for each fitness activity type.
  */
 public class MultipleLineGraphs extends BaseReportGraph {
 
@@ -49,8 +51,8 @@ public class MultipleLineGraphs extends BaseReportGraph {
 
     @Override
     public void clearData() {
-        maxData = 70;
-        minData = 70;
+        maxData = 15;
+        minData = 10;
         for (int n = 0; n < mSeriesDataSet.size(); n++) {
             mSeriesDataSet.get(n).clear();
         }
@@ -98,5 +100,10 @@ public class MultipleLineGraphs extends BaseReportGraph {
         mSeriesDataSet.add(series, seriesData);
 
         mRenderer.addSeriesRenderer(series, mCurrentRenderer);
+    }
+
+    @Override
+    public double getDataAtPoint(double yPos) {
+        return 0;
     }
 }

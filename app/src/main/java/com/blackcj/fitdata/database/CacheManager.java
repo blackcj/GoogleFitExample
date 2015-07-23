@@ -2,6 +2,7 @@ package com.blackcj.fitdata.database;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.ResultReceiver;
 import android.util.Log;
@@ -9,6 +10,7 @@ import android.util.Log;
 import com.blackcj.fitdata.Utilities;
 import com.blackcj.fitdata.activity.MainActivity;
 import com.blackcj.fitdata.model.Workout;
+import com.blackcj.fitdata.model.WorkoutTypes;
 import com.blackcj.fitdata.service.ReadCacheIntentService;
 import com.blackcj.fitdata.service.SummaryCacheIntentService;
 
@@ -54,12 +56,16 @@ public class CacheManager {
             QueryResultIterable<Workout> itr = cupboard().withDatabase(mDb).query(Workout.class).withSelection("start BETWEEN ? AND ?", "" + rangeStart, "" + rangeEnd).query();
             for (Workout workout : itr) {
                 Log.d(TAG, workout.toString());
-                if (workout.overlaps(inWorkout)) {
+                if (workout.type != WorkoutTypes.STILL.getValue() && workout.type != WorkoutTypes.UNKNOWN.getValue() && workout.overlaps(inWorkout)) {
                     overlap = true;
                 }
             }
             itr.close();
         }
         return overlap;
+    }
+
+    public interface ICacheManager {
+        public Cursor getCursor();
     }
 }

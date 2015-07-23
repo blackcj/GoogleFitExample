@@ -1,6 +1,7 @@
 package com.blackcj.fitdata.database;
 
 import android.app.Activity;
+import android.bluetooth.BluetoothClass;
 import android.content.Context;
 import android.content.IntentSender;
 import android.database.sqlite.SQLiteDatabase;
@@ -27,6 +28,7 @@ import com.google.android.gms.fitness.data.DataPoint;
 import com.google.android.gms.fitness.data.DataSet;
 import com.google.android.gms.fitness.data.DataSource;
 import com.google.android.gms.fitness.data.DataType;
+import com.google.android.gms.fitness.data.Device;
 import com.google.android.gms.fitness.data.Field;
 import com.google.android.gms.fitness.data.Subscription;
 import com.google.android.gms.fitness.request.DataDeleteRequest;
@@ -261,7 +263,8 @@ public class DataManager {
         long syncStart = workout.start - (1000 * 60 * 60 * 24);
         SQLiteDatabase db = getDatabase();
         if (db != null) {
-            cupboard().withDatabase(db).delete(Workout.class, "start >= ?", "" + syncStart);
+            //cupboard().withDatabase(db).delete(Workout.class, "start >= ?", "" + syncStart);
+            cupboard().withDatabase(db).delete(Workout.class, "start = ?", "" + startTime);
         } else {
             Log.w(TAG, "Warning: db is null");
         }
@@ -330,8 +333,9 @@ public class DataManager {
             Log.i(TAG, "Inserting the session in the History API");
             Context context = getApplicationContext();
             if(context != null) {
+                Device device = Device.getLocalDevice(context);
                 com.google.android.gms.common.api.Status insertStatus =
-                        Fitness.SessionsApi.insertSession(mClient, DataQueries.createSession(workout.start, workout.start + workout.duration, workout.stepCount, activityName, context.getPackageName()))
+                        Fitness.SessionsApi.insertSession(mClient, DataQueries.createSession(workout.start, workout.start + workout.duration, workout.stepCount, activityName, context.getPackageName(), device))
                                 .await(1, TimeUnit.MINUTES);
 
                 // Before querying the session, check to see if the insertion succeeded.
@@ -370,8 +374,9 @@ public class DataManager {
             Log.i(TAG, "Inserting the dataset in the History API");
             Context context = getApplicationContext();
             if (context != null) {
+                Device device = Device.getLocalDevice(context);
                 com.google.android.gms.common.api.Status insertStatus =
-                        Fitness.HistoryApi.insertData(mClient, DataQueries.createActivityDataSet(workout.start, workout.start + workout.duration, activityName, context.getPackageName()))
+                        Fitness.HistoryApi.insertData(mClient, DataQueries.createActivityDataSet(workout.start, workout.start + workout.duration, activityName, context.getPackageName(), device))
                                 .await(1, TimeUnit.MINUTES);
 
                 // Before querying the session, check to see if the insertion succeeded.
@@ -491,7 +496,23 @@ public class DataManager {
         //populateHistoricalData();
         // Data load not complete, could take a while so lets show some data
         //populateReport();
-        subscribeSteps();
+        //subscribeSteps();
+    }
+
+    public void setStepCounting(boolean active) {
+        if (active) {
+            subscribeSteps();
+        }else {
+            unsubscribeSteps();
+        }
+    }
+
+    public void setActivityTracking(boolean active) {
+        if (active) {
+            subscribeActivity();
+        }else {
+            unsubscribeActivity();
+        }
     }
 
     private void listSubscriptions() {
@@ -530,10 +551,30 @@ public class DataManager {
         });
     }
 
-    private void unsubscribeStepsAndDeleteData() {
+    private void unsubscribeSteps() {
         Context context = getApplicationContext();
         if (context != null) {
+            UserPreferences.setCountSteps(context, false);
             Fitness.RecordingApi.unsubscribe(mClient, DataType.TYPE_STEP_COUNT_DELTA)
+                    .setResultCallback(new ResultCallback<Status>() {
+                        @Override
+                        public void onResult(Status status) {
+                            if (status.isSuccess()) {
+                                Log.i(TAG, "Successfully unsubscribed for data type: step count delta");
+                            } else {
+                                // Subscription not removed
+                                Log.i(TAG, "Failed to unsubscribe for data type: step count delta");
+                            }
+                        }
+                    });
+        }
+    }
+
+    private void unsubscribeActivity() {
+        Context context = getApplicationContext();
+        if (context != null) {
+            UserPreferences.setActivityTracking(context, false);
+            Fitness.RecordingApi.unsubscribe(mClient, DataType.TYPE_ACTIVITY_SEGMENT)
                     .setResultCallback(new ResultCallback<Status>() {
                         @Override
                         public void onResult(Status status) {
@@ -551,6 +592,7 @@ public class DataManager {
     private void subscribeSteps() {
         Context context = getApplicationContext();
         if (context != null) {
+            UserPreferences.setCountSteps(context, true);
             Fitness.RecordingApi.subscribe(mClient, DataType.TYPE_STEP_COUNT_DELTA)
                     .setResultCallback(new ResultCallback<Status>() {
                         @Override
@@ -567,6 +609,13 @@ public class DataManager {
                             }
                         }
                     });
+        }
+    }
+
+    private void subscribeActivity() {
+        Context context = getApplicationContext();
+        if (context != null) {
+            UserPreferences.setActivityTracking(context, true);
             Fitness.RecordingApi.subscribe(mClient, DataType.TYPE_ACTIVITY_SEGMENT)
                     .setResultCallback(new ResultCallback<Status>() {
                         @Override
@@ -733,7 +782,7 @@ public class DataManager {
             // Populate db cache with data
             for(Field field : dp.getDataType().getFields()) {
                 if(field.getName().equals("activity") && dp.getDataType().getName().equals("com.google.activity.segment")) {
-
+                    Log.i(TAG, dp.getOriginalDataSource().getAppPackageName());
                     dp.getVersionCode();
                     long startTime = dp.getStartTime(TimeUnit.MILLISECONDS);
                     int activity = dp.getValue(field).asInt();
@@ -763,6 +812,7 @@ public class DataManager {
                             workout.duration = endTime - startTime;
                             workout.stepCount = stepCount;
                             workout.type = activity;
+                            workout.packageName = dp.getOriginalDataSource().getAppPackageName();
                             //Log.v("MainActivity", "Put Cache: " + WorkoutTypes.getWorkOutTextById(workout.type) + " " + workout.duration);
                             if (db != null) {
                                 cupboard().withDatabase(db).put(workout);

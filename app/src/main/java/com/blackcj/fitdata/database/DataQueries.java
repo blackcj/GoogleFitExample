@@ -1,11 +1,14 @@
 package com.blackcj.fitdata.database;
 
+import android.content.Context;
+
 import com.blackcj.fitdata.model.Workout;
 import com.google.android.gms.fitness.FitnessActivities;
 import com.google.android.gms.fitness.data.DataPoint;
 import com.google.android.gms.fitness.data.DataSet;
 import com.google.android.gms.fitness.data.DataSource;
 import com.google.android.gms.fitness.data.DataType;
+import com.google.android.gms.fitness.data.Device;
 import com.google.android.gms.fitness.data.Field;
 import com.google.android.gms.fitness.data.Session;
 import com.google.android.gms.fitness.request.DataReadRequest;
@@ -96,7 +99,7 @@ public class DataQueries {
      * @param packageName Package name for the app
      * @return Resulting insert request
      */
-    public static SessionInsertRequest createSession(long startTime, long endTime, int stepCountDelta, String activityName, String packageName) {
+    public static SessionInsertRequest createSession(long startTime, long endTime, int stepCountDelta, String activityName, String packageName, Device device) {
         // Create a session with metadata about the activity.
         Session session = new Session.Builder()
                 .setName(TAG)
@@ -110,8 +113,8 @@ public class DataQueries {
         // Build a session insert request
         SessionInsertRequest insertRequest = new SessionInsertRequest.Builder()
                 .setSession(session)
-                .addDataSet(createStepDeltaDataSet(startTime, endTime, stepCountDelta, packageName))
-                .addDataSet(createActivityDataSet(startTime, endTime, activityName, packageName))
+                .addDataSet(createStepDeltaDataSet(startTime, endTime, stepCountDelta, packageName, device))
+                .addDataSet(createActivityDataSet(startTime, endTime, activityName, packageName, device))
                 .build();
 
         return insertRequest;
@@ -126,11 +129,12 @@ public class DataQueries {
      * @param packageName Package name for the app
      * @return Resulting DataSet
      */
-    public static DataSet createStepDeltaDataSet(long startTime, long endTime, int stepCountDelta, String packageName) {
+    public static DataSet createStepDeltaDataSet(long startTime, long endTime, int stepCountDelta, String packageName, Device device) {
 
         // Create a data source
         DataSource dataSource = new DataSource.Builder()
                 .setAppPackageName(packageName)
+                .setDevice(device)
                 .setDataType(DataType.TYPE_STEP_COUNT_DELTA)
                 .setName(TAG + " - step count")
                 .setType(DataSource.TYPE_RAW)
@@ -148,11 +152,12 @@ public class DataQueries {
         return dataSet;
     }
 
-    public static DataSet createActivityDataSet(long startTime, long endTime, String activityName, String packageName) {
+    public static DataSet createActivityDataSet(long startTime, long endTime, String activityName, String packageName, Device device) {
 
         // Create a data source
         DataSource dataSource = new DataSource.Builder()
                 .setAppPackageName(packageName)
+                .setDevice(device)
                 .setDataType(DataType.TYPE_ACTIVITY_SEGMENT)
                 .setName(TAG + " - activity")
                 .setType(DataSource.TYPE_RAW)

@@ -8,17 +8,22 @@
         android:title="Search"
         app:actionViewClass="android.support.v7.widget.SearchView"
         app:showAsAction="collapseActionView|always"/>
-    <item android:id="@+id/action_history"
-        android:title="@string/action_history"
+
+    <item android:id="@+id/action_settings"
+        android:title="@string/action_settings"
         android:orderInCategory="100"
-        app:showAsAction="never" />
+        android:icon="@drawable/ic_settings_white"
+        app:showAsAction="ifRoom" />
 
     <item android:id="@+id/action_refresh_data"
         android:title="@string/action_load_data"
         android:orderInCategory="100"
-        app:showAsAction="never" />
-    <item android:id="@+id/action_settings"
-        android:title="@string/action_settings"
+        android:icon="@drawable/ic_refresh_white"
+        app:showAsAction="ifRoom" />
+
+    <item android:id="@+id/action_history"
+        android:title="@string/action_history"
         android:orderInCategory="100"
+        android:icon="@drawable/ic_history_white"
         app:showAsAction="never" />
 </menu>

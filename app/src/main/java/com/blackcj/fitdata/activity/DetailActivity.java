@@ -14,6 +14,8 @@ import android.support.v4.view.ViewCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.graphics.Palette;
+import android.transition.Fade;
+import android.transition.Transition;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -47,7 +49,9 @@ import butterknife.ButterKnife;
 
 
 /**
- * Created by chris.black on 5/2/15.
+ * Created by Chris Black
+ *
+ * Displays a detail page for the selected workout type
  */
 public class DetailActivity extends BaseActivity implements CacheResultReceiver.Receiver {
 
@@ -65,10 +69,39 @@ public class DetailActivity extends BaseActivity implements CacheResultReceiver.
     private CacheResultReceiver mReciever;
     private ReportsFragment mReportsFragment;
 
+    /**
+     * Used to start the activity using a custom animation.
+     *
+     * @param activity Reference to the Android Activity we are animating from
+     * @param transitionView Target view used in the scene transition animation
+     * @param workout Type of workout the DetailActivity should load
+     */
+    public static void launch(BaseActivity activity, View transitionView, Workout workout) {
+        ActivityOptionsCompat options =
+                ActivityOptionsCompat.makeSceneTransitionAnimation(
+                        activity, transitionView, EXTRA_IMAGE);
+        Intent intent = new Intent(activity, DetailActivity.class);
+        intent.putExtra(EXTRA_IMAGE, WorkoutTypes.getImageById(workout.type));
+        intent.putExtra(EXTRA_TITLE, WorkoutTypes.getWorkOutTextById(workout.type));
+        intent.putExtra(EXTRA_TYPE, workout.type);
+        ActivityCompat.startActivity(activity, intent, options.toBundle());
+    }
+
+    ///////////////////////////////////////
+    // LIFE CYCLE
+    ///////////////////////////////////////
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Transition fade = new Fade();
+        fade.excludeTarget(android.R.id.navigationBarBackground, true);
+
+        getWindow().setExitTransition(fade);
+        getWindow().setEnterTransition(fade);
+
+
         ButterKnife.bind(this);
         mReciever = new CacheResultReceiver(new Handler());
         ImageView image = (ImageView) findViewById(R.id.image);
@@ -115,6 +148,7 @@ public class DetailActivity extends BaseActivity implements CacheResultReceiver.
         getWindow().setStatusBarColor(vibrant);
 
 
+        // Report fragment used to display charts and graphs
         FragmentManager fragmentManager = getSupportFragmentManager();
         mReportsFragment = ReportsFragment.newInstance(getIntent().getIntExtra(EXTRA_TYPE, 0), 1);
         fragmentManager.beginTransaction()
@@ -161,6 +195,10 @@ public class DetailActivity extends BaseActivity implements CacheResultReceiver.
         return true;
     }
 
+    ///////////////////////////////////////
+    // OPTIONS MENU
+    ///////////////////////////////////////
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -176,16 +214,9 @@ public class DetailActivity extends BaseActivity implements CacheResultReceiver.
         return super.onOptionsItemSelected(item);
     }
 
-    public static void launch(BaseActivity activity, View transitionView, Workout workout) {
-        ActivityOptionsCompat options =
-                ActivityOptionsCompat.makeSceneTransitionAnimation(
-                        activity, transitionView, EXTRA_IMAGE);
-        Intent intent = new Intent(activity, DetailActivity.class);
-        intent.putExtra(EXTRA_IMAGE, WorkoutTypes.getImageById(workout.type));
-        intent.putExtra(EXTRA_TITLE, WorkoutTypes.getWorkOutTextById(workout.type));
-        intent.putExtra(EXTRA_TYPE, workout.type);
-        ActivityCompat.startActivity(activity, intent, options.toBundle());
-    }
+    ///////////////////////////////////////
+    // CALLBACKS
+    ///////////////////////////////////////
 
     @Override
     public void onReceiveResult(int resultCode, Bundle resultData) {

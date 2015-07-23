@@ -17,6 +17,7 @@ public class Workout implements Comparable<Workout>, Parcelable {
     public long start = 0;      // activity start time
     public int type;            // type of activity
     public int stepCount = 0;   // number of steps for activity
+    public String packageName = "";
 
 
     public Workout() {
@@ -25,6 +26,7 @@ public class Workout implements Comparable<Workout>, Parcelable {
         start = 0L;
         type = 0;
         stepCount = 0;
+        packageName = "";
     }
 
     public Workout(Parcel in) {
@@ -33,6 +35,7 @@ public class Workout implements Comparable<Workout>, Parcelable {
         start = in.readLong();
         type = in.readInt();
         stepCount = in.readInt();
+        packageName = in.readString();
     }
 
     public boolean overlaps(Workout another) {
@@ -88,11 +91,11 @@ public class Workout implements Comparable<Workout>, Parcelable {
     }
 
     public String shortText() {
-        String result = _id + ": " + Utilities.getDayString(start) +
+        String result = WorkoutTypes.getWorkOutTextById(type) + " on " + Utilities.getDayString(start) +
                 " at " + Utilities.getTimeString(start) +
                 " for " + WorkoutReport.getDurationBreakdown(duration);
         if (stepCount > 0) {
-            result += " with " + stepCount + "steps";
+            //result += " with " + stepCount + "steps";
         }
         return result;
     }
@@ -108,6 +111,7 @@ public class Workout implements Comparable<Workout>, Parcelable {
         dest.writeLong(start);
         dest.writeInt(type);
         dest.writeInt(stepCount);
+        dest.writeString(packageName);
     }
 
     public static final Parcelable.Creator<Workout> CREATOR = new Parcelable.Creator<Workout>()

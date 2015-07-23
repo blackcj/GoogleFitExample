@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.graphics.Color;
 
 import com.blackcj.fitdata.R;
-import com.blackcj.fitdata.model.WorkoutTypes;
 
 import org.achartengine.ChartFactory;
 import org.achartengine.GraphicalView;
@@ -16,7 +15,9 @@ import org.achartengine.renderer.XYMultipleSeriesRenderer;
 import org.achartengine.renderer.XYSeriesRenderer;
 
 /**
- * Created by chris.black on 6/29/15.
+ * Created by Chris Black
+ *
+ * Class that renders a single bar graph overlayed with a goal.
  */
 public class SingleBarGraphWithGoal extends BaseReportGraph {
 
@@ -38,8 +39,8 @@ public class SingleBarGraphWithGoal extends BaseReportGraph {
 
     @Override
     public void clearData() {
-        maxData = 70;
-        minData = 70;
+        maxData = 15;
+        minData = 10;
         mCurrentSeries.clear();
         mGoalSeries.clear();
     }
@@ -81,6 +82,10 @@ public class SingleBarGraphWithGoal extends BaseReportGraph {
 
         mRenderer.setShowGrid(true); // we show the grid
         mRenderer.setXLabels(0);
+
+        // enable the chart click events
+        mRenderer.setClickEnabled(true);
+        mRenderer.setSelectableBuffer(10);
     }
 
     @Override
@@ -103,7 +108,7 @@ public class SingleBarGraphWithGoal extends BaseReportGraph {
         mRenderer.setPanLimits(new double[]{-5, mCurrentSeries.getItemCount() + 5, 0, 0});
         mRenderer.setZoomLimits(new double[]{-5, mCurrentSeries.getItemCount() + 5, 0, 0});
         // An array containing the margin size values, in this order: top, left, bottom, right
-        mRenderer.setMargins(new int [] {getDPI(12),0,getDPI(10),0});
+        mRenderer.setMargins(new int[]{getDPI(12),0,getDPI(10),0});
 
         mRenderer.setYLabelsPadding(-getDPI(35));
 
@@ -115,6 +120,11 @@ public class SingleBarGraphWithGoal extends BaseReportGraph {
     @Override
     public void addRenderer(int series, Activity activity, int color) {
 
+    }
+
+    @Override
+    public double getDataAtPoint(double xPos) {
+        return mCurrentSeries.getY((int)xPos);
     }
 
 }

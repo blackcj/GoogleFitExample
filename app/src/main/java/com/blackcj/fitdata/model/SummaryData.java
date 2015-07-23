@@ -4,7 +4,9 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 /**
- * Created by chris.black on 7/8/15.
+ * Created by Chris Black
+ *
+ * Model object used to display fitness summary data.
  */
 public class SummaryData implements Parcelable {
 

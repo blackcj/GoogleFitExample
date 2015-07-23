@@ -6,11 +6,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
 import com.blackcj.fitdata.R;
-import com.blackcj.fitdata.database.DataManager;
 
 
 /**
- * Created by chris.black on 5/2/15.
+ * Created by Chris Black
+ *
+ * Contains functionality common to all Activities. Code here should be kept to the bare
+ * minimum.
  */
 public abstract class BaseActivity extends AppCompatActivity {
 

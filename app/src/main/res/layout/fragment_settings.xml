@@ -23,6 +23,8 @@
             android:layout_centerVertical="true"
             android:text="Step counter"/>
         <ToggleButton
+            android:id="@+id/step_toggle"
+            android:checked="false"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"/>
@@ -38,6 +40,8 @@
             android:layout_centerVertical="true"
             android:text="Activity recognition"/>
         <ToggleButton
+            android:id="@+id/activity_toggle"
+            android:checked="false"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"/>

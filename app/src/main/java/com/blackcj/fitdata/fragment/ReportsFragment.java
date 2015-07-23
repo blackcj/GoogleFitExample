@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import com.blackcj.fitdata.Utilities;
 import com.blackcj.fitdata.database.CupboardSQLiteOpenHelper;
@@ -22,6 +23,7 @@ import com.blackcj.fitdata.reports.MultipleLineGraphs;
 import com.blackcj.fitdata.reports.SingleBarGraphWithGoal;
 
 import org.achartengine.GraphicalView;
+import org.achartengine.model.SeriesSelection;
 import org.achartengine.tools.PanListener;
 import org.achartengine.tools.ZoomEvent;
 import org.achartengine.tools.ZoomListener;
@@ -100,9 +102,12 @@ public class ReportsFragment extends BaseFragment {
         }
         if (workoutType == WorkoutTypes.STEP_COUNT.getValue()) {
             reportGraph.setGoal(9500 * multiplier);
+        } else if (workoutType == WorkoutTypes.WALKING.getValue()){
+            // TODO: Create system for managing goals
+            reportGraph.setGoal(95 * multiplier);
         } else {
             // TODO: Create system for managing goals
-            reportGraph.setGoal(100 * multiplier);
+            reportGraph.setGoal(15 * multiplier);
         }
         reportGraph.setDisplayMetrics(densityDpi);
     }
@@ -132,6 +137,20 @@ public class ReportsFragment extends BaseFragment {
             public void zoomReset() {
             }
         }, true, true);
+        mChartView.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                // handle the click event on the chart
+                SeriesSelection seriesSelection = mChartView.getCurrentSeriesAndPoint();
+                if (seriesSelection == null) {
+                    //Toast.makeText(getActivity(), "No chart element", Toast.LENGTH_SHORT).show();
+                } else if(workoutType == WorkoutTypes.STEP_COUNT.getValue()){
+                    // display information of the clicked point
+                    Toast.makeText(
+                            getActivity(),
+                            "" + reportGraph.getDataAtPoint(seriesSelection.getXValue()) + " steps", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
         mChartView.addPanListener(new PanListener() {
             @Override
             public void panApplied() {
@@ -167,9 +186,15 @@ public class ReportsFragment extends BaseFragment {
         millisecondsInSegment = 1000*60*60*24*multiplier;
         if (workoutType == WorkoutTypes.STEP_COUNT.getValue()) {
             reportGraph.setGoal(9500 * multiplier);
+        } else if (workoutType == WorkoutTypes.WALKING.getValue()){
+            // TODO: Create system for managing goals
+            reportGraph.setGoal(90 * multiplier);
+        } else if (workoutType == WorkoutTypes.BIKING.getValue()){
+            // TODO: Create system for managing goals
+            reportGraph.setGoal(20 * multiplier);
         } else {
             // TODO: Create system for managing goals
-            reportGraph.setGoal(100 * multiplier);
+            reportGraph.setGoal(10 * multiplier);
         }
         showData();
     }

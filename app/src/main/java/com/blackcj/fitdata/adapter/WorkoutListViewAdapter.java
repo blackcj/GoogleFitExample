@@ -2,27 +2,21 @@ package com.blackcj.fitdata.adapter;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
-import android.support.v7.graphics.Palette;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.blackcj.fitdata.R;
-import com.blackcj.fitdata.Utilities;
 import com.blackcj.fitdata.model.Workout;
-import com.blackcj.fitdata.model.WorkoutReport;
 import com.blackcj.fitdata.model.WorkoutTypes;
 
 import static nl.qbusict.cupboard.CupboardFactory.cupboard;
 
 /**
- * Created by chris.black on 6/22/15.
+ * Created by Chris Black
  */
 public class WorkoutListViewAdapter extends CursorRecyclerViewAdapter<WorkoutListViewAdapter.ListViewHolder> implements View.OnClickListener{
 
@@ -49,9 +43,13 @@ public class WorkoutListViewAdapter extends CursorRecyclerViewAdapter<WorkoutLis
     public void onBindViewHolder(ListViewHolder holder, Cursor cursor) {
         Workout item = cupboard().withCursor(cursor).get(Workout.class);
 
-        holder.text.setText(item.toString());
+        holder.text.setText(item.shortText());
         holder.deleteButton.setTag(item);
-
+        if (item.packageName != null && item.packageName.equals("com.blackcj.fitdata")) {
+            holder.deleteButton.setVisibility(View.VISIBLE);
+        } else {
+            holder.deleteButton.setVisibility(View.INVISIBLE);
+        }
         //holder.container.setBackgroundColor(WorkoutTypes.getColorById(item.type));
 
         holder.image.setImageResource(WorkoutTypes.getImageById(item.type));

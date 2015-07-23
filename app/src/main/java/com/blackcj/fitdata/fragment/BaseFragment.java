@@ -8,12 +8,14 @@ import com.blackcj.fitdata.activity.IMainActivityCallback;
 import butterknife.ButterKnife;
 
 /**
- * Created by chris.black on 5/2/15.
+ * Created by Chris Black
+ *
+ * Contains functionality common to all Fragments. Code here should be kept to the bare
+ * minimum.
  */
 public abstract class BaseFragment extends Fragment {
 
     public static final String ARG_SECTION_NUMBER = "section_number";
-    protected IMainActivityCallback mCallback;
 
     @Override
     public void onDestroyView() {
@@ -23,20 +25,5 @@ public abstract class BaseFragment extends Fragment {
         ButterKnife.unbind(this);
     }
 
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        if(activity instanceof IMainActivityCallback) {
-            mCallback = (IMainActivityCallback)activity;
-        }
-    }
 
-    /**
-     * Clear callback on detach to prevent null reference errors after the view has been
-     */
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mCallback = null;
-    }
 }

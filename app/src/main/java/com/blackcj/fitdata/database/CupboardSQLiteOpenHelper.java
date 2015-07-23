@@ -9,7 +9,7 @@ import com.blackcj.fitdata.model.Workout;
 
 public class CupboardSQLiteOpenHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "googlefitexample.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
     static {
         // register our models

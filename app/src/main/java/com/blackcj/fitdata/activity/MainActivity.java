@@ -18,6 +18,9 @@ import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.SearchView;
+import android.transition.ChangeBounds;
+import android.transition.Fade;
+import android.transition.Transition;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -74,6 +77,12 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Transition fade = new ChangeBounds();
+        fade.excludeTarget(android.R.id.navigationBarBackground, true);
+        getWindow().setExitTransition(fade);
+        getWindow().setEnterTransition(fade);
+
         setActionBarIcon(R.drawable.barchart_icon);
         ButterKnife.bind(this);
 
@@ -256,7 +265,7 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
         int id = item.getItemId();
         switch (id) {
             case R.id.action_history:
-                RecentActivity.launch(MainActivity.this, 0);
+                RecentActivity.launch(MainActivity.this);
                 break;
             case R.id.action_refresh_data:
                 mDataManager.refreshData();
@@ -286,7 +295,6 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
 
     @Override
     public boolean onQueryTextChange(String newText) {
-        //mAdapter.filter(newText);
         mAdapter.getFragment(mViewPager.getCurrentItem()).filter(newText);
         Log.d("MainActivity", "Query test: " + newText);
         return false;
@@ -348,6 +356,18 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
 
     }
 
+    public void setStepCounting(boolean active) {
+        if (mDataManager != null) {
+            mDataManager.setStepCounting(active);
+        }
+    }
+
+    public void setActivityTracking(boolean active) {
+        if (mDataManager != null) {
+            mDataManager.setActivityTracking(active);
+        }
+    }
+
     @Override
     public void quickDataRead() {
         if (mDataManager != null) {
@@ -358,11 +378,6 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     @Override
     public void launch(View transitionView, Workout workout) {
         DetailActivity.launch(MainActivity.this, transitionView, workout);
-    }
-
-    @Override
-    public Cursor getCursor() {
-        return null;
     }
 
     ///////////////////////////////////////

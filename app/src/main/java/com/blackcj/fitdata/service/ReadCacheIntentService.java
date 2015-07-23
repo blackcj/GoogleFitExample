@@ -64,14 +64,15 @@ public class ReadCacheIntentService extends IntentService {
             }
         } else {
             long startTime = Utilities.getTimeFrameStart(mTimeFrame);
+            long endTime = Utilities.getTimeFrameEnd(mTimeFrame);
             workoutReport.clearWorkoutData();
             if (!mDb.isOpen()) {
                 Log.w(TAG, "db is closed!");
                 return;
             }
-            QueryResultIterable<Workout> itr = cupboard().withDatabase(mDb).query(Workout.class).withSelection("start >= ?", "" + startTime).query();
+            QueryResultIterable<Workout> itr = cupboard().withDatabase(mDb).query(Workout.class).withSelection("start >= ? AND start <= ?", "" + startTime, "" + endTime).query();
             for (Workout workout : itr) {
-                if (workout.start > startTime) {
+                if (workout.start > startTime && workout.start <= endTime) {
                     workoutReport.addWorkoutData(workout);
                 }
             }

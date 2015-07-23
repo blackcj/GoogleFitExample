@@ -9,7 +9,7 @@ import android.util.Log;
 import java.lang.ref.WeakReference;
 
 /**
- * Created by chris.black on 7/1/15.
+ * Created by Chris Black
  */
 public class CacheIntentService extends IntentService {
 

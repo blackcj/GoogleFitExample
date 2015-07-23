@@ -5,7 +5,7 @@ import android.support.v7.widget.GridLayoutManager;
 import android.util.AttributeSet;
 
 /**
- * Created by chris.black on 7/7/15.
+ * Created by Chris Black
  */
 public class AnimatedLayoutManager extends GridLayoutManager {
 

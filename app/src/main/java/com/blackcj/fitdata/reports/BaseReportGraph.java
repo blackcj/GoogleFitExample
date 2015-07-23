@@ -3,7 +3,6 @@ package com.blackcj.fitdata.reports;
 import android.util.DisplayMetrics;
 
 import org.achartengine.model.XYMultipleSeriesDataset;
-import org.achartengine.model.XYSeries;
 import org.achartengine.renderer.XYMultipleSeriesRenderer;
 
 import java.io.Serializable;
@@ -14,8 +13,8 @@ import java.io.Serializable;
 public abstract class BaseReportGraph implements IReportGraph, Serializable {
 
     protected int densityDPI = 1;
-    double maxData = 70;
-    double minData = 70;
+    double maxData = 15;
+    double minData = 10;
     int mGoal = 0;
 
     /** The main dataset that includes all the series that go into a chart. */
