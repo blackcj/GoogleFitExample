@@ -24,12 +24,13 @@ import butterknife.ButterKnife;
  *
  * Displays historical entries in a vertical list.
  */
+@SuppressWarnings("WeakerAccess") // Butterknife requires public reference of injected views
 public class RecentFragment extends BaseFragment implements WorkoutListViewAdapter.OnItemClickListener {
 
     public static final String TAG = "RecentFragment";
 
-    public DataManager.IDataManager dataReceiver;
-    public CacheManager.ICacheManager cacheReceiver;
+    private DataManager.IDataManager dataReceiver;
+    private CacheManager.ICacheManager cacheReceiver;
 
     @Bind(R.id.recyclerView)
     RecyclerView mRecyclerView;
@@ -37,8 +38,7 @@ public class RecentFragment extends BaseFragment implements WorkoutListViewAdapt
     private WorkoutListViewAdapter adapter;
 
     public static RecentFragment create() {
-        RecentFragment fragment = new RecentFragment();
-        return fragment;
+        return new RecentFragment();
     }
 
     @Override

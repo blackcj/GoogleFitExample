@@ -8,7 +8,7 @@ import android.util.Log;
 import java.lang.ref.WeakReference;
 
 /**
- * Created by chris.black on 7/6/15.
+ * Created by Chris Black
  */
 public class CacheResultReceiver extends ResultReceiver {
 
@@ -20,7 +20,7 @@ public class CacheResultReceiver extends ResultReceiver {
     }
 
     public interface Receiver {
-        public void onReceiveResult(int resultCode, Bundle resultData);
+        void onReceiveResult(int resultCode, Bundle resultData);
     }
 
     public void setReceiver(Receiver receiver) {

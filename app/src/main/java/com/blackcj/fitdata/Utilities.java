@@ -7,7 +7,7 @@ import java.util.Calendar;
 import java.util.Date;
 
 /**
- * Created by chris.black on 5/2/15.
+ * Created by Chris Black
  */
 public class Utilities {
 

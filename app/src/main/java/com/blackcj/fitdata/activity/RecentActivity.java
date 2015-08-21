@@ -33,11 +33,11 @@ import static nl.qbusict.cupboard.CupboardFactory.cupboard;
  * item for filtering results.
  */
 public class RecentActivity extends BaseActivity implements DataManager.IDataManager, CacheManager.ICacheManager {
-    public static final String TAG = "RecentActivity";
+    private static final String TAG = "RecentActivity";
     private static SQLiteDatabase mDb;
 
-    RecentFragment fragment;
-    public static final String ARG_ACTIVITY_TYPE = "ARG_ACTIVITY_TYPE";
+    private RecentFragment fragment;
+    private static final String ARG_ACTIVITY_TYPE = "ARG_ACTIVITY_TYPE";
     private CupboardSQLiteOpenHelper mHelper;
     private DataManager mDataManager;
     private Cursor mCursor;

@@ -3,22 +3,14 @@ package com.blackcj.fitdata.fragment;
 import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
-import android.content.Context;
 import android.os.Bundle;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.DatePicker;
 import android.widget.EditText;
@@ -39,18 +31,20 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnFocusChange;
-import butterknife.OnTouch;
 
 /**
- * Created by chris.black on 6/19/15.
+ * Created by Chris Black
+ *
+ * Input form used to add a manual entry.
  */
+@SuppressWarnings({"WeakerAccess", "unused"}) // Butterknife requires public reference of injected views
 public class AddEntryFragment extends Fragment {
 
     public static final String ARG_ACTIVITY_TYPE = "ARG_ACTIVITY_TYPE";
     public static final String TAG = "AddEntryFragment";
 
-    protected DataManager.IDataManager mCallback;
-    Calendar cal = Calendar.getInstance();
+    private DataManager.IDataManager mCallback;
+    private Calendar cal = Calendar.getInstance();
 
     @Bind(R.id.timeTextView)
     TextView timeTextView;

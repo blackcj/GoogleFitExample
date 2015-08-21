@@ -12,24 +12,28 @@
         android:id="@+id/image"
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:paddingRight="10dp"
+        android:layout_marginEnd="10dp"
+        android:padding="5dp"
+        android:contentDescription="@string/activity_icon_desc"
         tools:src="@drawable/biker_icon_color"/>
     <TextView
         android:id="@+id/text"
-        android:layout_toRightOf="@+id/image"
-        android:layout_toLeftOf="@+id/close_button"
+        android:layout_toEndOf="@+id/image"
+        android:layout_toStartOf="@+id/close_button"
         android:layout_width="wrap_content"
-        android:gravity="center|left"
+        android:textAlignment="viewStart"
+        android:gravity="center|start"
         android:layout_height="48dp"
         tools:text="Hello world"/>
     <ImageView
         android:id="@+id/close_button"
-        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
         android:padding="14dp"
         android:clickable="true"
         android:focusable="true"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:alpha="0.5"
-        android:src="@drawable/ic_close_black"/>
+        android:src="@drawable/ic_close_black"
+        android:contentDescription="@string/close_icon_desc"/>
 </RelativeLayout>

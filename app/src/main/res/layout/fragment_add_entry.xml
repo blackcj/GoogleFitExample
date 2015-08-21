@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:background="@color/lighterGray">
+    android:background="@color/lighterGray"
+    tools:context=".AddEntryActivity">
 
     <LinearLayout
         android:layout_width="fill_parent"
@@ -14,8 +15,10 @@
 
         <Spinner
             android:paddingTop="25dp"
-            android:gravity="bottom"
-            android:paddingLeft="4dp"
+            android:textAlignment="viewStart"
+            android:gravity="bottom|start"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
             android:id="@+id/activitySpinner"
             android:dropDownVerticalOffset="10dp"
             android:spinnerMode="dropdown"
@@ -28,8 +31,10 @@
         <TextView
             android:id="@+id/dateTextView"
             style="@style/form_item"
-            android:paddingLeft="4dp"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
             android:paddingTop="29dp"
+            android:textAlignment="viewStart"
             tools:text="June 22nd, 2015" />
 
         <View style="@style/form_divider" />
@@ -44,6 +49,7 @@
                 android:id="@+id/timeTextView"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
+                android:textAlignment="viewStart"
                 tools:text="1:00 PM"
                 android:editable="false"/>
         </android.support.design.widget.TextInputLayout>
@@ -62,6 +68,7 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:inputType="number"
+                    android:textAlignment="viewStart"
                     android:text="0">
                     <requestFocus />
                 </EditText>
@@ -72,12 +79,12 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="steps"
-                android:layout_marginLeft="-30dp"
+                android:layout_marginStart="-30dp"
                 android:paddingBottom="12dp"
                 android:textSize="18sp"
                 android:paddingTop="27dp"
 
-                android:layout_toRightOf="@+id/editInputLayout2"
+                android:layout_toEndOf="@+id/editInputLayout2"
                 android:textColor="@color/semiBlack" />
             <android.support.design.widget.TextInputLayout
                 android:id="@+id/editInputLayout"
@@ -103,12 +110,12 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="min"
-                android:layout_marginLeft="-25dp"
+                android:layout_marginStart="-25dp"
                 android:paddingBottom="12dp"
                 android:textSize="18sp"
                 android:paddingTop="27dp"
                 android:layout_below="@+id/editInputLayout2"
-                android:layout_toRightOf="@+id/editInputLayout"
+                android:layout_toEndOf="@+id/editInputLayout"
                 android:textColor="@color/semiBlack" />
 
         </RelativeLayout>

@@ -3,11 +3,9 @@ package com.blackcj.fitdata.fragment;
 import android.app.Activity;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.ResultReceiver;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,11 +14,9 @@ import com.blackcj.fitdata.R;
 import com.blackcj.fitdata.Utilities;
 import com.blackcj.fitdata.activity.IMainActivityCallback;
 import com.blackcj.fitdata.adapter.RecyclerViewAdapter;
-import com.blackcj.fitdata.adapter.WorkoutViewHolder;
 import com.blackcj.fitdata.animation.ItemAnimator;
 import com.blackcj.fitdata.database.CacheManager;
 import com.blackcj.fitdata.model.Workout;
-import com.blackcj.fitdata.model.WorkoutTypes;
 import com.blackcj.fitdata.service.CacheResultReceiver;
 
 import java.util.ArrayList;
@@ -30,12 +26,14 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 
 /**
- * Created by chris.black on 6/19/15.
+ * Created by Chris Black
+ *
+ * Used to display a page of data within the view pager.
  */
 public class PageFragment extends BaseFragment implements RecyclerViewAdapter.OnItemClickListener, CacheResultReceiver.Receiver {
 
-    public static final String TAG = "PageFragment";
-    public static final String ARG_PAGE = "ARG_PAGE";
+    private static final String TAG = "PageFragment";
+    private static final String ARG_PAGE = "ARG_PAGE";
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private RecyclerViewAdapter adapter;
     private int mPage;

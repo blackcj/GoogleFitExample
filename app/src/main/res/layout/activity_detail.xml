@@ -19,8 +19,8 @@
             <Spinner
                 android:layout_width="80dp"
                 android:layout_height="wrap_content"
-                android:layout_gravity="right"
-                android:layout_marginRight="15dp"
+                android:layout_gravity="end"
+                android:layout_marginEnd="15dp"
                 android:dropDownVerticalOffset="40dp"
                 android:id="@+id/spinner"
                 android:theme="@style/ThemeOverlay.AppCompat.Dark"
@@ -33,14 +33,13 @@
         android:layout_width="match_parent"
         android:layout_height="130dp"
         android:transitionName="photo_hero"
-        android:layout_below="@id/toolbar"
-        android:padding="20dp"/>
+        android:padding="20dp"
+        android:contentDescription="@string/activity_icon_desc"/>
 
     <FrameLayout
         android:id="@+id/chart_container"
         android:layout_width="match_parent"
         android:layout_height="250dp"
-        android:layout_below="@+id/image"
         tools:background="@color/semiWhite"/>
 
     <ScrollView
@@ -57,14 +56,14 @@
                 android:padding="10dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Average steps per day: 200"/>
+                tools:text="Average steps per day: 200"/>
             <TextView
                 android:id="@+id/current_text"
                 android:textColor="@color/colorWhite"
                 android:padding="10dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Steps today: 200"/>
+                tools:text="Steps today: 200"/>
 
         </LinearLayout>
     </ScrollView>

@@ -48,59 +48,23 @@
 
     <com.getbase.floatingactionbutton.FloatingActionsMenu
         android:id="@+id/floatingActionMenu"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="10dp"
-        app:fab_labelStyle="@style/menu_labels_style"
-        app:fab_labelsPosition="left"
-        app:fab_addButtonColorNormal="@color/colorAccent"
-        app:fab_addButtonColorPressed="@color/colorAccent"
-        app:fab_addButtonPlusIconColor="@color/white">
+        style="@style/FabAppearance.Menu">
 
         <com.getbase.floatingactionbutton.FloatingActionButton
             android:id="@+id/step_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:fab_icon="@drawable/ic_walk_white"
-            app:fab_colorNormal="@color/walking"
-            app:elevation="8dp"
-            app:fab_size="mini"
-            app:fab_title="Walking"
-            app:fab_colorPressed="@color/walking_pressed"/>
+            style="@style/FabAppearance.Walking" />
 
         <com.getbase.floatingactionbutton.FloatingActionButton
             android:id="@+id/run_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:fab_icon="@drawable/ic_run_white"
-            app:fab_colorNormal="@color/running"
-            app:elevation="8dp"
-            app:fab_size="mini"
-            app:fab_title="Running"
-            app:fab_colorPressed="@color/running_pressed"/>
+            style="@style/FabAppearance.Running"/>
 
         <com.getbase.floatingactionbutton.FloatingActionButton
             android:id="@+id/bike_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:fab_icon="@drawable/ic_bike_white"
-            app:fab_colorNormal="@color/biking"
-            app:elevation="8dp"
-            app:fab_size="mini"
-            app:fab_title="Biking"
-            app:fab_colorPressed="@color/biking_pressed"/>
+            style="@style/FabAppearance.Biking"/>
 
         <com.getbase.floatingactionbutton.FloatingActionButton
             android:id="@+id/other_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:fab_icon="@drawable/ic_more_white"
-            app:fab_colorNormal="@color/other"
-            app:elevation="8dp"
-            app:fab_size="mini"
-            app:fab_title="Other"
-            app:fab_colorPressed="@color/other_pressed"/>
+            style="@style/FabAppearance.Other" />
 
     </com.getbase.floatingactionbutton.FloatingActionsMenu>
 </FrameLayout>

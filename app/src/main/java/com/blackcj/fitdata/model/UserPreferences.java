@@ -11,8 +11,7 @@ public class UserPreferences {
 
     public static boolean getBackgroundLoadComplete(Context context) {
         SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, 0);
-        boolean complete = settings.getBoolean("backgroundLoadComplete", false);
-        return complete;
+        return settings.getBoolean("backgroundLoadComplete", false);
     }
 
     public static void setBackgroundLoadComplete(Context context, boolean value) {
@@ -26,8 +25,7 @@ public class UserPreferences {
 
     public static boolean getCountSteps(Context context) {
         SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, 0);
-        boolean complete = settings.getBoolean("shouldCountSteps", false);
-        return complete;
+        return settings.getBoolean("shouldCountSteps", false);
     }
 
     public static void setCountSteps(Context context, boolean value) {
@@ -41,8 +39,7 @@ public class UserPreferences {
 
     public static boolean getActivityTracking(Context context) {
         SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, 0);
-        boolean complete = settings.getBoolean("shouldTrackActivity", false);
-        return complete;
+        return settings.getBoolean("shouldTrackActivity", false);
     }
 
     public static void setActivityTracking(Context context, boolean value) {
@@ -56,8 +53,7 @@ public class UserPreferences {
 
     public static long getLastSync(Context context) {
         SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, 0);
-        long complete = settings.getLong("lastSuccessfulSync", 0);
-        return complete;
+        return settings.getLong("lastSuccessfulSync", 0);
     }
 
     public static void setLastSync(Context context, long value) {

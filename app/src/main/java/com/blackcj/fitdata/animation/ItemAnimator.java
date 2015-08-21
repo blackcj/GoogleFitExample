@@ -3,10 +3,9 @@ package com.blackcj.fitdata.animation;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.RecyclerView;
-import android.view.View;
 
 /**
- * Created by chris.black on 5/11/15.
+ * Created by Chris Black
  */
 public class ItemAnimator extends DefaultItemAnimator
 {

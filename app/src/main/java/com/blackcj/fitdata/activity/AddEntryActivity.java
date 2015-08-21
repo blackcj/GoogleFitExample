@@ -27,11 +27,12 @@ import butterknife.OnClick;
  * The AddEntryActivity displays a form field allowing the user to manually add an
  * entry into the Fit API.
  */
+@SuppressWarnings({"WeakerAccess", "unused"}) // Butterknife requires public reference of injected views
 public class AddEntryActivity extends BaseActivity implements DataManager.IDataManager {
 
-    public static final String TAG = "AddEntryActivity";
+    private static final String TAG = "AddEntryActivity";
 
-    AddEntryFragment fragment;
+    private AddEntryFragment fragment;
     public static final String ARG_ACTIVITY_TYPE = "ARG_ACTIVITY_TYPE";
     private DataManager mDataManager;
 
@@ -118,7 +119,6 @@ public class AddEntryActivity extends BaseActivity implements DataManager.IDataM
     ///////////////////////////////////////
     // EVENT HANDLERS
     ///////////////////////////////////////
-
     @OnClick(R.id.save_button) void onSave() {
         Workout workout = fragment.getWorkout();
         if (workout != null) {

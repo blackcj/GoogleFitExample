@@ -1,8 +1,5 @@
 package com.blackcj.fitdata.database;
 
-import android.content.Context;
-
-import com.blackcj.fitdata.model.Workout;
 import com.google.android.gms.fitness.FitnessActivities;
 import com.google.android.gms.fitness.data.DataPoint;
 import com.google.android.gms.fitness.data.DataSet;
@@ -17,7 +14,7 @@ import com.google.android.gms.fitness.request.SessionInsertRequest;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by chris.black on 5/1/15.
+ * Created by Chris Black
  */
 public class DataQueries {
     public static final String TAG = "FitData";
@@ -33,20 +30,18 @@ public class DataQueries {
      *
      */
     public static DataReadRequest queryActivitySegment(long startTime, long endTime) {
-        DataReadRequest readRequest = new DataReadRequest.Builder()
+        return new DataReadRequest.Builder()
                 .read(DataType.TYPE_ACTIVITY_SEGMENT)
                 .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
                 .build();
-        return readRequest;
     }
 
     public static DataReadRequest queryActivitySegmentBucket(long startTime, long endTime) {
-        DataReadRequest readRequest = new DataReadRequest.Builder()
+        return new DataReadRequest.Builder()
                 .aggregate(DataType.TYPE_ACTIVITY_SEGMENT, DataType.AGGREGATE_ACTIVITY_SUMMARY)
                 .bucketByTime(1, TimeUnit.DAYS)
                 .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
                 .build();
-        return readRequest;
     }
 
     /**
@@ -63,12 +58,11 @@ public class DataQueries {
                 .setAppPackageName("com.google.android.gms")
                 .build();
 
-        DataReadRequest readRequest = new DataReadRequest.Builder()
+        return new DataReadRequest.Builder()
                 .aggregate(ESTIMATED_STEP_DELTAS, DataType.AGGREGATE_STEP_COUNT_DELTA)
                 .bucketByTime(1, TimeUnit.DAYS)
                 .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
                 .build();
-        return readRequest;
     }
 
     /**
@@ -78,15 +72,11 @@ public class DataQueries {
      *
      */
     public static DataReadRequest queryStepCount(long startTime, long endTime) {
-        // [START build_read_data_request]
-        DataReadRequest readRequest = new DataReadRequest.Builder()
+        return new DataReadRequest.Builder()
                 .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
                 .bucketByTime(1, TimeUnit.DAYS)
                 .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
                 .build();
-        // [END build_read_data_request]
-
-        return readRequest;
     }
 
     /**
@@ -111,13 +101,12 @@ public class DataQueries {
                 .build();
 
         // Build a session insert request
-        SessionInsertRequest insertRequest = new SessionInsertRequest.Builder()
+
+        return new SessionInsertRequest.Builder()
                 .setSession(session)
                 .addDataSet(createStepDeltaDataSet(startTime, endTime, stepCountDelta, packageName, device))
                 .addDataSet(createActivityDataSet(startTime, endTime, activityName, packageName, device))
                 .build();
-
-        return insertRequest;
     }
 
     /**

@@ -5,7 +5,9 @@ import com.blackcj.fitdata.model.WorkoutReport;
 import com.blackcj.fitdata.model.WorkoutTypes;
 
 /**
- * Created by chris.black on 6/22/15.
+ * Created by Chris Black
+ *
+ * Mock data that can be used for debugging
  */
 public class MockData {
 

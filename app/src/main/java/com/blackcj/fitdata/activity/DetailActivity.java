@@ -3,46 +3,33 @@ package com.blackcj.fitdata.activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewCompat;
-import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.graphics.Palette;
 import android.transition.Fade;
 import android.transition.Transition;
-import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.Spinner;
-import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 
 import com.blackcj.fitdata.R;
 import com.blackcj.fitdata.Utilities;
-import com.blackcj.fitdata.adapter.TabPagerAdapter;
 import com.blackcj.fitdata.database.CacheManager;
 import com.blackcj.fitdata.fragment.ReportsFragment;
 import com.blackcj.fitdata.model.SummaryData;
 import com.blackcj.fitdata.model.Workout;
 import com.blackcj.fitdata.model.WorkoutTypes;
 import com.blackcj.fitdata.service.CacheResultReceiver;
-
-import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -53,6 +40,7 @@ import butterknife.ButterKnife;
  *
  * Displays a detail page for the selected workout type
  */
+@SuppressWarnings("WeakerAccess") // Butterknife requires public reference of injected views
 public class DetailActivity extends BaseActivity implements CacheResultReceiver.Receiver {
 
     private static final String EXTRA_TYPE = "DetailActivity:type";
@@ -224,8 +212,9 @@ public class DetailActivity extends BaseActivity implements CacheResultReceiver.
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                averageText.setText("Average steps per day: " + data.averageDailyData);
-                currentText.setText("Steps today: " + data.todayData);
+                // TODO: Work in progress
+                //averageText.setText("Average steps per day: " + data.averageDailyData);
+                //currentText.setText("Steps today: " + data.todayData);
             }
         });
     }

@@ -8,7 +8,9 @@ import org.achartengine.renderer.XYMultipleSeriesRenderer;
 import java.io.Serializable;
 
 /**
- * Created by chris.black on 6/29/15.
+ * Created by Chris BLack
+ *
+ * Base class for report graphs
  */
 public abstract class BaseReportGraph implements IReportGraph, Serializable {
 
@@ -35,7 +37,7 @@ public abstract class BaseReportGraph implements IReportGraph, Serializable {
      * Baseline an int to the correct pixel density.
      *
      * @param size int to convert
-     * @return
+     * @return Size in DP
      */
     public int getDPI(int size){
         return (size * densityDPI) / DisplayMetrics.DENSITY_DEFAULT;

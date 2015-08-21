@@ -9,10 +9,8 @@ import android.util.Log;
 
 import com.blackcj.fitdata.Utilities;
 import com.blackcj.fitdata.activity.MainActivity;
-import com.blackcj.fitdata.database.CacheManager;
 import com.blackcj.fitdata.database.CupboardSQLiteOpenHelper;
 import com.blackcj.fitdata.database.MockData;
-import com.blackcj.fitdata.model.SummaryData;
 import com.blackcj.fitdata.model.Workout;
 import com.blackcj.fitdata.model.WorkoutReport;
 
@@ -24,7 +22,7 @@ import nl.qbusict.cupboard.QueryResultIterable;
 import static nl.qbusict.cupboard.CupboardFactory.cupboard;
 
 /**
- * Created by chris.black on 7/6/15.
+ * Created by Chris Black
  */
 public class ReadCacheIntentService extends IntentService {
 
@@ -42,7 +40,7 @@ public class ReadCacheIntentService extends IntentService {
         mReceiver = new WeakReference<>(resultReceiver);
         final CupboardSQLiteOpenHelper dbHelper = new CupboardSQLiteOpenHelper(this);
         final SQLiteDatabase mDb = dbHelper.getWritableDatabase();
-        Utilities.TimeFrame mTimeFrame = (Utilities.TimeFrame) intent.getSerializableExtra("TimeFrame");;
+        Utilities.TimeFrame mTimeFrame = (Utilities.TimeFrame) intent.getSerializableExtra("TimeFrame");
         ArrayList<Workout> report;
         if (mockData) {
             switch (mTimeFrame) {

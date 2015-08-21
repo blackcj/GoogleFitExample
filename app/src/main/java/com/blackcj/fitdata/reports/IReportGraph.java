@@ -1,22 +1,21 @@
 package com.blackcj.fitdata.reports;
 
 import android.app.Activity;
-import android.util.DisplayMetrics;
-
-import com.blackcj.fitdata.model.Workout;
 
 import org.achartengine.GraphicalView;
 
 /**
- * Created by chris.black on 6/29/15.
+ * Created by Chris Black
+ *
+ * Interface for report graphs
  */
 public interface IReportGraph {
-    public GraphicalView getChartGraph(Activity activity);
-    public void clearData();
-    public void addWorkout(int series, int data, int position);
-    public void updateRenderer();
-    public void setGoal(int goalValue);
-    public void setDisplayMetrics(int dpi);
-    public void addRenderer(int series, Activity activity, int color);
-    public double getDataAtPoint(double xPos);
+    GraphicalView getChartGraph(Activity activity);
+    void clearData();
+    void addWorkout(int series, int data, int position);
+    void updateRenderer();
+    void setGoal(int goalValue);
+    void setDisplayMetrics(int dpi);
+    void addRenderer(int series, Activity activity, int color);
+    double getDataAtPoint(double xPos);
 }

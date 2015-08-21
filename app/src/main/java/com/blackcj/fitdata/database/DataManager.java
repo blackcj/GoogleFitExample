@@ -1,7 +1,6 @@
 package com.blackcj.fitdata.database;
 
 import android.app.Activity;
-import android.bluetooth.BluetoothClass;
 import android.content.Context;
 import android.content.IntentSender;
 import android.database.sqlite.SQLiteDatabase;
@@ -26,7 +25,6 @@ import com.google.android.gms.fitness.FitnessStatusCodes;
 import com.google.android.gms.fitness.data.Bucket;
 import com.google.android.gms.fitness.data.DataPoint;
 import com.google.android.gms.fitness.data.DataSet;
-import com.google.android.gms.fitness.data.DataSource;
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.Device;
 import com.google.android.gms.fitness.data.Field;
@@ -179,7 +177,7 @@ public class DataManager {
     public void quickDataRead() {
         if (mClient.isConnected()) {
             Context context = getApplicationContext();
-            long syncStart = Utilities.getTimeFrameStart(Utilities.TimeFrame.BEGINNING_OF_WEEK);
+            long syncStart = Utilities.getTimeFrameStart(Utilities.TimeFrame.BEGINNING_OF_DAY);
             if (context != null) {
                 SQLiteDatabase db = getDatabase();
                 if (db != null && db.isOpen()) {
@@ -260,7 +258,7 @@ public class DataManager {
         // Set a start and end time for our data, using a start time of 1 day before this moment.
         long endTime = workout.start + workout.duration;
         long startTime = workout.start;
-        long syncStart = workout.start - (1000 * 60 * 60 * 24);
+        long syncStart = workout.start - (1000 * 60 * 60 * 8);
         SQLiteDatabase db = getDatabase();
         if (db != null) {
             //cupboard().withDatabase(db).delete(Workout.class, "start >= ?", "" + syncStart);
@@ -351,7 +349,7 @@ public class DataManager {
 
                 //cupboard().withDatabase(mDb).put(workout);
                 UserPreferences.setBackgroundLoadComplete(context, false);
-                UserPreferences.setLastSync(context, workout.start - (1000 * 60 * 60 * 24));
+                UserPreferences.setLastSync(context, workout.start - (1000 * 60 * 60 * 8));
 
                 populateHistoricalData();
             }
@@ -390,7 +388,7 @@ public class DataManager {
                 Log.i(TAG, "Data insert was successful!");
 
                 UserPreferences.setBackgroundLoadComplete(context, false);
-                UserPreferences.setLastSync(context, workout.start - (1000 * 60 * 60 * 24));
+                UserPreferences.setLastSync(context, workout.start - (1000 * 60 * 60 * 8));
 
                 //populateHistoricalData();
             }
@@ -493,7 +491,7 @@ public class DataManager {
 
     public void onConnect() {
         // TODO: Only populate history data on first load.
-        //populateHistoricalData();
+        populateHistoricalData();
         // Data load not complete, could take a while so lets show some data
         //populateReport();
         //subscribeSteps();

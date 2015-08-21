@@ -54,7 +54,7 @@ public class Workout implements Comparable<Workout>, Parcelable {
 
     @Override
     public int compareTo(Workout another) {
-        int result = 0;
+        int result;
         Long obj1 = this.start;
         Long obj2 = another.start;
 
@@ -94,9 +94,6 @@ public class Workout implements Comparable<Workout>, Parcelable {
         String result = WorkoutTypes.getWorkOutTextById(type) + " on " + Utilities.getDayString(start) +
                 " at " + Utilities.getTimeString(start) +
                 " for " + WorkoutReport.getDurationBreakdown(duration);
-        if (stepCount > 0) {
-            //result += " with " + stepCount + "steps";
-        }
         return result;
     }
 

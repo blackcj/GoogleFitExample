@@ -15,7 +15,10 @@ import com.blackcj.fitdata.model.WorkoutReport;
 import java.lang.ref.WeakReference;
 
 /**
- * Created by chris.black on 7/8/15.
+ * Created by Chris Black
+ *
+ * This class is a work in progress. It will be used to return summary data to display on
+ * the report page.
  */
 public class SummaryCacheIntentService  extends IntentService {
 
@@ -33,7 +36,7 @@ public class SummaryCacheIntentService  extends IntentService {
         mReceiver = new WeakReference<>(resultReceiver);
         final CupboardSQLiteOpenHelper dbHelper = new CupboardSQLiteOpenHelper(this);
         final SQLiteDatabase mDb = dbHelper.getWritableDatabase();
-        int workoutType = intent.getIntExtra("WorkoutType", 0);;
+        int workoutType = intent.getIntExtra("WorkoutType", 0);
         SummaryData report = new SummaryData();
         if (mockData) {
             report.activityType = -2;

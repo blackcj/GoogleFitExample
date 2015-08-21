@@ -19,7 +19,7 @@ import nl.qbusict.cupboard.QueryResultIterable;
 import static nl.qbusict.cupboard.CupboardFactory.cupboard;
 
 /**
- * Created by chris.black on 6/22/15.
+ * Created by Chris Black
  */
 public class CacheManager {
 
@@ -66,6 +66,6 @@ public class CacheManager {
     }
 
     public interface ICacheManager {
-        public Cursor getCursor();
+        Cursor getCursor();
     }
 }

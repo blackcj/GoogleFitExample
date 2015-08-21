@@ -1,9 +1,6 @@
 package com.blackcj.fitdata.fragment;
 
-import android.app.Activity;
 import android.support.v4.app.Fragment;
-
-import com.blackcj.fitdata.activity.IMainActivityCallback;
 
 import butterknife.ButterKnife;
 

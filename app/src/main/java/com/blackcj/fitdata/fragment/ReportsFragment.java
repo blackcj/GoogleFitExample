@@ -10,7 +10,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.blackcj.fitdata.Utilities;
@@ -41,7 +40,7 @@ import nl.qbusict.cupboard.QueryResultIterable;
 import static nl.qbusict.cupboard.CupboardFactory.cupboard;
 
 /**
- * Created by chris.black on 5/2/15.
+ * Created by Chris Black
  */
 @SuppressWarnings("WeakerAccess") // Butterknife requires public reference of injected views
 public class ReportsFragment extends BaseFragment {
@@ -165,10 +164,6 @@ public class ReportsFragment extends BaseFragment {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
         return super.onOptionsItemSelected(item);
     }
 
@@ -287,9 +282,7 @@ public class ReportsFragment extends BaseFragment {
             if (multiplier == 7) {
                 id = numSegments - (week_of_year - cal.get(Calendar.WEEK_OF_YEAR)) - 1;
             }
-            if (workout.type == workoutType) {
-                //Log.d(TAG, id + " | " + numSegments + " | " + workout.toString());
-            }
+
             if (id < numSegments && id >= 0) {
 
                 if (workoutType == WorkoutTypes.TIME.getValue() && WorkoutTypes.isActiveWorkout(workout.type)) {

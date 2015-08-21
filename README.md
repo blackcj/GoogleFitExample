@@ -11,6 +11,7 @@ Resources
 ---------------------------
 + [Material Everywhere](http://antonioleiva.com/material-design-everywhere/)
 + [Google Fit Tutorial](http://orange.dataart.com/how-to-use-googlefit-api/)
++ [Cupboard Tutorial](https://guides.codepath.com/android/Easier-SQL-with-Cupboard)
 
 Third Party Libraries
 ---------------------------

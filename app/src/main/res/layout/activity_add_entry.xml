@@ -1,17 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="fill_parent"
     android:id="@+id/container"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    tools:context=".AddEntryActivity">
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar"
         android:elevation="4dp"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:background="?attr/colorPrimaryDark"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        style="@style/ToolbarAppearance"
         android:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
     <FrameLayout
         android:id="@+id/placeholder"
@@ -19,37 +17,22 @@
         android:layout_above="@+id/bottom_bar"
         android:background="@color/colorPrimary"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent" />
 
     <LinearLayout
         android:elevation="4dp"
         android:id="@+id/bottom_bar"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:gravity="right"
-        android:paddingRight="15dp"
-        android:background="@color/lighterGray">
-
+        style="@style/LayoutAppearance.BottomBar">
         <Button
             android:id="@+id/cancel_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="CANCEL"
-            android:layout_alignBaseline="@+id/save_button"
-            android:layout_toLeftOf="@+id/save_button"
-            android:background="@android:color/transparent"
-            android:layout_marginRight="15dp"
-            android:layout_marginBottom="0dp"/>
+            style="@style/ButtonAppearance.BarButton"
+            android:text="@string/cancel_button_text"
+            android:layout_marginEnd="15dp"
+            android:layout_marginBottom="0dp" />
         <Button
             android:id="@+id/save_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            style="@style/ButtonAppearance.BarButton"
             android:textColor="@color/colorPrimaryDark"
-            android:text="SAVE"
-            android:background="@android:color/transparent"
-            />
+            android:text="@string/save_button_text" />
     </LinearLayout>
 </RelativeLayout>

@@ -5,8 +5,6 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Intent;
-import android.database.Cursor;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CoordinatorLayout;
@@ -19,17 +17,12 @@ import android.support.v4.view.MotionEventCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.SearchView;
 import android.transition.ChangeBounds;
-import android.transition.Fade;
 import android.transition.Transition;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.animation.AccelerateInterpolator;
-import android.view.animation.Animation;
-import android.view.animation.DecelerateInterpolator;
-import android.view.animation.ScaleAnimation;
 
 import com.blackcj.fitdata.adapter.TabPagerAdapter;
 import com.blackcj.fitdata.R;
@@ -40,8 +33,6 @@ import com.blackcj.fitdata.model.Workout;
 import com.getbase.floatingactionbutton.FloatingActionsMenu;
 import com.google.android.gms.fitness.data.DataSet;
 
-import java.util.ArrayList;
-
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -51,11 +42,12 @@ import butterknife.OnClick;
  * query against existing data, and remove data. It also demonstrates how to authenticate
  * a user with Google Play Services and how to properly represent data in a {@link DataSet}.
  */
+@SuppressWarnings("WeakerAccess") // Butterknife requires public reference of injected views
 public class MainActivity extends BaseActivity implements SearchView.OnQueryTextListener,
         FragmentManager.OnBackStackChangedListener, AppBarLayout.OnOffsetChangedListener,
         IMainActivityCallback, DataManager.IDataManager, FloatingActionsMenu.OnFloatingActionsMenuUpdateListener {
 
-    public static final String TAG = "MainActivity";
+    private static final String TAG = "MainActivity";
     public final static String RECEIVER_TAG = "MainActivityReceiver";
     public static boolean active = false;
     protected DataManager mDataManager;

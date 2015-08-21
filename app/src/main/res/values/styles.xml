@@ -26,12 +26,7 @@
         <item name="windowActionBar">false</item>
         <!-- For the resting Spinner style -->
         <item name="android:spinnerItemStyle">@style/spinnerItemStyle</item>
-
-        <!-- For each individual Spinner list item once clicked on -->
-        <!--<item name="android:spinnerDropDownItemStyle">@style/spinnerDropDownItemStyle</item>-->
-
     </style>
-
 
     <style name="Log" parent="AppTheme">
         <item name="android:typeface">monospace</item>
@@ -45,11 +40,87 @@
         <item name="android:padding">0dp</item>
         <item name="android:textSize">18sp</item>
         <item name="android:textAlignment">center</item>
-        <!--<item name="android:textColor">#111</item>-->
     </style>
 
-    <style name="spinnerDropDownItemStyle">
+    <style name="ToolbarAppearance">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:minHeight">?attr/actionBarSize</item>
+        <item name="android:theme">@style/ThemeOverlay.AppCompat.Dark.ActionBar</item>
+        <item name="android:background">?attr/colorPrimary</item>
+    </style>
 
+    <style name="LayoutAppearance" />
+
+    <style name="LayoutAppearance.BottomBar">
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:layout_alignParentBottom">true</item>
+        <item name="android:layout_alignParentEnd">true</item>
+        <item name="android:gravity">end</item>
+        <item name="android:paddingEnd">15dp</item>
+        <item name="android:paddingStart">15dp</item>
+        <item name="android:background">@color/lighterGray</item>
+    </style>
+
+    <style name="ButtonAppearance" />
+
+    <style name="ButtonAppearance.BarButton">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@android:color/transparent</item>
+    </style>
+
+    <style name="FabAppearance">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+    <style name="FabAppearance.Menu">
+        <item name="android:layout_gravity">bottom|end</item>
+        <item name="android:layout_margin">10dp</item>
+        <item name="fab_labelStyle">@style/menu_labels_style</item>
+        <item name="fab_labelsPosition">left</item>
+        <item name="fab_addButtonColorNormal">@color/colorAccent</item>
+        <item name="fab_addButtonColorPressed">@color/colorAccent</item>
+        <item name="fab_addButtonPlusIconColor">@color/white</item>
+    </style>
+
+    <style name="FabAppearance.Walking">
+        <item name="fab_icon">@drawable/ic_walk_white</item>
+        <item name="fab_colorNormal">@color/walking</item>
+        <item name="elevation">8dp</item>
+        <item name="fab_size">mini</item>
+        <item name="fab_title">Walking</item>
+        <item name="fab_colorPressed">@color/walking_pressed</item>
+    </style>
+
+    <style name="FabAppearance.Running">
+        <item name="fab_icon">@drawable/ic_run_white</item>
+        <item name="fab_colorNormal">@color/running</item>
+        <item name="elevation">8dp</item>
+        <item name="fab_size">mini</item>
+        <item name="fab_title">Running</item>
+        <item name="fab_colorPressed">@color/running_pressed</item>
+    </style>
+
+    <style name="FabAppearance.Biking">
+        <item name="fab_icon">@drawable/ic_bike_white</item>
+        <item name="fab_colorNormal">@color/biking</item>
+        <item name="elevation">8dp</item>
+        <item name="fab_size">mini</item>
+        <item name="fab_title">Biking</item>
+        <item name="fab_colorPressed">@color/biking_pressed</item>
+    </style>
+
+    <style name="FabAppearance.Other">
+        <item name="fab_icon">@drawable/ic_more_white</item>
+        <item name="fab_colorNormal">@color/other</item>
+        <item name="elevation">8dp</item>
+        <item name="fab_size">mini</item>
+        <item name="fab_title">Other</item>
+        <item name="fab_colorPressed">@color/other_pressed</item>
     </style>
 
     <style name="menu_labels_style">
@@ -58,7 +129,7 @@
     </style>
 
     <style name="form_item">
-        <item name="android:layout_marginLeft">30dp</item>
+        <item name="android:layout_marginStart">30dp</item>
         <item name="android:layout_width">190dp</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:textColor">@android:color/black</item>
@@ -68,7 +139,7 @@
     <style name="form_divider">
         <item name="android:layout_width">172dp</item>
         <item name="android:layout_height">1dp</item>
-        <item name="android:layout_marginLeft">34dp</item>
+        <item name="android:layout_marginStart">34dp</item>
         <item name="android:background">@color/colorAccent</item>
     </style>
 

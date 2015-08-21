@@ -2,9 +2,7 @@ package com.blackcj.fitdata.fragment;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -23,9 +21,10 @@ import butterknife.OnCheckedChanged;
 /**
  * Created by chris.black on 7/2/15.
  */
+@SuppressWarnings({"WeakerAccess", "unused"}) // Butterknife requires public reference of injected views
 public class SettingsFragment extends BaseFragment {
 
-    protected IMainActivityCallback mCallback;
+    private IMainActivityCallback mCallback;
 
     @Bind(R.id.step_toggle)
     ToggleButton step_toggle;
