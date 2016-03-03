@@ -780,7 +780,7 @@ public class DataManager {
             // Populate db cache with data
             for(Field field : dp.getDataType().getFields()) {
                 if(field.getName().equals("activity") && dp.getDataType().getName().equals("com.google.activity.segment")) {
-                    Log.i(TAG, dp.getOriginalDataSource().getAppPackageName());
+                    //Log.i(TAG, dp.getOriginalDataSource().getAppPackageName());
                     dp.getVersionCode();
                     long startTime = dp.getStartTime(TimeUnit.MILLISECONDS);
                     int activity = dp.getValue(field).asInt();
