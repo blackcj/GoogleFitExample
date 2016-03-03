@@ -3,15 +3,42 @@
 
     <color name="colorPrimary">#70C4AF</color>
     <color name="colorPrimaryDark">#5CA292</color>
+    <color name="colorPrimaryDarker">#1A302C</color>
     <color name="colorAccent">#4E5D74</color>
     <color name="colorTextPrimary">#353F50</color>
     <color name="semiBlack">#aa111111</color>
     <color name="semiWhite">#CCFFFFFF</color>
+    <color name="semiGray">#CCEEEEEE</color>
     <color name="colorBarGraph">#77FFFFFF</color>
+    <color name="colorBarGraph2">#35FFFFFF</color>
     <color name="colorWhite">#FFFFFF</color>
+    <color name="lighterGray">#f2f2f2</color>
     <color name="lightGray">#eee</color>
 
     <color name="blue4">#8AD5F0</color>
     <color name="darkGrey">#888888</color>
+    <color name="darkerGrey">#444</color>
     <color name="blue14">#0099CC</color>
+
+    <color name="white">#fafafa</color>
+    <color name="white_pressed">#f1f1f1</color>
+
+    <color name="running_graph">#AADE5F8A</color>
+    <color name="biking_graph">#AA76C4C7</color>
+    <color name="walking_graph">#AAFFA55B</color>
+    <color name="golfing_graph">#AA9BD2A7</color>
+    <color name="paddling_graph">#AAC8B48F</color>
+    <color name="other_graph">#AAEFEFEF</color>
+
+    <color name="running">#DE5F8A</color>
+    <color name="biking">#76C4C7</color>
+    <color name="walking">#FFA55B</color>
+    <color name="golfing">#56AB75</color>
+    <color name="paddling">#C8B48F</color>
+    <color name="other">#808080</color>
+
+    <color name="running_pressed">#BF5278</color>
+    <color name="biking_pressed">#65A9AD</color>
+    <color name="walking_pressed">#EB984E</color>
+    <color name="other_pressed">#646464</color>
 </resources>
