@@ -62,7 +62,8 @@ public class Utilities {
         BEGINNING_OF_MONTH,
         LAST_MONTH,
         BEGINNING_OF_YEAR,
-        THIRTY_DAYS;
+        THIRTY_DAYS,
+        ALL_TIME;
         private static TimeFrame[] vals = values();
         public TimeFrame next()
         {
@@ -89,6 +90,9 @@ public class Utilities {
             case BEGINNING_OF_YEAR: // Year to date
                 result = "This Year";
                 break;
+            case ALL_TIME: // Year to date
+                result = "All Time";
+                break;
         }
         return result;
     }
@@ -102,6 +106,8 @@ public class Utilities {
             case BEGINNING_OF_DAY: // 1 day
             case BEGINNING_OF_WEEK: // 1 week
             case BEGINNING_OF_MONTH: // 1 month
+            case BEGINNING_OF_YEAR: // 1 year
+            case ALL_TIME: // All time
                 break;
             case LAST_MONTH: // 1 month ago
                 cal.set(Calendar.DAY_OF_MONTH, 0);
@@ -149,13 +155,13 @@ public class Utilities {
                 cal.set(Calendar.MILLISECOND, 0);
                 cal.add(Calendar.MONTH, -1);
                 break;
-            case BEGINNING_OF_YEAR: // 1 month ago
+            case BEGINNING_OF_YEAR: // This year
                 cal.set(Calendar.DAY_OF_MONTH, 1);
                 cal.set(Calendar.HOUR_OF_DAY, 0);
                 cal.set(Calendar.MINUTE, 0);
                 cal.set(Calendar.SECOND, 0);
                 cal.set(Calendar.MILLISECOND, 0);
-                cal.set(Calendar.YEAR, 0);
+                cal.set(Calendar.DAY_OF_YEAR, 1);
                 break;
             case THIRTY_DAYS: // 30 days
                 cal.set(Calendar.HOUR_OF_DAY, 0);
@@ -163,6 +169,13 @@ public class Utilities {
                 cal.set(Calendar.SECOND, 0);
                 cal.set(Calendar.MILLISECOND, 0);
                 cal.add(Calendar.DAY_OF_YEAR, -30);
+                break;
+            case ALL_TIME: // All time
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                cal.add(Calendar.YEAR, 0);
                 break;
         }
         return cal.getTimeInMillis();

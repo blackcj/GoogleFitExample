@@ -21,8 +21,10 @@ public enum WorkoutTypes {
     WALKING(7),
     RUNNING(8),
     AEROBICS(9),
+    GARDENING(31),
     GOLF(32),
     KAYAKING(40),
+    ROCK_CLIMBING(52),
     CROSS_COUNTRY_SKIING(67),
     SLEEP(72),
     SNOWBOARDING(73),
@@ -84,11 +86,17 @@ public enum WorkoutTypes {
             case 9:
                 result = FitnessActivities.AEROBICS;
                 break;
+            case 31:
+                result = FitnessActivities.GARDENING;
+                break;
             case 32:
                 result = FitnessActivities.GOLF;
                 break;
             case 40:
                 result = FitnessActivities.KAYAKING;
+                break;
+            case 52:
+                result = FitnessActivities.ROCK_CLIMBING;
                 break;
             case 67:
                 result = FitnessActivities.SKIING_CROSS_COUNTRY;
@@ -145,11 +153,17 @@ public enum WorkoutTypes {
             case 3:
                 result = "Still";
                 break;
+            case 31:
+                result = "Gardening";
+                break;
             case 32:
                 result = "Golf";
                 break;
             case 40:
                 result = "Kayaking";
+                break;
+            case 52:
+                result = "Rock Climbing";
                 break;
             case 67:
                 result = "Cross Country Skiing";

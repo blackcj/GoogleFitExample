@@ -156,6 +156,8 @@ public class AddEntryFragment extends Fragment {
             case 4:
             case 5:
             case 7:
+            case 10:
+            case 11:
                 editInputLayout2.setVisibility(View.GONE);
                 labelText2.setVisibility(View.GONE);
                 break;
@@ -275,6 +277,12 @@ public class AddEntryFragment extends Fragment {
                 break;
             case 9:
                 workout.type = WorkoutTypes.TENNIS.getValue();
+                break;
+            case 10:
+                workout.type = WorkoutTypes.ROCK_CLIMBING.getValue();
+                break;
+            case 11:
+                workout.type = WorkoutTypes.GARDENING.getValue();
                 break;
 
         }

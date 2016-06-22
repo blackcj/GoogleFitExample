@@ -54,6 +54,8 @@
         <item>Sleep</item>
         <item>Snowboarding</item>
         <item>Tennis</item>
+        <item>Rock Climbing</item>
+        <item>Gardening</item>
     </string-array>
 
     <string-array name="graph_types">

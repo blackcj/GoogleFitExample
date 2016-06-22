@@ -1,5 +1,6 @@
 package com.blackcj.fitdata.activity;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
@@ -7,6 +8,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -120,13 +122,35 @@ public class AddEntryActivity extends BaseActivity implements DataManager.IDataM
     // EVENT HANDLERS
     ///////////////////////////////////////
     @OnClick(R.id.save_button) void onSave() {
-        Workout workout = fragment.getWorkout();
+        final Workout workout = fragment.getWorkout();
         if (workout != null) {
             Log.d(TAG, "Added: " + workout.toString());
             // Validate workout doesn't overlap
             if (CacheManager.checkConflict(this, workout)) {
-                Log.d(TAG, "Overlap detected!");
-                Snackbar.make(container, "Overlap detected. Please change start time.", Snackbar.LENGTH_LONG).show();
+                Log.d(TAG, "Overlap detected.");
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setMessage("Overlap detected.")
+                        .setPositiveButton("CONTINUE", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                mDataManager.insertData(workout);
+                                finishAfterTransition();
+                            }
+                        })
+                        .setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                // User cancelled the dialog
+                            }
+                        });
+                builder.create();
+                /*
+                Snackbar.make(container, "Overlap detected.", Snackbar.LENGTH_INDEFINITE).setAction("OVERLAP", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        mDataManager.insertData(workout);
+                        finishAfterTransition();
+                    }
+                }).show();*/
             } else {
                 mDataManager.insertData(workout);
                 finishAfterTransition();
