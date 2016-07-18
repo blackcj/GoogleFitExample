@@ -15,6 +15,7 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.blackcj.fitdata.R;
+import com.blackcj.fitdata.Utilities;
 import com.blackcj.fitdata.database.CacheManager;
 import com.blackcj.fitdata.database.CupboardSQLiteOpenHelper;
 import com.blackcj.fitdata.database.DataManager;
@@ -155,7 +156,12 @@ public class RecentActivity extends BaseActivity implements DataManager.IDataMan
         Snackbar.make(container, "Removed entry", Snackbar.LENGTH_LONG).setAction("UNDO", clickListener).show();
         Log.d(TAG, "Removed: " + workout.toString());
         mDataManager.deleteWorkout(workout);
-        dataChanged();
+        onDataChanged(Utilities.TimeFrame.ALL_TIME);
+    }
+
+    @Override
+    public void onConnected() {
+
     }
 
     final View.OnClickListener clickListener = new View.OnClickListener() {
@@ -165,7 +171,7 @@ public class RecentActivity extends BaseActivity implements DataManager.IDataMan
     };
 
     @Override
-    public void dataChanged() {
+    public void onDataChanged(Utilities.TimeFrame timeFrame) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -174,6 +180,8 @@ public class RecentActivity extends BaseActivity implements DataManager.IDataMan
                 Log.d(TAG, "Refresh cursor");
             }
         });
-
-    }
+    };
+    @Override
+    public void onDataComplete() {
+    };
 }

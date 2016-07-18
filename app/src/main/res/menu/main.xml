@@ -17,6 +17,12 @@
         app:showAsAction="ifRoom" />
 
     <item android:id="@+id/action_refresh_data"
+        android:title="@string/action_refresh_data"
+        android:orderInCategory="100"
+        android:icon="@drawable/ic_refresh_white"
+        app:showAsAction="ifRoom" />
+
+    <item android:id="@+id/action_reload_data"
         android:title="@string/action_load_data"
         android:orderInCategory="100"
         android:icon="@drawable/ic_refresh_white"

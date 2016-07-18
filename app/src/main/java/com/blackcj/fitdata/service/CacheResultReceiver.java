@@ -1,5 +1,6 @@
 package com.blackcj.fitdata.service;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
@@ -10,6 +11,7 @@ import java.lang.ref.WeakReference;
 /**
  * Created by Chris Black
  */
+@SuppressLint("ParcelCreator")
 public class CacheResultReceiver extends ResultReceiver {
 
     public final static String TAG = "CacheResultReceiver";

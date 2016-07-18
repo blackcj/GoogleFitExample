@@ -19,7 +19,8 @@
     <string name="app_name">Fit Data</string>
     <string name="intro_text">Behold, a data dump from the Fitness API! Check the menu for more actions!</string>
     <string name="action_search">Search</string>
-    <string name="action_load_data">Refresh</string>
+    <string name="action_load_data">Reload</string>
+    <string name="action_refresh_data">Refresh</string>
     <string name="action_delete_steps">Delete steps</string>
     <string name="action_settings">Settings</string>
     <string name="action_history">History</string>

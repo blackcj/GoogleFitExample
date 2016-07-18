@@ -1,6 +1,7 @@
 package com.blackcj.fitdata.fragment;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -16,7 +17,9 @@ import com.blackcj.fitdata.activity.IMainActivityCallback;
 import com.blackcj.fitdata.adapter.RecyclerViewAdapter;
 import com.blackcj.fitdata.animation.ItemAnimator;
 import com.blackcj.fitdata.database.CacheManager;
+import com.blackcj.fitdata.model.UserPreferences;
 import com.blackcj.fitdata.model.Workout;
+import com.blackcj.fitdata.service.BackgroundRefreshService;
 import com.blackcj.fitdata.service.CacheResultReceiver;
 
 import java.util.ArrayList;
@@ -36,9 +39,12 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
     private static final String ARG_PAGE = "ARG_PAGE";
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private RecyclerViewAdapter adapter;
+    private boolean needsRefresh = true;
     private int mPage;
     private CacheResultReceiver mReciever;
     protected IMainActivityCallback mCallback;
+    protected Handler mHandler;
+    protected Runnable mRunnable;
 
     @Bind(R.id.recyclerView)
     RecyclerView mRecyclerView;
@@ -81,10 +87,14 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
             @Override
             public void onRefresh() {
                 //CacheManager.getReport(Utilities.TimeFrame.values()[mPage - 1], mReciever, getActivity());
+                if (mPage < 4) {
+                    //UserPreferences.setLastSync(getActivity(), Utilities.getTimeFrameStart(Utilities.TimeFrame.values()[mPage - 1]));
+                }
                 mCallback.quickDataRead();
             }
         });
         mSwipeRefreshLayout.setEnabled(false);
+
         return view;
     }
 
@@ -129,6 +139,9 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
     public void onPause() {
         super.onPause();
         mReciever.setReceiver(null);
+        if (mHandler != null && mRunnable != null) {
+            mHandler.removeCallbacks(mRunnable);
+        }
         if (mSwipeRefreshLayout != null) {
             mSwipeRefreshLayout.setRefreshing(false);
             mSwipeRefreshLayout.setEnabled(false);
@@ -149,20 +162,33 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
     @Override
     public void onReceiveResult(int resultCode, Bundle resultData) {
         final List<Workout> workoutList = resultData.getParcelableArrayList("workoutList");
-        // Update the UI
-        getActivity().runOnUiThread(new Runnable() {
+        needsRefresh = true;
+        if (adapter.getItemCount() == 0) {
+            needsRefresh = false;
+            adapter.setItems(workoutList, Utilities.getTimeFrameText(Utilities.TimeFrame.values()[mPage - 1]));
+        }
+        if (mHandler != null && mRunnable != null) {
+            mHandler.removeCallbacks(mRunnable);
+        }
+
+        mHandler = new Handler();
+        mRunnable = new Runnable() {
             @Override
             public void run() {
-                adapter.setItems(workoutList, Utilities.getTimeFrameText(Utilities.TimeFrame.values()[mPage - 1]));
-                Handler handler = new Handler();
-                handler.postDelayed(new Runnable() {
+                if (needsRefresh) {
+                    adapter.setItems(workoutList, Utilities.getTimeFrameText(Utilities.TimeFrame.values()[mPage - 1]));
+                }
+                // Update the UI
+                getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         mSwipeRefreshLayout.setRefreshing(false);
                     }
-                }, 700);
+                });
             }
-        });
+        };
+        mHandler.postDelayed(mRunnable, 1000);
+
 
     }
 }

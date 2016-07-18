@@ -63,6 +63,7 @@ public class Utilities {
         LAST_MONTH,
         BEGINNING_OF_YEAR,
         THIRTY_DAYS,
+        NINETY_DAYS,
         ALL_TIME;
         private static TimeFrame[] vals = values();
         public TimeFrame next()
@@ -169,6 +170,13 @@ public class Utilities {
                 cal.set(Calendar.SECOND, 0);
                 cal.set(Calendar.MILLISECOND, 0);
                 cal.add(Calendar.DAY_OF_YEAR, -30);
+                break;
+            case NINETY_DAYS: // 30 days
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                cal.add(Calendar.DAY_OF_YEAR, -90);
                 break;
             case ALL_TIME: // All time
                 cal.set(Calendar.HOUR_OF_DAY, 0);

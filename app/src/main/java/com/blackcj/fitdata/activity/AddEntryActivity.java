@@ -14,6 +14,7 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.blackcj.fitdata.R;
+import com.blackcj.fitdata.Utilities;
 import com.blackcj.fitdata.database.CacheManager;
 import com.blackcj.fitdata.database.DataManager;
 import com.blackcj.fitdata.fragment.AddEntryFragment;
@@ -142,7 +143,8 @@ public class AddEntryActivity extends BaseActivity implements DataManager.IDataM
                                 // User cancelled the dialog
                             }
                         });
-                builder.create();
+                AlertDialog dialog = builder.create();
+                dialog.show();
                 /*
                 Snackbar.make(container, "Overlap detected.", Snackbar.LENGTH_INDEFINITE).setAction("OVERLAP", new View.OnClickListener() {
                     @Override
@@ -177,7 +179,17 @@ public class AddEntryActivity extends BaseActivity implements DataManager.IDataM
     }
 
     @Override
-    public void dataChanged() {
+    public void onConnected() {
+
+    }
+
+    @Override
+    public void onDataChanged(Utilities.TimeFrame timeFrame) {
+
+    }
+
+    @Override
+    public void onDataComplete() {
 
     }
 }

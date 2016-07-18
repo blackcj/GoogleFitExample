@@ -18,6 +18,7 @@ limitations under the License.
     package="com.blackcj.fitdata" >
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:allowBackup="true"
@@ -66,6 +67,14 @@ limitations under the License.
 
         <service android:name=".service.ReadCacheIntentService" />
         <service android:name=".service.SummaryCacheIntentService" />
+        <service android:name=".service.BackgroundRefreshService"
+            android:enabled="true"
+            android:exported="true" >
+            <intent-filter>
+                <action
+                    android:name="com.google.android.gms.wearable.BIND_LISTENER" />
+            </intent-filter>
+        </service>
         <meta-data android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
 

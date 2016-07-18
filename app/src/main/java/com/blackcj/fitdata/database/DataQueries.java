@@ -33,6 +33,7 @@ public class DataQueries {
         return new DataReadRequest.Builder()
                 .read(DataType.TYPE_ACTIVITY_SEGMENT)
                 .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+                .enableServerQueries() // Used to retrieve data from cloud. TODO: Check reachability.
                 .build();
     }
 
@@ -41,6 +42,7 @@ public class DataQueries {
                 .aggregate(DataType.TYPE_ACTIVITY_SEGMENT, DataType.AGGREGATE_ACTIVITY_SUMMARY)
                 .bucketByTime(1, TimeUnit.DAYS)
                 .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+                .enableServerQueries() // Used to retrieve data from cloud
                 .build();
     }
 
@@ -62,6 +64,7 @@ public class DataQueries {
                 .aggregate(ESTIMATED_STEP_DELTAS, DataType.AGGREGATE_STEP_COUNT_DELTA)
                 .bucketByTime(1, TimeUnit.DAYS)
                 .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+                .enableServerQueries() // Used to retrieve data from cloud
                 .build();
     }
 
@@ -76,6 +79,7 @@ public class DataQueries {
                 .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
                 .bucketByTime(1, TimeUnit.DAYS)
                 .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+                .enableServerQueries() // Used to retrieve data from cloud
                 .build();
     }
 
