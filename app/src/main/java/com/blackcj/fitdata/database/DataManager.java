@@ -34,6 +34,8 @@ import com.google.android.gms.fitness.request.DataDeleteRequest;
 import com.google.android.gms.fitness.request.DataReadRequest;
 import com.google.android.gms.fitness.result.DataReadResult;
 import com.google.android.gms.fitness.result.ListSubscriptionsResult;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.plus.Plus;
 
 import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
@@ -77,13 +79,7 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
         if (_instance == null)
         {
             _instance = new DataManager(context);
-        }
-
-        if (!_instance.hasContext()) {
-            _instance.setContext(context);
-        }
-        if (context instanceof Activity) {
-            // Always give priority to Acitivty context
+        } else {
             _instance.setContext(context);
         }
         return _instance;
@@ -236,22 +232,35 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
     }
 
     public void quickDataRead() {
-        if (mClient.isConnected() && !refreshInProgress) {
-            // TODO: Add timeout limit to refreshInProgress
-            dumpSubscriptionsList();
-            refreshInProgress = true;
-            Context context = getApplicationContext();
-            long syncStart = UserPreferences.getLastSync(context);
-            //long syncStart = Utilities.getTimeFrameStart(Utilities.TimeFrame.BEGINNING_OF_DAY);
-            if (context != null) {
-                SQLiteDatabase db = getDatabase();
-                if (db != null && db.isOpen()) {
-                    //db.execSQL("DELETE FROM " + Workout.class.getSimpleName()); // This deletes all data
-                    cupboard().withDatabase(db).delete(Workout.class, "start >= ?", "" + syncStart);
+        Context context = getApplicationContext();
+        if (context != null && refreshInProgress) {
+            Calendar cal = Calendar.getInstance();
+            Date now = new Date();
+            cal.setTime(now);
+            long currentTime = cal.getTimeInMillis();
+            if (currentTime - UserPreferences.getLastSync(context) > 1000 * 60 * 10) {
+                // More than 10 minutes have passed. Let the user execute another refresh.
+                refreshInProgress = false;
+                Log.w(TAG, "Warning: Refresh timed out.");
+            }
+        }
+        if (mClient.isConnected()) {
+            if (!refreshInProgress) {
+                // TODO: Add timeout limit to refreshInProgress
+                dumpSubscriptionsList();
+                refreshInProgress = true;
+                long syncStart = UserPreferences.getLastSync(context);// - (1000 * 60 * 60 * 8);
+                //long syncStart = Utilities.getTimeFrameStart(Utilities.TimeFrame.BEGINNING_OF_DAY);
+                if (context != null) {
+                    SQLiteDatabase db = getDatabase();
+                    if (db != null && db.isOpen()) {
+                        //db.execSQL("DELETE FROM " + Workout.class.getSimpleName()); // This deletes all data
+                        cupboard().withDatabase(db).delete(Workout.class, "start >= ?", "" + syncStart);
+                    }
+                    //UserPreferences.setBackgroundLoadComplete(context, false);
+                    //UserPreferences.setLastSync(context, syncStart);
+                    populateHistoricalData();
                 }
-                //UserPreferences.setBackgroundLoadComplete(context, false);
-                //UserPreferences.setLastSync(context, syncStart);
-                populateHistoricalData();
             }
         } else {
             refreshInProgress = false;
@@ -260,22 +269,25 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
     }
 
     public void dataRead(long syncStart) {
-        if (mClient.isConnected() && !refreshInProgress) {
-            // TODO: Add timeout limit to refreshInProgress
-            refreshInProgress = true;
-            Context context = getApplicationContext();
-            if (context != null) {
-                SQLiteDatabase db = getDatabase();
-                if (db != null && db.isOpen()) {
-                    //db.execSQL("DELETE FROM " + Workout.class.getSimpleName()); // This deletes all data
-                    cupboard().withDatabase(db).delete(Workout.class, "start >= ?", "" + syncStart);
+        if (mClient.isConnected()) {
+            if (!refreshInProgress) {
+                // TODO: Add timeout limit to refreshInProgress
+                refreshInProgress = true;
+                Context context = getApplicationContext();
+                if (context != null) {
+                    SQLiteDatabase db = getDatabase();
+                    if (db != null && db.isOpen()) {
+                        //db.execSQL("DELETE FROM " + Workout.class.getSimpleName()); // This deletes all data
+                        cupboard().withDatabase(db).delete(Workout.class, "start >= ?", "" + syncStart);
+                    }
+                    //UserPreferences.setBackgroundLoadComplete(context, false);
+                    UserPreferences.setLastSync(context, syncStart);
+                    populateHistoricalData();
                 }
-                //UserPreferences.setBackgroundLoadComplete(context, false);
-                UserPreferences.setLastSync(context, syncStart);
-                populateHistoricalData();
             }
         } else {
-            Log.w(TAG, "Warning: Already running.");
+            refreshInProgress = false;
+            mClient.connect();
         }
     }
 
@@ -346,47 +358,44 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
     }
 
     public void deleteWorkout(final Workout workout) {
-        // Set a start and end time for our data, using a start time of 1 day before this moment.
-        long endTime = workout.start + workout.duration;
-        long startTime = workout.start;
-        long syncStart = workout.start - (1000 * 60 * 60 * 8);
-        SQLiteDatabase db = getDatabase();
-        if (db != null) {
-            //cupboard().withDatabase(db).delete(Workout.class, "start >= ?", "" + syncStart);
-            cupboard().withDatabase(db).delete(Workout.class, "start = ?", "" + startTime);
-        } else {
-            Log.w(TAG, "Warning: db is null");
-        }
+        if (isConnected()) {
+            // Set a start and end time for our data, using a start time of 1 day before this moment.
+            long endTime = workout.start + workout.duration;
+            long startTime = workout.start;
+            //long syncStart = workout.start - (1000 * 60 * 60 * 8);
+            SQLiteDatabase db = getDatabase();
+            if (db != null) {
+                //cupboard().withDatabase(db).delete(Workout.class, "start >= ?", "" + syncStart);
+                cupboard().withDatabase(db).delete(Workout.class, "start = ? AND type = ?", "" + startTime, "" + workout.type);
+            } else {
+                Log.w(TAG, "Warning: db is null");
+            }
 
-        // https://developers.google.com/android/reference/com/google/android/gms/fitness/request/DataDeleteRequest
-        //  Create a delete request object, providing a data type and a time interval
-        DataDeleteRequest request = new DataDeleteRequest.Builder()
-                .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS)
-                .deleteAllData()
-                .deleteAllSessions()
-                .build();
+            // https://developers.google.com/android/reference/com/google/android/gms/fitness/request/DataDeleteRequest
+            //  Create a delete request object, providing a data type and a time interval
+            DataDeleteRequest request = new DataDeleteRequest.Builder()
+                    .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS)
+                    .deleteAllData()
+                    .deleteAllSessions()
+                    .build();
 
-        // Invoke the History API with the Google API client object and delete request, and then
-        // specify a callback that will check the result.
-        Fitness.HistoryApi.deleteData(mClient, request)
-                .setResultCallback(new ResultCallback<Status>() {
-                    @Override
-                    public void onResult(Status status) {
-                        if (status.isSuccess()) {
-                            Log.i(TAG, "Successfully deleted: " + workout.toString());
-                        } else {
-                            // The deletion will fail if the requesting app tries to delete data
-                            // that it did not insert.
-                            Log.i(TAG, "Failed to delete workout");
+            // Invoke the History API with the Google API client object and delete request, and then
+            // specify a callback that will check the result.
+            Fitness.HistoryApi.deleteData(mClient, request)
+                    .setResultCallback(new ResultCallback<Status>() {
+                        @Override
+                        public void onResult(Status status) {
+                            if (status.isSuccess()) {
+                                Log.i(TAG, "Successfully deleted: " + workout.toString());
+                            } else {
+                                // The deletion will fail if the requesting app tries to delete data
+                                // that it did not insert.
+                                Log.i(TAG, "Failed to delete workout");
+                            }
                         }
-                    }
-                });
-        Context context = getApplicationContext();
-        if(context != null) {
-            UserPreferences.setLastSync(context, syncStart);
+                    });
+            notifyListenersDataChanged(Utilities.TimeFrame.ALL_TIME);
         }
-        notifyListenersDataChanged(Utilities.TimeFrame.ALL_TIME);
-        //populateHistoricalData();
     }
 
     private void populateHistoricalData() {
@@ -422,7 +431,7 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
             // of low memory or other conditions.
             Log.i(TAG, "Inserting the session in the History API");
             Context context = getApplicationContext();
-            if(context != null) {
+            if(context != null && isConnected()) {
                 Device device = Device.getLocalDevice(context);
                 com.google.android.gms.common.api.Status insertStatus =
                         Fitness.SessionsApi.insertSession(mClient, DataQueries.createSession(workout.start, workout.start + workout.duration, workout.stepCount, activityName, context.getPackageName(), device))
@@ -519,15 +528,16 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
         if (context != null) {
             // Create the Google API Client
             mClient = new GoogleApiClient.Builder(context)
-                    .addApi(Fitness.HISTORY_API)
+                    .addApi(Plus.API)
+                    .addApi(Fitness.SENSORS_API)
                     .addApi(Fitness.SESSIONS_API)
+                    .addApi(Fitness.HISTORY_API)
                     .addApi(Fitness.RECORDING_API)
+                    .addApi(LocationServices.API)
+                    .addScope(new Scope(Scopes.PROFILE))
+                    .addScope(new Scope(Scopes.FITNESS_LOCATION_READ_WRITE))
                     .addScope(new Scope(Scopes.FITNESS_ACTIVITY_READ_WRITE))
-                    .addConnectionCallbacks(this) /*
-                            new GoogleApiClient.ConnectionCallbacks() {
-
-                            }
-                    )*/
+                    .addConnectionCallbacks(this)
                     .addOnConnectionFailedListener(this)
                     .build();
         }
@@ -626,6 +636,9 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
     }
 
     public void setStepCounting(boolean active) {
+        if (UserPreferences.getCountSteps(getContext()) == active) {
+            return;
+        }
         if (active) {
             subscribeSteps();
         }else {
@@ -634,6 +647,9 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
     }
 
     public void setActivityTracking(boolean active) {
+        if (UserPreferences.getActivityTracking(getContext()) == active) {
+            return;
+        }
         if (active) {
             subscribeActivity();
         }else {
@@ -642,7 +658,13 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
     }
 
     public void setContext(Context activityContext) {
-
+        if (!_instance.hasContext()) {
+            mContext = new WeakReference<>(activityContext);
+        }
+        if (activityContext instanceof Activity) {
+            // Always give priority to Acitivty context
+            mContext = new WeakReference<>(activityContext);
+        }
     }
 
     private void listSubscriptions() {
@@ -658,126 +680,165 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
     }
 
     private void unsubscribeAll() {
-        Fitness.RecordingApi.listSubscriptions(mClient).setResultCallback(new ResultCallback<ListSubscriptionsResult>() {
-            @Override
-            public void onResult(ListSubscriptionsResult result) {
-                for (Subscription sc : result.getSubscriptions()) {
-                    DataType dt = sc.getDataType();
-                    Log.i(TAG, "Unsubscribing: " + dt.getName());
-                    Fitness.RecordingApi.unsubscribe(mClient, sc)
-                            .setResultCallback(new ResultCallback<Status>() {
-                                @Override
-                                public void onResult(Status status) {
-                                    if (status.isSuccess()) {
-                                        Log.i(TAG, "Successfully unsubscribed for data type: step count delta");
-                                    } else {
-                                        // Subscription not removed
-                                        Log.i(TAG, "Failed to unsubscribe for data type: step count delta");
+        if (isConnected()) {
+            Fitness.RecordingApi.listSubscriptions(mClient).setResultCallback(new ResultCallback<ListSubscriptionsResult>() {
+                @Override
+                public void onResult(ListSubscriptionsResult result) {
+                    for (Subscription sc : result.getSubscriptions()) {
+                        DataType dt = sc.getDataType();
+                        Log.i(TAG, "Unsubscribing: " + dt.getName());
+                        Fitness.RecordingApi.unsubscribe(mClient, sc)
+                                .setResultCallback(new ResultCallback<Status>() {
+                                    @Override
+                                    public void onResult(Status status) {
+                                        if (status.isSuccess()) {
+                                            Log.i(TAG, "Successfully unsubscribed for data type: step count delta");
+                                        } else {
+                                            // Subscription not removed
+                                            Log.i(TAG, "Failed to unsubscribe for data type: step count delta");
+                                        }
                                     }
-                                }
-                            });
+                                });
+                    }
                 }
+            });
+        } else {
+            Context context = getApplicationContext();
+            if (context != null) {
+                Toast.makeText(context, "Error: mClient not connected.", Toast.LENGTH_LONG).show();
             }
-        });
+        }
     }
 
     private void unsubscribeSteps() {
-        Context context = getApplicationContext();
-        if (context != null) {
-            UserPreferences.setCountSteps(context, false);
+
+        if (isConnected()) {
             Fitness.RecordingApi.unsubscribe(mClient, DataType.TYPE_STEP_COUNT_DELTA)
                     .setResultCallback(new ResultCallback<Status>() {
                         @Override
                         public void onResult(Status status) {
-                            if (status.isSuccess()) {
-                                Log.i(TAG, "Successfully unsubscribed for data type: step count delta");
-                            } else {
-                                // Subscription not removed
-                                Log.i(TAG, "Failed to unsubscribe for data type: step count delta");
+                            Context context = getApplicationContext();
+                            if (context != null) {
+                                if (status.isSuccess()) {
+                                    UserPreferences.setCountSteps(context, false);
+                                    Toast.makeText(context, "Successfully unsubscribed type: steps", Toast.LENGTH_LONG).show();
+                                    Log.i(TAG, "Successfully unsubscribed for data type: step count delta");
+                                } else {
+                                    // Subscription not removed
+                                    Toast.makeText(context, "Error:" + status.getStatusMessage(), Toast.LENGTH_LONG).show();
+                                    Log.i(TAG, "Failed to unsubscribe for data type: step count delta");
+                                }
                             }
                         }
                     });
+        } else {
+            Context context = getApplicationContext();
+            if (context != null) {
+                Toast.makeText(context, "Error: mClient not connected.", Toast.LENGTH_LONG).show();
+            }
         }
     }
 
     private void unsubscribeActivity() {
-        Context context = getApplicationContext();
-        if (context != null) {
-            UserPreferences.setActivityTracking(context, false);
+        if (isConnected()) {
             Fitness.RecordingApi.unsubscribe(mClient, DataType.TYPE_ACTIVITY_SEGMENT)
                     .setResultCallback(new ResultCallback<Status>() {
                         @Override
                         public void onResult(Status status) {
-                            if (status.isSuccess()) {
-                                Log.i(TAG, "Successfully unsubscribed for data type: activity");
-                            } else {
-                                // Subscription not removed
-                                Log.i(TAG, "Failed to unsubscribe for data type: activity");
+                            Context context = getApplicationContext();
+                            if (context != null) {
+                                if (status.isSuccess()) {
+                                    Log.i(TAG, "Successfully unsubscribed for data type: activity");
+                                    Toast.makeText(context, "Successfully unsubscribed type: activity", Toast.LENGTH_LONG).show();
+                                    UserPreferences.setActivityTracking(context, false);
+                                } else {
+                                    // Subscription not removed
+                                    Toast.makeText(context, "Error:" + status.getStatusMessage(), Toast.LENGTH_LONG).show();
+                                    Log.i(TAG, "Failed to unsubscribe for data type: activity");
+                                }
                             }
                         }
                     });
+        } else {
+            Context context = getApplicationContext();
+            if (context != null) {
+                Toast.makeText(context, "Error: mClient not connected.", Toast.LENGTH_LONG).show();
+            }
         }
     }
 
     private void subscribeSteps() {
-        Fitness.RecordingApi.subscribe(mClient, DataType.TYPE_STEP_COUNT_DELTA)
-                .setResultCallback(new ResultCallback<Status>() {
-                    @Override
-                    public void onResult(Status status) {
-                        if (status.isSuccess()) {
-                            if (status.getStatusCode()
-                                    == FitnessStatusCodes.SUCCESS_ALREADY_SUBSCRIBED) {
-                                Log.i(TAG, "Existing subscription for steps detected.");
+        if (isConnected()) {
+            Fitness.RecordingApi.subscribe(mClient, DataType.TYPE_STEP_COUNT_DELTA)
+                    .setResultCallback(new ResultCallback<Status>() {
+                        @Override
+                        public void onResult(Status status) {
+                            if (status.isSuccess()) {
+                                if (status.getStatusCode()
+                                        == FitnessStatusCodes.SUCCESS_ALREADY_SUBSCRIBED) {
+                                    Log.i(TAG, "Existing subscription for steps detected.");
 
+                                } else {
+                                    Log.i(TAG, "Successfully subscribed!");
+                                }
+                                Context context = getApplicationContext();
+                                if (context != null) {
+                                    Toast.makeText(context, "Successfully subscribed!", Toast.LENGTH_LONG).show();
+                                    UserPreferences.setCountSteps(context, true);
+                                }
                             } else {
-                                Log.i(TAG, "Successfully subscribed!");
-                            }
-                            Context context = getApplicationContext();
-                            if (context != null) {
-                                Toast.makeText(context, "Successfully subscribed!", Toast.LENGTH_LONG).show();
-                                UserPreferences.setCountSteps(context, true);
-                            }
-                        } else {
-                            Log.i(TAG, "There was a problem subscribing.");
-                            Context context = getApplicationContext();
-                            if (context != null) {
-                                Toast.makeText(context, "Error:" + status.getStatusMessage(), Toast.LENGTH_LONG).show();
-                                UserPreferences.setCountSteps(context, false);
+                                Log.i(TAG, "There was a problem subscribing.");
+                                Context context = getApplicationContext();
+                                if (context != null) {
+                                    Toast.makeText(context, "Error:" + status.getStatusMessage(), Toast.LENGTH_LONG).show();
+                                    UserPreferences.setCountSteps(context, false);
+                                }
                             }
                         }
-                    }
-                });
+                    });
+        } else {
+            Context context = getApplicationContext();
+            if (context != null) {
+                Toast.makeText(context, "Error: mClient not connected.", Toast.LENGTH_LONG).show();
+            }
+        }
     }
 
     private void subscribeActivity() {
-
-        Fitness.RecordingApi.subscribe(mClient, DataType.TYPE_ACTIVITY_SEGMENT)
-                .setResultCallback(new ResultCallback<Status>() {
-                    @Override
-                    public void onResult(Status status) {
-                        if (status.isSuccess()) {
-                            if (status.getStatusCode()
-                                    == FitnessStatusCodes.SUCCESS_ALREADY_SUBSCRIBED) {
-                                Log.i(TAG, "Existing subscription for activity detected.");
+        if (isConnected()) {
+            Fitness.RecordingApi.subscribe(mClient, DataType.TYPE_ACTIVITY_SEGMENT)
+                    .setResultCallback(new ResultCallback<Status>() {
+                        @Override
+                        public void onResult(Status status) {
+                            if (status.isSuccess()) {
+                                if (status.getStatusCode()
+                                        == FitnessStatusCodes.SUCCESS_ALREADY_SUBSCRIBED) {
+                                    Log.i(TAG, "Existing subscription for activity detected.");
+                                } else {
+                                    Log.i(TAG, "Successfully subscribed!");
+                                }
+                                Context context = getApplicationContext();
+                                if (context != null) {
+                                    Toast.makeText(context, "Successfully subscribed!", Toast.LENGTH_LONG).show();
+                                    UserPreferences.setActivityTracking(context, true);
+                                }
                             } else {
-                                Log.i(TAG, "Successfully subscribed!");
-                            }
-                            Context context = getApplicationContext();
-                            if (context != null) {
-                                Toast.makeText(context, "Successfully subscribed!", Toast.LENGTH_LONG).show();
-                                UserPreferences.setActivityTracking(context, true);
-                            }
-                        } else {
-                            Log.i(TAG, "There was a problem subscribing.");
-                            Context context = getApplicationContext();
-                            if (context != null) {
-                                Toast.makeText(context, "Error:" + status.getStatusMessage(), Toast.LENGTH_LONG).show();
-                                UserPreferences.setActivityTracking(context, false);
-                                buildFitnessClient(getContext());
+                                Log.i(TAG, "There was a problem subscribing.");
+                                Context context = getApplicationContext();
+                                if (context != null) {
+                                    Toast.makeText(context, "Error:" + status.getStatusMessage(), Toast.LENGTH_LONG).show();
+                                    UserPreferences.setActivityTracking(context, false);
+                                    buildFitnessClient(getContext());
+                                }
                             }
                         }
-                    }
-                });
+                    });
+        } else {
+            Context context = getApplicationContext();
+            if (context != null) {
+                Toast.makeText(context, "Error: mClient not connected.", Toast.LENGTH_LONG).show();
+            }
+        }
     }
 
     private class ReadHistoricalDataTask extends AsyncTask<Void, Void, Void> {
@@ -835,6 +896,7 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
                     //Log.i(TAG, "Step count: " + stepCount);
                     SQLiteDatabase db = getDatabase();
                     if (db != null && db.isOpen()) {
+                        cupboard().withDatabase(db).delete(Workout.class, "start = ? AND type = ?", "" + workout.start, "" + workout.type);
                         cupboard().withDatabase(db).put(workout);
                     } else {
                         Log.w(TAG, "Warning: db is null");
@@ -853,7 +915,7 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
                 endTime = cal.getTimeInMillis();
                 if (lastSync > 0) {
                     Log.i(TAG, "Fast data read starting: " + Utilities.getTimeDateString(lastSync));
-                    startTime = lastSync; // Go back 8 hours just to be safe
+                    startTime = lastSync;
                 } else {
                     Log.i(TAG, "Slow data read");
                     cal.setTime(now);
@@ -901,7 +963,7 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
                     Log.i(TAG, "Range End: " + endTime);
                     Log.i(TAG, "Loading rest");
                     DataReadRequest activitySegmentRequest = DataQueries.queryActivitySegment(startTime, endTime);
-                    DataReadResult dataReadResult = Fitness.HistoryApi.readData(mClient, activitySegmentRequest).await(10, TimeUnit.MINUTES);
+                    DataReadResult dataReadResult = Fitness.HistoryApi.readData(mClient, activitySegmentRequest).await(15, TimeUnit.MINUTES);
                     writeActivityDataToCache(dataReadResult);
                 }
 
@@ -983,6 +1045,7 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
                             workout.packageName = dp.getOriginalDataSource().getAppPackageName();
                             //Log.v("MainActivity", "Put Cache: " + WorkoutTypes.getWorkOutTextById(workout.type) + " " + workout.duration);
                             if (db != null) {
+                                cupboard().withDatabase(db).delete(Workout.class, "start = ? AND type = ?", "" + workout.start, "" + workout.type);
                                 cupboard().withDatabase(db).put(workout);
                             } else {
                                 Log.w(TAG, "Warning: db is null");

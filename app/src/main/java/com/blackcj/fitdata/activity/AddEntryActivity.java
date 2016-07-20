@@ -94,7 +94,6 @@ public class AddEntryActivity extends BaseActivity implements DataManager.IDataM
     @Override
     protected void onDestroy() {
         mDataManager.disconnect();
-        Log.w(TAG, "Closing db");
         super.onDestroy();
     }
 

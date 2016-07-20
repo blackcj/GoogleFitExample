@@ -89,6 +89,7 @@ public class RecentActivity extends BaseActivity implements DataManager.IDataMan
     public void onStart() {
         super.onStart();
         mDataManager.addListener(this);
+        mDataManager.setContext(this);
         mDataManager.connect();
     }
 

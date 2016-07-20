@@ -33,12 +33,14 @@ import com.blackcj.fitdata.fragment.SettingsFragment;
 import com.blackcj.fitdata.model.UserPreferences;
 import com.blackcj.fitdata.model.Workout;
 import com.blackcj.fitdata.service.BackgroundRefreshService;
+import com.crashlytics.android.Crashlytics;
 import com.getbase.floatingactionbutton.FloatingActionsMenu;
 import com.google.android.gms.fitness.data.DataSet;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import io.fabric.sdk.android.Fabric;
 
 /**
  * This sample demonstrates how to use the History API of the Google Fit platform to insert data,
@@ -74,6 +76,7 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Fabric.with(this, new Crashlytics());
 
         Transition fade = new ChangeBounds();
         fade.excludeTarget(android.R.id.navigationBarBackground, true);
@@ -148,6 +151,7 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
         active = true;
         mDataManager = DataManager.getInstance(this);
         mDataManager.addListener(this);
+        mDataManager.setContext(this);
         mDataManager.connect();
         appBarLayout.addOnOffsetChangedListener(this);
         getSupportFragmentManager().addOnBackStackChangedListener(this);
@@ -172,7 +176,7 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     @Override
     protected void onDestroy() {
         mAdapter.destroy();
-        //mDataManager.disconnect();
+        mDataManager.disconnect();
         super.onDestroy();
     }
 
@@ -379,22 +383,20 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     };
 
     public void setStepCounting(boolean active) {
-        if (mDataManager != null) {
+        if (mDataManager != null && UserPreferences.getCountSteps(this) != active) {
             mDataManager.setStepCounting(active);
         }
     }
 
     public void setActivityTracking(boolean active) {
-        if (mDataManager != null) {
+        if (mDataManager != null && UserPreferences.getActivityTracking(this) != active) {
             mDataManager.setActivityTracking(active);
         }
     }
 
     @Override
     public void quickDataRead() {
-        if (mDataManager != null) {
-            mDataManager.quickDataRead();
-        }
+        startService(new Intent(this, BackgroundRefreshService.class));
     }
 
     @Override

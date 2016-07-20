@@ -25,6 +25,7 @@ import butterknife.OnCheckedChanged;
 public class SettingsFragment extends BaseFragment {
 
     private IMainActivityCallback mCallback;
+    private boolean viewLoaded = false;
 
     @Bind(R.id.step_toggle)
     ToggleButton step_toggle;
@@ -35,6 +36,7 @@ public class SettingsFragment extends BaseFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        viewLoaded = false;
         View view = inflater.inflate(R.layout.fragment_settings, container, false);
         ButterKnife.bind(this, view);
 
@@ -57,18 +59,22 @@ public class SettingsFragment extends BaseFragment {
 
         step_toggle.setChecked(UserPreferences.getCountSteps(getActivity()));
         activity_toggle.setChecked(UserPreferences.getActivityTracking(getActivity()));
-
+        viewLoaded = true;
         return view;
     }
 
     @OnCheckedChanged(R.id.step_toggle)
     public void onStepCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        mCallback.setStepCounting(isChecked);
+        if(viewLoaded && mCallback != null) {
+            mCallback.setStepCounting(isChecked);
+        }
     }
 
     @OnCheckedChanged(R.id.activity_toggle)
     public void onActivityCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        mCallback.setActivityTracking(isChecked);
+        if(viewLoaded && mCallback != null) {
+            mCallback.setActivityTracking(isChecked);
+        }
     }
 
     @Override
