@@ -20,6 +20,8 @@ public class TabPagerAdapter extends FragmentStatePagerAdapter {
 
     private Map<Integer, PageFragment> mPageReferenceMap = new HashMap<>();
 
+    public String filter = "";
+
     private static final String[] TITLES = new String[] {
             "Today",
             "Week",
@@ -47,7 +49,7 @@ public class TabPagerAdapter extends FragmentStatePagerAdapter {
 
     @Override
     public Fragment getItem(int position) {
-        PageFragment myFragment = PageFragment.create(position + 1);
+        PageFragment myFragment = PageFragment.create(position + 1, filter);
         mPageReferenceMap.put(position, myFragment);
         //Log.d(TAG, "PUT: " + position);
         return myFragment;
@@ -70,6 +72,10 @@ public class TabPagerAdapter extends FragmentStatePagerAdapter {
     }
 
     public PageFragment getFragment(int key) {
-        return mPageReferenceMap.get(key);
+        PageFragment pf = mPageReferenceMap.get(key);
+        if (pf != null) {
+            pf.setFilterText(filter);
+        }
+        return pf;
     }
 }

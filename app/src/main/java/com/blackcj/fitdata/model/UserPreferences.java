@@ -10,12 +10,12 @@ public class UserPreferences {
     public static final String PREFS_NAME = "GoogleFitExample";
 
     public static boolean getBackgroundLoadComplete(Context context) {
-        SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, 0);
+        SharedPreferences settings = context.getApplicationContext().getSharedPreferences(PREFS_NAME, 0);
         return settings.getBoolean("backgroundLoadComplete", false);
     }
 
     public static void setBackgroundLoadComplete(Context context, boolean value) {
-        SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, 0);
+        SharedPreferences settings = context.getApplicationContext().getSharedPreferences(PREFS_NAME, 0);
         SharedPreferences.Editor editor = settings.edit();
         editor.putBoolean("backgroundLoadComplete", value);
 
@@ -24,12 +24,12 @@ public class UserPreferences {
     }
 
     public static boolean getCountSteps(Context context) {
-        SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, 0);
+        SharedPreferences settings = context.getApplicationContext().getSharedPreferences(PREFS_NAME, 0);
         return settings.getBoolean("shouldCountSteps", false);
     }
 
     public static void setCountSteps(Context context, boolean value) {
-        SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, 0);
+        SharedPreferences settings = context.getApplicationContext().getSharedPreferences(PREFS_NAME, 0);
         SharedPreferences.Editor editor = settings.edit();
         editor.putBoolean("shouldCountSteps", value);
 
@@ -38,12 +38,12 @@ public class UserPreferences {
     }
 
     public static boolean getActivityTracking(Context context) {
-        SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, 0);
+        SharedPreferences settings = context.getApplicationContext().getSharedPreferences(PREFS_NAME, 0);
         return settings.getBoolean("shouldTrackActivity", false);
     }
 
     public static void setActivityTracking(Context context, boolean value) {
-        SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, 0);
+        SharedPreferences settings = context.getApplicationContext().getSharedPreferences(PREFS_NAME, 0);
         SharedPreferences.Editor editor = settings.edit();
         editor.putBoolean("shouldTrackActivity", value);
 
@@ -52,12 +52,12 @@ public class UserPreferences {
     }
 
     public static long getLastSync(Context context) {
-        SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, 0);
+        SharedPreferences settings = context.getApplicationContext().getSharedPreferences(PREFS_NAME, 0);
         return settings.getLong("lastSuccessfulSync", 0);
     }
 
     public static void setLastSync(Context context, long value) {
-        SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, 0);
+        SharedPreferences settings = context.getApplicationContext().getSharedPreferences(PREFS_NAME, 0);
         SharedPreferences.Editor editor = settings.edit();
         editor.putLong("lastSuccessfulSync", value);
 
@@ -65,4 +65,31 @@ public class UserPreferences {
         editor.commit();
     }
 
+    public static boolean getShouldDeleteData(Context context) {
+        SharedPreferences settings = context.getApplicationContext().getSharedPreferences(PREFS_NAME, 0);
+        return settings.getBoolean("shouldDeleteData", false);
+    }
+
+    public static void setLastSync(Context context, boolean value) {
+        SharedPreferences settings = context.getApplicationContext().getSharedPreferences(PREFS_NAME, 0);
+        SharedPreferences.Editor editor = settings.edit();
+        editor.putBoolean("shouldDeleteData", value);
+
+        // Commit the edits!
+        editor.commit();
+    }
+
+    public static String getUserEmail(Context context) {
+        SharedPreferences settings = context.getApplicationContext().getSharedPreferences(PREFS_NAME, 0);
+        return settings.getString("userEmail", "");
+    }
+
+    public static void setUserEmail(Context context, String value) {
+        SharedPreferences settings = context.getApplicationContext().getSharedPreferences(PREFS_NAME, 0);
+        SharedPreferences.Editor editor = settings.edit();
+        editor.putString("userEmail", value);
+
+        // Commit the edits!
+        editor.commit();
+    }
 }

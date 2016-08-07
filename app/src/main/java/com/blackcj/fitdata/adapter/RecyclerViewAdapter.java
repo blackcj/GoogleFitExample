@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,6 +31,7 @@ import java.util.Locale;
  */
 public class RecyclerViewAdapter extends RecyclerView.Adapter<WorkoutViewHolder> implements View.OnClickListener {
 
+    public static final String TAG = "RecyclerViewAdapter";
     private List<Workout> filteredItems;
     private List<Workout> items;
     private OnItemClickListener onItemClickListener;
@@ -56,29 +58,38 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<WorkoutViewHolder>
      */
     public void setItems(final List<Workout> newItems, final String time) {
         timeDesc = time;
+        Log.i(TAG, "1. New item size: " +  newItems.size() + " Old item size: " + items.size() + " Last position: " + lastPosition);
         if(newItems.size() > items.size()) {
-            lastPosition = 0;
+            lastPosition = items.size() - 1;
         }
-        if (newItems.size() < items.size()) {
+        /*if (newItems.size() < items.size()) {
             items.clear();
             items.addAll(newItems);
             notifyDataSetChanged();
 
-        } else if (newItems.size() > 0) {
-            items.add(0, newItems.get(0));
-            notifyItemChanged(0);
+        } else */
+        if (newItems.size() > 0) {
+            if (items.size() == 0) {
+                items.add(newItems.get(0));
+                notifyItemInserted(0);
+            } else {
+                items.set(0, newItems.get(0));
+                notifyItemChanged(0);
+            }
             if(items.size() > 0) {
                 int itemSize = items.size() - 1;
                 for (int i = itemSize; i > 0; i--) {
-                    if (i > lastPosition) {
+                    if (i >= newItems.size()) {
                         items.remove(i);
                         notifyItemRemoved(i);
                     }
                 }
             }
+            Log.i(TAG, "2. New item size: " +  newItems.size() + " Old item size: " + items.size() + " Last position: " + lastPosition);
             if(newItems.size() > 0) {
+                int itemSize = items.size();
                 for (int i = 1; i < newItems.size(); i++) {
-                    if (i > lastPosition) {
+                    if (i >= itemSize) {
                         items.add(newItems.get(i));
                         notifyItemInserted(i);
                     } else {
@@ -132,7 +143,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<WorkoutViewHolder>
         } else {
             item = items.get(position);
         }
-
         if(item.type == WorkoutTypes.TIME.getValue()) {
             holder.text.setText(timeDesc);
         } else {
@@ -140,12 +150,21 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<WorkoutViewHolder>
         }
         holder.image.setImageResource(WorkoutTypes.getImageById(item.type));
         holder.itemView.setTag(item);
+
         Bitmap bitmap = ((BitmapDrawable)holder.image.getDrawable()).getBitmap();
-        Palette palette = Palette.generate(bitmap);
-        int vibrant = palette.getVibrantColor(0x000000);
-        if(vibrant == 0) {
+        Palette palette = Palette.from(bitmap).generate();
+        Palette.Swatch swatch = palette.getLightVibrantSwatch();
+
+        int vibrant = 0xFF110000;
+        if (swatch != null) {
+            vibrant = swatch.getRgb();//palette.getVibrantColor(0xFF110000);
+        }
+        if(vibrant == 0xFF110000) {
+            swatch = palette.getVibrantSwatch();
             //vibrant = palette.getLightMutedColor(0x000000);
-            vibrant = palette.getMutedColor(0x000000);
+            if (swatch != null) {
+                vibrant = swatch.getRgb();//palette.getVibrantColor(0xFF110000);
+            }
         }
 
         if(item.type == WorkoutTypes.TIME.getValue()) {
@@ -202,21 +221,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<WorkoutViewHolder>
     public void onClick(final View v) {
         if (onItemClickListener != null) {
             onItemClickListener.onItemClick(v, (Workout) v.getTag());
-        }
-    }
-
-    protected static class ViewHolder extends RecyclerView.ViewHolder {
-        public ImageView image;
-        public TextView text;
-        public TextView detail;
-        public LinearLayout container;
-
-        public ViewHolder(View itemView) {
-            super(itemView);
-            image = (ImageView) itemView.findViewById(R.id.image);
-            text = (TextView) itemView.findViewById(R.id.text);
-            detail = (TextView) itemView.findViewById(R.id.summary_text);
-            container = (LinearLayout) itemView.findViewById(R.id.container);
         }
     }
 

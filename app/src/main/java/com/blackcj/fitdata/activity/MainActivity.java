@@ -34,6 +34,8 @@ import com.blackcj.fitdata.model.UserPreferences;
 import com.blackcj.fitdata.model.Workout;
 import com.blackcj.fitdata.service.BackgroundRefreshService;
 import com.crashlytics.android.Crashlytics;
+import com.crashlytics.android.answers.Answers;
+import com.crashlytics.android.answers.SearchEvent;
 import com.getbase.floatingactionbutton.FloatingActionsMenu;
 import com.google.android.gms.fitness.data.DataSet;
 
@@ -76,7 +78,7 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Fabric.with(this, new Crashlytics());
+        Fabric.with(this.getApplicationContext(), new Crashlytics(), new Answers());
 
         Transition fade = new ChangeBounds();
         fade.excludeTarget(android.R.id.navigationBarBackground, true);
@@ -127,6 +129,9 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
         });
 
         floatingActionMenu.setOnFloatingActionsMenuUpdateListener(this);
+
+        Intent intent = new Intent("com.blackcj.fitdata.START_REFRESH");
+        sendBroadcast(intent);
     }
 
     protected void changeFab(int position) {
@@ -162,6 +167,7 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     protected void onStop() {
         active = false;
         mDataManager.removeListener(this);
+        mDataManager.disconnect();
         appBarLayout.removeOnOffsetChangedListener(this);
         getSupportFragmentManager().removeOnBackStackChangedListener(this);
         super.onStop();
@@ -176,12 +182,13 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     @Override
     protected void onDestroy() {
         mAdapter.destroy();
-        mDataManager.disconnect();
+        //mDataManager.disconnect();
         super.onDestroy();
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == DataManager.REQUEST_OAUTH) {
             mDataManager.authInProgress = false;
             if (resultCode == RESULT_OK) {
@@ -271,7 +278,7 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
                 RecentActivity.launch(MainActivity.this);
                 break;
             case R.id.action_reload_data:
-                long syncStart = Utilities.getTimeFrameStart(Utilities.TimeFrame.THIRTY_DAYS);
+                long syncStart = Utilities.getTimeFrameStart(Utilities.TimeFrame.BEGINNING_OF_DAY);
                 UserPreferences.setLastSync(this, syncStart);
                 startService(new Intent(this, BackgroundRefreshService.class));
                 return true;
@@ -303,8 +310,19 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
 
     @Override
     public boolean onQueryTextChange(String newText) {
-        mAdapter.getFragment(mViewPager.getCurrentItem()).filter(newText);
-        Log.d("MainActivity", "Query test: " + newText);
+        mAdapter.filter = newText;
+        if (mAdapter.getFragment(mViewPager.getCurrentItem()) != null) {
+            mAdapter.getFragment(mViewPager.getCurrentItem()).setFilterText(newText);
+        }
+        if (mAdapter.getFragment(mViewPager.getCurrentItem() + 1) != null) {
+            mAdapter.getFragment(mViewPager.getCurrentItem() + 1).setFilterText(newText);
+        }
+        if (mAdapter.getFragment(mViewPager.getCurrentItem() - 1) != null) {
+            mAdapter.getFragment(mViewPager.getCurrentItem() - 1).setFilterText(newText);
+        }
+        Answers.getInstance().logSearch(new SearchEvent()
+                .putQuery(newText));
+        Log.d("MainActivity", "Query text: " + newText);
         return false;
     }
 
@@ -355,7 +373,7 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                /*if (timeFrame == Utilities.TimeFrame.BEGINNING_OF_DAY) {
+                if (timeFrame == Utilities.TimeFrame.BEGINNING_OF_DAY) {
                     if (mAdapter.getFragment(0) != null) {
                         mAdapter.getFragment(0).refreshData();
                     }
@@ -363,7 +381,7 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
                     if (mAdapter.getFragment(1) != null) {
                         mAdapter.getFragment(1).refreshData();
                     }
-                } else {*/
+                } else {
                     if (mAdapter.getFragment(mViewPager.getCurrentItem()) != null) {
                         mAdapter.getFragment(mViewPager.getCurrentItem()).refreshData();
                     }
@@ -373,7 +391,7 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
                     if (mAdapter.getFragment(mViewPager.getCurrentItem() - 1) != null) {
                         mAdapter.getFragment(mViewPager.getCurrentItem() - 1).refreshData();
                     }
-                //}
+                }
             }
         });
     };

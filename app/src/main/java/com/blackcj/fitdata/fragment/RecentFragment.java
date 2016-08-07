@@ -1,6 +1,7 @@
 package com.blackcj.fitdata.fragment;
 
 import android.app.Activity;
+import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
@@ -15,6 +16,8 @@ import com.blackcj.fitdata.animation.ItemAnimator;
 import com.blackcj.fitdata.database.CacheManager;
 import com.blackcj.fitdata.database.DataManager;
 import com.blackcj.fitdata.model.Workout;
+import com.crashlytics.android.answers.Answers;
+import com.crashlytics.android.answers.ContentViewEvent;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -57,11 +60,16 @@ public class RecentFragment extends BaseFragment implements WorkoutListViewAdapt
         mRecyclerView.setItemAnimator(new ItemAnimator());
         mRecyclerView.setAdapter(adapter);
 
+        Answers.getInstance().logContentView(new ContentViewEvent()
+                .putContentName("Historical activity data")
+                .putContentType("View")
+                .putContentId("RecentFragment"));
+
         return view;
     }
 
     @Override
-    public void onAttach(Activity activity) {
+    public void onAttach(Context activity) {
         super.onAttach(activity);
         if(activity instanceof DataManager.IDataManager) {
             dataReceiver = (DataManager.IDataManager)activity;

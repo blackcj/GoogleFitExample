@@ -39,7 +39,7 @@ public class ReadCacheIntentService extends IntentService {
         ResultReceiver resultReceiver = intent.getParcelableExtra(MainActivity.RECEIVER_TAG);
         mReceiver = new WeakReference<>(resultReceiver);
         final CupboardSQLiteOpenHelper dbHelper = new CupboardSQLiteOpenHelper(this);
-        final SQLiteDatabase mDb = dbHelper.getWritableDatabase();
+        final SQLiteDatabase mDb = dbHelper.getReadableDatabase();
         Utilities.TimeFrame mTimeFrame = (Utilities.TimeFrame) intent.getSerializableExtra("TimeFrame");
         ArrayList<Workout> report;
         if (mockData) {

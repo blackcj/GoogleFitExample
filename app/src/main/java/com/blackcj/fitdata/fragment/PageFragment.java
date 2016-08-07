@@ -1,6 +1,7 @@
 package com.blackcj.fitdata.fragment;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -37,10 +38,12 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
 
     private static final String TAG = "PageFragment";
     private static final String ARG_PAGE = "ARG_PAGE";
+    private static final String ARG_FILTER = "ARG_FILTER";
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private RecyclerViewAdapter adapter;
     private boolean needsRefresh = true;
     private int mPage;
+    private String mFilterText = "";
     private CacheResultReceiver mReciever;
     protected IMainActivityCallback mCallback;
     protected Handler mHandler;
@@ -49,9 +52,10 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
     @Bind(R.id.recyclerView)
     RecyclerView mRecyclerView;
 
-    public static PageFragment create(int page) {
+    public static PageFragment create(int page, String filterText) {
         Bundle args = new Bundle();
         args.putInt(ARG_PAGE, page);
+        args.putString(ARG_FILTER, filterText);
         PageFragment fragment = new PageFragment();
         fragment.setArguments(args);
         return fragment;
@@ -61,6 +65,7 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mPage = getArguments().getInt(ARG_PAGE);
+        mFilterText = getArguments().getString(ARG_FILTER);
         mReciever = new CacheResultReceiver(new Handler());
 
     }
@@ -77,7 +82,7 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
 
         adapter = new RecyclerViewAdapter(items, this.getActivity(), Utilities.getTimeFrameText(Utilities.TimeFrame.values()[mPage - 1]));
         adapter.setOnItemClickListener(this);
-
+        filter();
         mRecyclerView.setItemAnimator(new ItemAnimator());
         mRecyclerView.setAdapter(adapter);
 
@@ -99,7 +104,7 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
     }
 
     @Override
-    public void onAttach(Activity activity) {
+    public void onAttach(Context activity) {
         super.onAttach(activity);
         if(activity instanceof IMainActivityCallback) {
             mCallback = (IMainActivityCallback)activity;
@@ -115,16 +120,25 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
         mCallback = null;
     }
 
+    public void setFilterText(String text) {
+        if(mFilterText.equals(text)) {
+            return;
+        }
+        mFilterText = text;
+        filter();
+    }
+
     /**
      * Triggered when data changes in the DataManger by calls to quickDataRead
      */
     public void refreshData() {
+        mReciever.setReceiver(this);
         mSwipeRefreshLayout.setRefreshing(true);
         CacheManager.getReport(Utilities.TimeFrame.values()[mPage - 1], mReciever, getActivity());
     }
 
-    public void filter(String filterText) {
-        adapter.filter(filterText);
+    public void filter() {
+        adapter.filter(mFilterText);
     }
 
     @Override
@@ -166,6 +180,7 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
         if (adapter.getItemCount() == 0) {
             needsRefresh = false;
             adapter.setItems(workoutList, Utilities.getTimeFrameText(Utilities.TimeFrame.values()[mPage - 1]));
+            filter();
         }
         if (mHandler != null && mRunnable != null) {
             mHandler.removeCallbacks(mRunnable);
@@ -177,6 +192,7 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
             public void run() {
                 if (needsRefresh) {
                     adapter.setItems(workoutList, Utilities.getTimeFrameText(Utilities.TimeFrame.values()[mPage - 1]));
+                    filter();
                 }
                 // Update the UI
                 getActivity().runOnUiThread(new Runnable() {

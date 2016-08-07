@@ -13,13 +13,15 @@ import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import com.blackcj.fitdata.Utilities;
-import com.blackcj.fitdata.database.CupboardSQLiteOpenHelper;
+import com.blackcj.fitdata.database.SimpleDBHelper;
 import com.blackcj.fitdata.model.Workout;
 import com.blackcj.fitdata.R;
 import com.blackcj.fitdata.model.WorkoutTypes;
 import com.blackcj.fitdata.reports.BaseReportGraph;
 import com.blackcj.fitdata.reports.MultipleLineGraphs;
 import com.blackcj.fitdata.reports.SingleBarGraphWithGoal;
+import com.crashlytics.android.answers.Answers;
+import com.crashlytics.android.answers.ContentViewEvent;
 
 import org.achartengine.GraphicalView;
 import org.achartengine.model.SeriesSelection;
@@ -54,9 +56,6 @@ public class ReportsFragment extends BaseFragment {
     private int numDays = 45;
     private int numSegments;
     private long millisecondsInSegment;
-    private CupboardSQLiteOpenHelper mHelper;
-
-    private SQLiteDatabase db;
 
     /** The chart view that displays the data. */
     private GraphicalView mChartView;
@@ -109,6 +108,13 @@ public class ReportsFragment extends BaseFragment {
             reportGraph.setGoal(15 * multiplier);
         }
         reportGraph.setDisplayMetrics(densityDpi);
+
+        Answers.getInstance().logContentView(new ContentViewEvent()
+                .putContentName("Report graph view")
+                .putContentType("View")
+                .putContentId("ReportsFragment")
+                .putCustomAttribute("Type Id", workoutType)
+                .putCustomAttribute("Type Name", WorkoutTypes.getWorkOutTextById(workoutType)));
     }
 
     long currentTimeStamp;
@@ -123,8 +129,7 @@ public class ReportsFragment extends BaseFragment {
         cal.setTime(now);
         currentTimeStamp = cal.getTimeInMillis();
         ButterKnife.bind(this, view);
-        mHelper = new CupboardSQLiteOpenHelper(this.getActivity());
-        db = mHelper.getWritableDatabase();
+
 
         mChartView = reportGraph.getChartGraph(getActivity());
 
@@ -236,7 +241,7 @@ public class ReportsFragment extends BaseFragment {
 
     @Override
     public void onDestroy() {
-        mHelper.close();
+        SimpleDBHelper.INSTANCE.close();
         super.onDestroy();
     }
 
@@ -275,6 +280,7 @@ public class ReportsFragment extends BaseFragment {
         cal.add(Calendar.DAY_OF_YEAR, -numDays + 1);        // 30 days of history
         long startTime = cal.getTimeInMillis();
         long baseline = (startTime - startTime % millisecondsInSegment) / millisecondsInSegment;
+        SQLiteDatabase db = SimpleDBHelper.INSTANCE.open(this.getActivity().getApplicationContext());
         QueryResultIterable<Workout> itr = cupboard().withDatabase(db).query(Workout.class).withSelection("start >= ?", "" + startTime).query();
         for (Workout workout : itr) {
             cal.setTimeInMillis(workout.start);

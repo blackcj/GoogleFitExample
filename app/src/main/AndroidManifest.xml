@@ -23,6 +23,7 @@ limitations under the License.
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="android.permission.USE_CREDENTIALS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:allowBackup="true"
@@ -71,14 +72,18 @@ limitations under the License.
 
         <service android:name=".service.ReadCacheIntentService" />
         <service android:name=".service.SummaryCacheIntentService" />
-        <service android:name=".service.BackgroundRefreshService"
-            android:enabled="true"
-            android:exported="true" >
+        <service android:enabled="true"  android:name=".service.BackgroundRefreshService" />
+        <receiver android:name=".service.MyScheduleReceiver" android:exported="false">
             <intent-filter>
-                <action
-                    android:name="com.google.android.gms.wearable.BIND_LISTENER" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="com.blackcj.fitdata.START_REFRESH" />
             </intent-filter>
-        </service>
+        </receiver>
+        <receiver android:process=":remote" android:name=".service.MyStartServiceReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="com.blackcj.fitdata.MyScheduleReceiver" />
+            </intent-filter>
+        </receiver>
         <meta-data android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
 

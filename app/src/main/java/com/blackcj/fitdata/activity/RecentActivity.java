@@ -19,6 +19,7 @@ import com.blackcj.fitdata.Utilities;
 import com.blackcj.fitdata.database.CacheManager;
 import com.blackcj.fitdata.database.CupboardSQLiteOpenHelper;
 import com.blackcj.fitdata.database.DataManager;
+import com.blackcj.fitdata.database.SimpleDBHelper;
 import com.blackcj.fitdata.fragment.RecentFragment;
 import com.blackcj.fitdata.model.Workout;
 
@@ -35,11 +36,8 @@ import static nl.qbusict.cupboard.CupboardFactory.cupboard;
  */
 public class RecentActivity extends BaseActivity implements DataManager.IDataManager, CacheManager.ICacheManager {
     private static final String TAG = "RecentActivity";
-    private static SQLiteDatabase mDb;
-
     private RecentFragment fragment;
     private static final String ARG_ACTIVITY_TYPE = "ARG_ACTIVITY_TYPE";
-    private CupboardSQLiteOpenHelper mHelper;
     private DataManager mDataManager;
     private Cursor mCursor;
     private Workout lastWorkout;
@@ -72,10 +70,8 @@ public class RecentActivity extends BaseActivity implements DataManager.IDataMan
             actionBar.setTitle("Recent History");
         }
         toolbar.setNavigationIcon(getResources().getDrawable(R.drawable.ic_close_white, null));
-        mHelper = new CupboardSQLiteOpenHelper(this);
-        mDb = mHelper.getWritableDatabase();
         mDataManager = DataManager.getInstance(this);
-
+        SQLiteDatabase mDb = SimpleDBHelper.INSTANCE.open(this.getApplicationContext());
         fragment = RecentFragment.create();
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         transaction.replace(R.id.placeholder, fragment, RecentFragment.TAG);
@@ -96,13 +92,14 @@ public class RecentActivity extends BaseActivity implements DataManager.IDataMan
     @Override
     protected void onStop() {
         mDataManager.removeListener(this);
+        mDataManager.disconnect();
         super.onStop();
     }
 
     @Override
     protected void onDestroy() {
         mCursor.close();
-        mHelper.close();
+        SimpleDBHelper.INSTANCE.close();
         mDataManager.disconnect();
         super.onDestroy();
     }
@@ -173,12 +170,15 @@ public class RecentActivity extends BaseActivity implements DataManager.IDataMan
 
     @Override
     public void onDataChanged(Utilities.TimeFrame timeFrame) {
+        final SQLiteDatabase mDb = SimpleDBHelper.INSTANCE.open(this.getApplicationContext());
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                mCursor = cupboard().withDatabase(mDb).query(Workout.class).withSelection("type != ? AND type != ?", "3", "-2").orderBy("start DESC").limit(200).query().getCursor();
-                fragment.swapCursor(mCursor);
-                Log.d(TAG, "Refresh cursor");
+                if (mDb != null) {
+                    mCursor = cupboard().withDatabase(mDb).query(Workout.class).withSelection("type != ? AND type != ?", "3", "-2").orderBy("start DESC").limit(200).query().getCursor();
+                    fragment.swapCursor(mCursor);
+                    Log.d(TAG, "Refresh cursor");
+                }
             }
         });
     };

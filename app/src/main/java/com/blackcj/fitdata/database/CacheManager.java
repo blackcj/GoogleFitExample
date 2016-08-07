@@ -51,7 +51,7 @@ public class CacheManager {
         boolean overlap = false;
         if (context != null) {
             final CupboardSQLiteOpenHelper dbHelper = new CupboardSQLiteOpenHelper(context);
-            final SQLiteDatabase mDb = dbHelper.getWritableDatabase();
+            final SQLiteDatabase mDb = dbHelper.getReadableDatabase();
             long rangeStart = inWorkout.start - 1000 * 60 * 60 * 24;
             long rangeEnd = inWorkout.start + inWorkout.duration;
             QueryResultIterable<Workout> itr = cupboard().withDatabase(mDb).query(Workout.class).withSelection("start BETWEEN ? AND ?", "" + rangeStart, "" + rangeEnd).query();
@@ -62,6 +62,7 @@ public class CacheManager {
                 }
             }
             itr.close();
+            dbHelper.close();
         }
         return overlap;
     }

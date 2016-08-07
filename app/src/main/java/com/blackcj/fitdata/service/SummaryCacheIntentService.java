@@ -35,7 +35,7 @@ public class SummaryCacheIntentService  extends IntentService {
         ResultReceiver resultReceiver = intent.getParcelableExtra(MainActivity.RECEIVER_TAG);
         mReceiver = new WeakReference<>(resultReceiver);
         final CupboardSQLiteOpenHelper dbHelper = new CupboardSQLiteOpenHelper(this);
-        final SQLiteDatabase mDb = dbHelper.getWritableDatabase();
+        final SQLiteDatabase mDb = dbHelper.getReadableDatabase();
         int workoutType = intent.getIntExtra("WorkoutType", 0);
         SummaryData report = new SummaryData();
         if (mockData) {

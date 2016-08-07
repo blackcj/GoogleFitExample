@@ -3,6 +3,7 @@ package com.blackcj.fitdata.fragment;
 import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
@@ -23,6 +24,8 @@ import com.blackcj.fitdata.Utilities;
 import com.blackcj.fitdata.database.DataManager;
 import com.blackcj.fitdata.model.Workout;
 import com.blackcj.fitdata.model.WorkoutTypes;
+import com.crashlytics.android.answers.Answers;
+import com.crashlytics.android.answers.ContentViewEvent;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -137,6 +140,11 @@ public class AddEntryFragment extends Fragment {
             updateView();
         }
 
+        Answers.getInstance().logContentView(new ContentViewEvent()
+                .putContentName("Add new entry")
+                .putContentType("View")
+                .putContentId("AddEntryFragment"));
+
         return view;
     }
 
@@ -170,7 +178,7 @@ public class AddEntryFragment extends Fragment {
 
 
     @Override
-    public void onAttach(Activity activity) {
+    public void onAttach(Context activity) {
         super.onAttach(activity);
         if(activity instanceof DataManager.IDataManager) {
             mCallback = (DataManager.IDataManager)activity;
@@ -239,6 +247,7 @@ public class AddEntryFragment extends Fragment {
         cal.set(year, month, day, hour, minute);
         long startTime = cal.getTimeInMillis();
         workout.start = startTime;
+        workout._id = startTime;
         cal.add(Calendar.MINUTE, Integer.parseInt(editTextMinutes.getText().toString()));
         workout.duration = cal.getTimeInMillis() - startTime;
         workout.stepCount = Integer.parseInt(editTextSteps.getText().toString());

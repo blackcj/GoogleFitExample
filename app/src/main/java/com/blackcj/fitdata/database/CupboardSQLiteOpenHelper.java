@@ -3,11 +3,10 @@ package com.blackcj.fitdata.database;
 import static nl.qbusict.cupboard.CupboardFactory.cupboard;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 
 import com.blackcj.fitdata.model.Workout;
 
-public class CupboardSQLiteOpenHelper extends SQLiteOpenHelper {
+public class CupboardSQLiteOpenHelper extends MultiThreadSQLiteOpenHelper {
     private static final String DATABASE_NAME = "googlefitexample.db";
     private static final int DATABASE_VERSION = 2;
 

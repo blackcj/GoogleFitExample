@@ -97,12 +97,19 @@ public class DetailActivity extends BaseActivity implements CacheResultReceiver.
         image.setImageResource(getIntent().getIntExtra(EXTRA_IMAGE, R.drawable.heart_icon));
 
         Bitmap bitmap = ((BitmapDrawable)image.getDrawable()).getBitmap();
-        Palette palette = Palette.generate(bitmap);
-        int vibrant = palette.getVibrantColor(0x000000);
-        //int vibrant = palette.getMutedColor(0x000000);
-        if(vibrant == 0) {
+        Palette palette = Palette.from(bitmap).generate();
+        Palette.Swatch swatch = palette.getLightVibrantSwatch();
+
+        int vibrant = 0xFF110000;
+        if (swatch != null) {
+            vibrant = swatch.getRgb();//palette.getVibrantColor(0xFF110000);
+        }
+        if(vibrant == 0xFF110000) {
+            swatch = palette.getVibrantSwatch();
             //vibrant = palette.getLightMutedColor(0x000000);
-            vibrant = palette.getMutedColor(0x000000);
+            if (swatch != null) {
+                vibrant = swatch.getRgb();//palette.getVibrantColor(0xFF110000);
+            }
         }
         image.setBackgroundColor(Utilities.lighter(vibrant, 0.4f));
 

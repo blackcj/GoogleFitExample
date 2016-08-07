@@ -10,7 +10,16 @@ import android.widget.Toast;
 
 import com.blackcj.fitdata.Utilities;
 import com.blackcj.fitdata.database.DataManager;
+import com.blackcj.fitdata.model.UserPreferences;
 import com.blackcj.fitdata.model.Workout;
+import com.crashlytics.android.Crashlytics;
+import com.crashlytics.android.answers.Answers;
+import com.crashlytics.android.answers.CustomEvent;
+
+import java.util.Calendar;
+import java.util.Date;
+
+import io.fabric.sdk.android.Fabric;
 
 
 /**
@@ -22,6 +31,8 @@ public class BackgroundRefreshService extends Service implements DataManager.IDa
     protected DataManager mDataManager;
     private PowerManager.WakeLock mWakeLock;
     private boolean mInProgress = false;
+    private boolean mFirstLoad = true;
+    private long startTime;
 
     public class LocalBinder extends Binder {
         public BackgroundRefreshService getServerInstance() {
@@ -39,7 +50,9 @@ public class BackgroundRefreshService extends Service implements DataManager.IDa
         super.onStartCommand(intent, flags, startId);
 
         PowerManager mgr = (PowerManager)getSystemService(Context.POWER_SERVICE);
-        //Toast.makeText(BackgroundRefreshService.this, "Service Started", Toast.LENGTH_SHORT).show();
+        Fabric.with(this.getApplicationContext(), new Crashlytics(), new Answers());
+
+        Toast.makeText(BackgroundRefreshService.this, "Service Started", Toast.LENGTH_SHORT).show();
         /*
         WakeLock is reference counted so we don't want to create multiple WakeLocks. So do a check before initializing and acquiring.
 
@@ -56,6 +69,7 @@ public class BackgroundRefreshService extends Service implements DataManager.IDa
         if (mDataManager == null) {
             mDataManager = DataManager.getInstance(this);
         }
+        mDataManager.addListener(this);
 
         if(mDataManager.isConnected() && !mInProgress) {
             onConnected();
@@ -65,9 +79,10 @@ public class BackgroundRefreshService extends Service implements DataManager.IDa
         if(!mDataManager.isConnected() && !mInProgress)
         {
             mInProgress = true;
-            mDataManager.addListener(this);
+
             mDataManager.connect();
         }
+
 
         return START_STICKY;
     }
@@ -91,7 +106,7 @@ public class BackgroundRefreshService extends Service implements DataManager.IDa
             this.mDataManager = null;
         }
         // Display the connection status
-        Toast.makeText(BackgroundRefreshService.this, "Service Destroyed", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(BackgroundRefreshService.this, "Service Destroyed", Toast.LENGTH_SHORT).show();
 
         if (this.mWakeLock != null) {
             this.mWakeLock.release();
@@ -114,16 +129,25 @@ public class BackgroundRefreshService extends Service implements DataManager.IDa
     @Override
     public void onConnected() {
         if(mDataManager != null && mDataManager.isConnected()) {
-            if(mDataManager.isRefreshInProgress()) {
-                //stopSelf();
-                Toast.makeText(BackgroundRefreshService.this, "Refresh already in progress.", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(BackgroundRefreshService.this, "Starting new background refresh.", Toast.LENGTH_SHORT).show();
-                mInProgress = false;
-                mDataManager.quickDataRead();
+            //Toast.makeText(BackgroundRefreshService.this, "Starting new background refresh.", Toast.LENGTH_SHORT).show();
+            mInProgress = false;
+            Calendar cal = Calendar.getInstance();
+            Date now = new Date();
+            cal.setTime(now);
+            startTime = cal.getTimeInMillis();
+            long lastSync = UserPreferences.getLastSync(this.getApplicationContext());
+            if (lastSync > 0) {
+                mFirstLoad = false;
             }
+            mDataManager.quickDataRead();
         } else {
-            Toast.makeText(BackgroundRefreshService.this, "Something went wrong.", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(BackgroundRefreshService.this, "Something went wrong.", Toast.LENGTH_SHORT).show();
+            Calendar cal = Calendar.getInstance();
+            Date now = new Date();
+            cal.setTime(now);
+
+            Answers.getInstance().logCustom(new CustomEvent("Background Refresh Failure")
+                    .putCustomAttribute("Time (s)", Math.floor(cal.getTimeInMillis() - startTime) / 1000));
             stopSelf();
         }
     }
@@ -132,6 +156,17 @@ public class BackgroundRefreshService extends Service implements DataManager.IDa
     public void onDataChanged(Utilities.TimeFrame timeFrame) {};
     @Override
     public void onDataComplete() {
+        Calendar cal = Calendar.getInstance();
+        Date now = new Date();
+        cal.setTime(now);
+        if (mFirstLoad) {
+            Answers.getInstance().logCustom(new CustomEvent("Initial Load Succes")
+                    .putCustomAttribute("Time (s)", Math.floor(cal.getTimeInMillis() - startTime) / 1000));
+        } else {
+            Answers.getInstance().logCustom(new CustomEvent("Background Refresh Success")
+                    .putCustomAttribute("Time (s)", Math.floor(cal.getTimeInMillis() - startTime) / 1000));
+        }
+
         stopSelf();
     };
 }

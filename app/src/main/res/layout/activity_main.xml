@@ -24,19 +24,20 @@
             android:id="@+id/appBarLayout"
             layout="@layout/toolbar"/>
 
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/floatingActionButton"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            app:layout_anchor="@id/coordinatorLayout"
-            app:layout_anchorGravity="bottom|right|end"
-            android:src="@drawable/ic_add_white"
-            android:layout_margin="@dimen/fab_margin"
-            android:elevation="5dp"
-            android:visibility="gone"
-            android:clickable="true"/>
+
 
     </android.support.design.widget.CoordinatorLayout>
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/floatingActionButton"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        app:layout_anchor="@id/top_container"
+        app:layout_anchorGravity="bottom|right|end"
+        android:src="@drawable/ic_add_white"
+        android:layout_margin="@dimen/fab_margin"
+        android:elevation="5dp"
+        android:visibility="gone"
+        android:clickable="true"/>
     <View
         android:id="@+id/main_overlay"
         android:layout_width="fill_parent"
