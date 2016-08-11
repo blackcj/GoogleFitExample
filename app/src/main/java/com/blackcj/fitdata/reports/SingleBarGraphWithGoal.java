@@ -22,9 +22,9 @@ import org.achartengine.renderer.XYSeriesRenderer;
 public class SingleBarGraphWithGoal extends BaseReportGraph {
 
     /** The most recently added series. */
-    protected XYSeries mCurrentSeries;
+    private XYSeries mCurrentSeries;
     /** The most recently added series. */
-    protected XYSeries mGoalSeries;
+    private XYSeries mGoalSeries;
 
     @Override
     public GraphicalView getChartGraph(Activity activity) {

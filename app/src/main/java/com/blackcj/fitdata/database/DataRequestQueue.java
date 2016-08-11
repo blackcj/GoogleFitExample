@@ -8,10 +8,13 @@ import java.util.List;
 
 /**
  * Created by chris.black on 8/2/16.
+ *
+ * Data structure used to store write requests made to the database while
+ * current opperations finish.
  */
 public class DataRequestQueue {
 
-    List<WorkoutDataRequest> list = Collections.synchronizedList(new ArrayList());
+    private List<WorkoutDataRequest> list = Collections.synchronizedList(new ArrayList());
 
     public boolean hasNext() {
         return list.size() > 0;

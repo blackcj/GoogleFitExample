@@ -288,12 +288,14 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
 
     public void quickDataRead() {
         Context context = getApplicationContext();
+        Calendar cal = Calendar.getInstance();
+        Date now = new Date();
+        cal.setTime(now);
+        final long currentTime = cal.getTimeInMillis();
         if (context != null && refreshInProgress) {
-            Calendar cal = Calendar.getInstance();
-            Date now = new Date();
-            cal.setTime(now);
-            long currentTime = cal.getTimeInMillis();
-            if (currentTime - UserPreferences.getLastSync(context) > 1000 * 60 * 10) {
+
+            if (currentTime - UserPreferences.getLastSyncStart(context) > 1000 * 60 * 10) {
+                // TODO: Add start sync time
                 // More than 10 minutes have passed. Let the user execute another refresh.
                 refreshInProgress = false;
                 retryCount = 0;
@@ -304,6 +306,7 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
             if (!refreshInProgress) {
                 dumpSubscriptionsList();
                 refreshInProgress = true;
+                UserPreferences.setLastSyncStart(context, currentTime);
                 long syncStart = UserPreferences.getLastSync(context);// - (1000 * 60 * 60 * 8);
                 //long syncStart = Utilities.getTimeFrameStart(Utilities.TimeFrame.BEGINNING_OF_DAY);
                 if (context != null) {
@@ -514,7 +517,8 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
                 SQLiteDatabase db = getDatabase();
                 if (db != null && db.isOpen()) {
                     if (workout.duration > 0) {
-                        cupboard().withDatabase(db).delete(Workout.class, "start >= ? AND start < ?", "" + workout.start, "" + (workout.start + workout.duration));
+                        long start = workout.start - (1000 * 60 * 60 * 2);
+                        cupboard().withDatabase(db).delete(Workout.class, "start >= ? AND start < ?", "" + start, "" + (workout.start + workout.duration));
                         cupboard().withDatabase(db).put(workout);
                         notifyListenersDataChanged(Utilities.TimeFrame.ALL_TIME);
                     } else {
@@ -524,11 +528,13 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
                     Log.w(TAG, "Warning: db is null");
                 }
 
-                //UserPreferences.setBackgroundLoadComplete(context, false);
-                UserPreferences.setLastSync(context, workout.start);
+                if(!refreshInProgress) {
+                    //UserPreferences.setBackgroundLoadComplete(context, false);
+                    UserPreferences.setLastSync(context, workout.start);
 
-                // TODO: This could be optimized to select an end time.
-                populateHistoricalData();
+                    // TODO: This could be optimized to select an end time.
+                    populateHistoricalData();
+                }
             }
 
             return  null;
@@ -658,11 +664,6 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
         if (mClient.isConnected()) {
             connected = true;
 
-            Context context = getApplicationContext();
-            long lastSync = UserPreferences.getLastSync(context);
-            if (lastSync == 0) {
-                populateHistoricalData();
-            }
 
         /*
         Plus.PeopleApi.loadVisible(mClient, null);
@@ -941,8 +942,8 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
                 // Update step count
                 cal.setTime(now);
                 endTime = cal.getTimeInMillis();
-                cal.set(Calendar.HOUR_OF_DAY, 1);
-                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 1);
                 cal.set(Calendar.SECOND, 0);
                 cal.set(Calendar.MILLISECOND, 0);
                 startTime = cal.getTimeInMillis();
@@ -1055,6 +1056,8 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
                 Log.i(TAG, "Range Start: " + dateFormat.format(startTime));
                 Log.i(TAG, "Range End: " + dateFormat.format(endTime));
 
+                boolean wroteDataToCache = false;
+
                 // Load today
                 long dayStart = Utilities.getTimeFrameStart(Utilities.TimeFrame.BEGINNING_OF_DAY);
                 if(startTime <= dayStart && dayStart < endTime) {
@@ -1062,7 +1065,7 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
                     // Estimated steps and duration by Activity
                     DataReadRequest activitySegmentRequest = DataQueries.queryActivitySegment(dayStart, endTime);
                     DataReadResult dataReadResult = Fitness.HistoryApi.readData(mClient, activitySegmentRequest).await(10, TimeUnit.MINUTES);
-                    writeActivityDataToCache(dataReadResult);
+                    wroteDataToCache = writeActivityDataToCache(dataReadResult);
                     endTime = dayStart;
                     notifyListenersDataChanged(Utilities.TimeFrame.BEGINNING_OF_DAY);
                 }
@@ -1077,7 +1080,7 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
                     // Estimated steps and duration by Activity
                     DataReadRequest activitySegmentRequest = DataQueries.queryActivitySegment(weekStart, endTime);
                     DataReadResult dataReadResult = Fitness.HistoryApi.readData(mClient, activitySegmentRequest).await(10, TimeUnit.MINUTES);
-                    writeActivityDataToCache(dataReadResult);
+                    wroteDataToCache = writeActivityDataToCache(dataReadResult);
                     endTime = weekStart;
                     notifyListenersDataChanged(Utilities.TimeFrame.BEGINNING_OF_WEEK);
                 }
@@ -1091,13 +1094,15 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
                     Log.i(TAG, "Loading rest");
                     DataReadRequest activitySegmentRequest = DataQueries.queryActivitySegment(startTime, endTime);
                     DataReadResult dataReadResult = Fitness.HistoryApi.readData(mClient, activitySegmentRequest).await(15, TimeUnit.MINUTES);
-                    writeActivityDataToCache(dataReadResult);
+                    wroteDataToCache = writeActivityDataToCache(dataReadResult);
                 }
 
                 cal.setTime(now);
                 Log.i(TAG, "Background load complete");
-                UserPreferences.setLastSync(context, cal.getTimeInMillis());
-                UserPreferences.setBackgroundLoadComplete(context, true);
+                if (wroteDataToCache) {
+                    UserPreferences.setLastSync(context, cal.getTimeInMillis());
+                    UserPreferences.setBackgroundLoadComplete(context, true);
+                }
                 refreshInProgress = false;
                 notifyListenersDataChanged(Utilities.TimeFrame.ALL_TIME);
                 notifyListenersLoadComplete();
@@ -1122,10 +1127,10 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
      * Walk through all activity fields in a segment dataset and writes them to the cache. Used to
      * store data to display in reports and graphs.
      *
-     * @param dataSet
+     * @param dataSet set of data from the Google Fit API
      */
     private boolean writeDataSetToCache(DataSet dataSet) {
-        boolean wroteDataToCache = false;
+        boolean wroteDataToCache = true;
         SQLiteDatabase db = getDatabase();
         for (DataPoint dp : dataSet.getDataPoints()) {
             // Populate db cache with data
@@ -1150,35 +1155,38 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
                     // then we have at most 8 - 12 hours of data. Recent data is likely to change so over-
                     // write it.
                     Context context = getApplicationContext();
-                    if (context != null) {
-                        if (workout == null || UserPreferences.getBackgroundLoadComplete(context)) {
-                            long endTime = dp.getEndTime(TimeUnit.MILLISECONDS);
-                            DataReadRequest readRequest = DataQueries.queryStepCount(startTime, endTime);
-                            // TODO: Crash happening here
-                            DataReadResult dataReadResult = Fitness.HistoryApi.readData(mClient, readRequest).await(10, TimeUnit.MINUTES);
-                            int stepCount = countStepData(dataReadResult);
-                            workout = new Workout();
-                            workout._id = startTime;
-                            workout.start = startTime;
-                            workout.duration = endTime - startTime;
-                            workout.stepCount = stepCount;
-                            workout.type = activity;
-                            workout.packageName = dp.getOriginalDataSource().getAppPackageName();
-                            //Log.v("MainActivity", "Put Cache: " + WorkoutTypes.getWorkOutTextById(workout.type) + " " + workout.duration);
-                            if (db != null && db.isOpen()) {
-                                if (workout.duration > 0) {
-                                    Log.i(TAG, "Wrote to DB: " + workout.toString());
-                                    cupboard().withDatabase(db).put(workout);
-                                } else {
-                                    Log.w(TAG, "Warning: duration is 0");
-                                }
-
-                                wroteDataToCache = true;
+                    if (context != null && isConnected()) {
+                        //if (workout == null || UserPreferences.getBackgroundLoadComplete(context)) {
+                        long endTime = dp.getEndTime(TimeUnit.MILLISECONDS);
+                        DataReadRequest readRequest = DataQueries.queryStepCount(startTime, endTime);
+                        DataReadResult dataReadResult = Fitness.HistoryApi.readData(mClient, readRequest).await(2, TimeUnit.MINUTES);
+                        int stepCount = countStepData(dataReadResult);
+                        workout = new Workout();
+                        workout._id = startTime;
+                        workout.start = startTime;
+                        workout.duration = endTime - startTime;
+                        workout.stepCount = stepCount;
+                        workout.type = activity;
+                        workout.packageName = dp.getOriginalDataSource().getAppPackageName();
+                        //Log.v("MainActivity", "Put Cache: " + WorkoutTypes.getWorkOutTextById(workout.type) + " " + workout.duration);
+                        if (db != null && db.isOpen()) {
+                            if (workout.duration > 0) {
+                                Log.i(TAG, "Wrote to DB: " + workout.toString());
+                                cupboard().withDatabase(db).put(workout);
+                            } else {
+                                Log.w(TAG, "Warning: duration is 0");
                             }
+
+                            //wroteDataToCache = true;
                         } else {
+                            wroteDataToCache = false;
+                        }
+                        //} else {
                             // Do not overwrite data if the initial load is in progress. This would take too
                             // long and prevent us from accumulating a base set of data.
-                        }
+                        //}
+                    } else {
+                        wroteDataToCache = false;
                     }
 
                 }
@@ -1218,7 +1226,7 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
      * Walk through all fields in a step_count dataset and return the sum of steps. Used to
      * calculate step counts.
      *
-     * @param dataSet
+     * @param dataSet set of data from the Google Fit API
      */
     private int parseDataSet(DataSet dataSet) {
         int dataSteps = 0;

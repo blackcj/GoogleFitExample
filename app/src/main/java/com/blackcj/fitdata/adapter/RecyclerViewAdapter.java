@@ -1,9 +1,7 @@
 package com.blackcj.fitdata.adapter;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
-import android.support.v7.graphics.Palette;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -12,9 +10,6 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.DecelerateInterpolator;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import com.blackcj.fitdata.R;
 import com.blackcj.fitdata.Utilities;
@@ -151,6 +146,10 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<WorkoutViewHolder>
         holder.image.setImageResource(WorkoutTypes.getImageById(item.type));
         holder.itemView.setTag(item);
 
+        // This is just not working as expected. Switching to use hard coded color.
+        // TODO: Colorize image to match pre-defined color. Allowing user to select the color at some point.
+        int vibrant = ContextCompat.getColor(context, WorkoutTypes.getColorById(item.type));
+        /*
         Bitmap bitmap = ((BitmapDrawable)holder.image.getDrawable()).getBitmap();
         Palette palette = Palette.from(bitmap).generate();
         Palette.Swatch swatch = palette.getLightVibrantSwatch();
@@ -166,16 +165,14 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<WorkoutViewHolder>
                 vibrant = swatch.getRgb();//palette.getVibrantColor(0xFF110000);
             }
         }
+        */
 
         if(item.type == WorkoutTypes.TIME.getValue()) {
-            holder.detail.setText("Active: " + WorkoutReport.getDurationBreakdown(item.duration));
+            final String label = context.getText(R.string.active_label) + " " + WorkoutReport.getDurationBreakdown(item.duration);
+            holder.detail.setText(label);
         }else if(item.type == WorkoutTypes.STEP_COUNT.getValue()) {
-            if(item.start != 0) {
-                // TODO: Remove this when we have step summary cached
-                holder.detail.setText(item.stepCount + " steps");
-            } else {
-                holder.detail.setText(item.stepCount + " steps");
-            }
+            final String label = item.stepCount + " " + context.getText(R.string.step_label);
+            holder.detail.setText(label);
         } else {
             holder.detail.setText(WorkoutReport.getDurationBreakdown(item.duration));
         }

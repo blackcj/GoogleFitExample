@@ -5,21 +5,18 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.util.Log;
 
 import com.blackcj.fitdata.model.UserPreferences;
-import com.crashlytics.android.Crashlytics;
-import com.crashlytics.android.answers.Answers;
-import com.crashlytics.android.answers.CustomEvent;
 
 import java.util.Calendar;
 import java.util.Date;
 
-import io.fabric.sdk.android.Fabric;
-
 /**
  * Created by chris.black on 8/2/16.
+ *
+ * Receiver used to schedule the alarm manager that triggers the background
+ * refresh.
  */
 public class MyScheduleReceiver extends BroadcastReceiver {
 
@@ -54,18 +51,20 @@ public class MyScheduleReceiver extends BroadcastReceiver {
 
             AlarmManager alarmManager = (AlarmManager) context
                     .getSystemService(Context.ALARM_SERVICE);
-            alarmIntent.setData(Uri.parse("custom://" + ALARM_CODE));
+
+            //alarmIntent.setData(Uri.parse("custom://" + ALARM_CODE));
             PendingIntent pending = PendingIntent.getBroadcast(context, ALARM_CODE, alarmIntent,
                     PendingIntent.FLAG_UPDATE_CURRENT);
             // adb shell dumpsys alarm > dump.txt
             // Cancel any existing alarms
+            /*
             try {
-                alarmManager.cancel(pending);
+                //alarmManager.cancel(pending);
             } catch (Exception e) {
-                Log.e(TAG, "AlarmManager update was not canceled. " + e.toString());
-            }
+                //Log.e(TAG, "AlarmManager update was not canceled. " + e.toString());
+            }*/
 
-            cal.add(Calendar.MINUTE, 5);
+            cal.add(Calendar.MINUTE, 2);
             // fetch every 30 seconds
             // InexactRepeating allows Android to optimize the energy consumption
             alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP,

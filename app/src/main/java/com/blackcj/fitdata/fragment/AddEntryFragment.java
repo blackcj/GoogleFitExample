@@ -1,6 +1,5 @@
 package com.blackcj.fitdata.fragment;
 
-import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
@@ -109,13 +108,13 @@ public class AddEntryFragment extends Fragment {
             public void onTextChanged(CharSequence s, int start, int before, int count){}
         });
 
-        Calendar mcurrentTime = Calendar.getInstance();
-        mcurrentTime.add(Calendar.MINUTE, -30);
-        year = mcurrentTime.get(Calendar.YEAR);
-        month = mcurrentTime.get(Calendar.MONTH);
-        day = mcurrentTime.get(Calendar.DAY_OF_MONTH);
-        hour = mcurrentTime.get(Calendar.HOUR_OF_DAY);
-        minute = mcurrentTime.get(Calendar.MINUTE);
+        Calendar mCurrentTime = Calendar.getInstance();
+        mCurrentTime.add(Calendar.MINUTE, -30);
+        year = mCurrentTime.get(Calendar.YEAR);
+        month = mCurrentTime.get(Calendar.MONTH);
+        day = mCurrentTime.get(Calendar.DAY_OF_MONTH);
+        hour = mCurrentTime.get(Calendar.HOUR_OF_DAY);
+        minute = mCurrentTime.get(Calendar.MINUTE);
         cal.set(year, month, day, hour, minute);
 
         timeTextView.setText(Utilities.getTimeString(cal.getTimeInMillis()));

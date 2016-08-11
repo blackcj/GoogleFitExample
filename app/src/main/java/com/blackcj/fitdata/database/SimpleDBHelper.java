@@ -6,6 +6,8 @@ import android.util.Log;
 
 /**
  * Created by chris.black on 8/5/16.
+ *
+ * DB helper.
  */
 public class SimpleDBHelper {
 

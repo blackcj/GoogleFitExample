@@ -14,7 +14,7 @@ buildscript {
 
 allprojects {
     repositories {
-        // Sourceforge repo for achartengine
+        // Sourceforge repo for AChartEngine
         maven {
             url 'https://repository-achartengine.forge.cloudbees.com/snapshot/'
         }

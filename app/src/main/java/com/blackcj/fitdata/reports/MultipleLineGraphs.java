@@ -2,6 +2,7 @@ package com.blackcj.fitdata.reports;
 
 import android.app.Activity;
 import android.graphics.Color;
+import android.support.v4.content.ContextCompat;
 
 import com.blackcj.fitdata.R;
 
@@ -38,10 +39,10 @@ public class MultipleLineGraphs extends BaseReportGraph {
         mRenderer.setPanEnabled(true, false);
         mRenderer.setZoomEnabled(true, false);
         mRenderer.setLabelsTextSize(getDPI(15));
-        mRenderer.setXLabelsColor(activity.getResources().getColor(R.color.colorWhite));
-        mRenderer.setYLabelsColor(0, activity.getResources().getColor(R.color.colorWhite));
-        mRenderer.setLabelsColor(activity.getResources().getColor(R.color.colorWhite));
-        mRenderer.setAxesColor(activity.getResources().getColor(R.color.colorWhite));
+        mRenderer.setXLabelsColor(ContextCompat.getColor(activity,R.color.colorWhite));
+        mRenderer.setYLabelsColor(0, ContextCompat.getColor(activity,R.color.colorWhite));
+        mRenderer.setLabelsColor(ContextCompat.getColor(activity,R.color.colorWhite));
+        mRenderer.setAxesColor(ContextCompat.getColor(activity,R.color.colorWhite));
 
         mRenderer.setShowGrid(true); // we show the grid
         mRenderer.setXLabels(0);

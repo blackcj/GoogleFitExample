@@ -1,8 +1,6 @@
 package com.blackcj.fitdata.fragment;
 
-import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -18,9 +16,7 @@ import com.blackcj.fitdata.activity.IMainActivityCallback;
 import com.blackcj.fitdata.adapter.RecyclerViewAdapter;
 import com.blackcj.fitdata.animation.ItemAnimator;
 import com.blackcj.fitdata.database.CacheManager;
-import com.blackcj.fitdata.model.UserPreferences;
 import com.blackcj.fitdata.model.Workout;
-import com.blackcj.fitdata.service.BackgroundRefreshService;
 import com.blackcj.fitdata.service.CacheResultReceiver;
 
 import java.util.ArrayList;

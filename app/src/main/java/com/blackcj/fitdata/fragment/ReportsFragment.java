@@ -1,8 +1,9 @@
 package com.blackcj.fitdata.fragment;
 
-import android.app.Activity;
+import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -75,7 +76,7 @@ public class ReportsFragment extends BaseFragment {
     int densityDpi = 0;
 
     @Override
-    public void onAttach(Activity activity) {
+    public void onAttach(Context activity) {
         super.onAttach(activity);
         DisplayMetrics metrics = new DisplayMetrics();
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
@@ -109,6 +110,7 @@ public class ReportsFragment extends BaseFragment {
         }
         reportGraph.setDisplayMetrics(densityDpi);
 
+        // TODO: Crash here - keep an eye out
         Answers.getInstance().logContentView(new ContentViewEvent()
                 .putContentName("Report graph view")
                 .putContentType("View")
@@ -339,17 +341,17 @@ public class ReportsFragment extends BaseFragment {
         // TODO: END
         int series = 0;
         for (Integer workoutType : map.keySet()) {
-            int color = getResources().getColor(R.color.other_graph);
+            int color = ContextCompat.getColor(this.getActivity(),R.color.other_graph);
             if (workoutType == WorkoutTypes.WALKING.getValue()) {
-                color = getResources().getColor(R.color.walking_graph);
+                color = ContextCompat.getColor(this.getActivity(),R.color.walking_graph);
             } else if (workoutType == WorkoutTypes.RUNNING.getValue()) {
-                color = getResources().getColor(R.color.running_graph);
+                color = ContextCompat.getColor(this.getActivity(),R.color.running_graph);
             } else if (workoutType == WorkoutTypes.BIKING.getValue()) {
-                color = getResources().getColor(R.color.biking_graph);
+                color = ContextCompat.getColor(this.getActivity(),R.color.biking_graph);
             } else if (workoutType == WorkoutTypes.GOLF.getValue()) {
-                color = getResources().getColor(R.color.golfing_graph);
+                color = ContextCompat.getColor(this.getActivity(),R.color.golfing_graph);
             } else if (workoutType == WorkoutTypes.KAYAKING.getValue()) {
-                color = getResources().getColor(R.color.paddling_graph);
+                color = ContextCompat.getColor(this.getActivity(),R.color.paddling_graph);
             }
             reportGraph.addRenderer(series, getActivity(), color);
             Integer[] dataMap = map.get(workoutType);

@@ -3,13 +3,14 @@ package com.blackcj.fitdata.model;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
  * Created by chris.black on 5/1/15.
+ *
+ * Data model for the workout reports.
  */
 public class WorkoutReport {
     private Map<Integer, Workout> map =  new HashMap<>();
@@ -58,11 +59,10 @@ public class WorkoutReport {
     public long getTotalDuration() {
         long totalDuration = 0;
         Set keys = map.keySet();
-        for (Iterator i = keys.iterator(); i.hasNext();)
-        {
-            int key = (int) i.next();
+        for (Object key1 : keys) {
+            int key = (int) key1;
             Workout workout = map.get(key);
-            if(workout.type != WorkoutTypes.TIME.getValue() && workout.type != WorkoutTypes.STILL.getValue()
+            if (workout.type != WorkoutTypes.TIME.getValue() && workout.type != WorkoutTypes.STILL.getValue()
                     && workout.type != WorkoutTypes.IN_VEHICLE.getValue()) {
                 totalDuration += workout.duration;
             }
@@ -91,9 +91,8 @@ public class WorkoutReport {
     public String toString() {
         String result = "";
         Set keys = map.keySet();
-        for (Iterator i = keys.iterator(); i.hasNext();)
-        {
-            int key = (int) i.next();
+        for (Object key1 : keys) {
+            int key = (int) key1;
             Workout value = map.get(key);
             result += WorkoutTypes.getWorkOutTextById(value.type) + " steps: " + value.stepCount + "\n";
             result += WorkoutTypes.getWorkOutTextById(value.type) + " duration: " + getDurationBreakdown(value.duration) + "\n";

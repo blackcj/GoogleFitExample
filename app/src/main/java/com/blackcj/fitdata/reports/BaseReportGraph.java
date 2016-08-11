@@ -19,9 +19,9 @@ public abstract class BaseReportGraph implements IReportGraph, Serializable {
     double minData = 10;
     int mGoal = 0;
 
-    /** The main dataset that includes all the series that go into a chart. */
+    /** The main data set that includes all the series that go into a chart. */
     protected XYMultipleSeriesDataset mDataset = new XYMultipleSeriesDataset();
-    /** The main renderer that includes all the renderers customizing a chart. */
+    /** The main renderer that includes all the renderer customizing a chart. */
     protected XYMultipleSeriesRenderer mRenderer = new XYMultipleSeriesRenderer();
 
 

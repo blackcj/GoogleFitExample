@@ -12,10 +12,10 @@ import com.blackcj.fitdata.R;
  * Created by Chris Black
  */
 public class WorkoutViewHolder extends RecyclerView.ViewHolder {
-    public ImageView image;
-    public TextView text;
-    public TextView detail;
-    public LinearLayout container;
+    public final ImageView image;
+    public final TextView text;
+    public final TextView detail;
+    public final LinearLayout container;
 
     public WorkoutViewHolder(View itemView) {
         super(itemView);

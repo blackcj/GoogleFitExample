@@ -1,9 +1,5 @@
 package com.blackcj.fitdata.database;
 
-/**
- * Created by chris.black on 8/5/16.
- */
-
 import java.util.Map;
 import java.util.WeakHashMap;
 
@@ -30,7 +26,7 @@ public abstract class MultiThreadSQLiteOpenHelper extends SQLiteOpenHelper {
 
     // Tells for each thread if it requires that database should be opened or not opened (closed)
     // Using WeakHashMap so that thread can be released by GC when needed (no strong references on threads)
-    private WeakHashMap<Thread, Boolean> states = new WeakHashMap<Thread, Boolean>();
+    private WeakHashMap<Thread, Boolean> states = new WeakHashMap<>();
 
     public MultiThreadSQLiteOpenHelper(Context context, String name,
                                        CursorFactory factory, int version) {
@@ -53,7 +49,7 @@ public abstract class MultiThreadSQLiteOpenHelper extends SQLiteOpenHelper {
     }
 
     /**
-     * Close database if all threads dont need the database anymore
+     * Close database if all threads don't need the database anymore
      * @return true if closed, false otherwise
      */
     public boolean closeIfNeeded() {
@@ -83,7 +79,7 @@ public abstract class MultiThreadSQLiteOpenHelper extends SQLiteOpenHelper {
                 }
             }
 
-            Log.d(TAG, String.format(mustBeClosed ? "database must be closed" : "database still needs to be opened"));
+            Log.d(TAG, mustBeClosed ? "database must be closed" : "database still needs to be opened");
 
             if (mustBeClosed) {
                 super.close();

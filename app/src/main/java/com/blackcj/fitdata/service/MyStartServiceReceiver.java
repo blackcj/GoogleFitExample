@@ -2,19 +2,15 @@ package com.blackcj.fitdata.service;
 
 /**
  * Created by chris.black on 8/2/16.
+ *
+ * Receiver that's triggered by the alarm manager and kick starts the background refresh service. Is this
+ * necessary or can we just fire the service directly from the alarm manager?
  */
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.support.v4.content.WakefulBroadcastReceiver;
 import android.util.Log;
-
-import com.crashlytics.android.Crashlytics;
-import com.crashlytics.android.answers.Answers;
-import com.crashlytics.android.answers.CustomEvent;
-
-import io.fabric.sdk.android.Fabric;
 
 public class MyStartServiceReceiver extends BroadcastReceiver {
     private static final String TAG = "MyStartServiceReceiver";
@@ -27,10 +23,6 @@ public class MyStartServiceReceiver extends BroadcastReceiver {
             Log.i(TAG, "AlarmManager triggered background refresh.");
 
             context.startService(service);
-
-            /*Answers.getInstance().logCustom(new CustomEvent("Received Broadcast")
-                    .putCustomAttribute("Class", "MyStartServiceReceiver")
-                    .putCustomAttribute("Details", "Started background task in MyStartServiceReceiver"));*/
         }
     }
 }

@@ -6,7 +6,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.ResultReceiver;
 import android.util.Log;
-import android.widget.TextView;
 
 import com.blackcj.fitdata.Utilities;
 import com.blackcj.fitdata.activity.MainActivity;

@@ -1,6 +1,6 @@
 package com.blackcj.fitdata.fragment;
 
-import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
@@ -85,7 +85,7 @@ public class SettingsFragment extends BaseFragment {
     }
 
     @Override
-    public void onAttach(Activity activity) {
+    public void onAttach(Context activity) {
         super.onAttach(activity);
         if(activity instanceof IMainActivityCallback) {
             mCallback = (IMainActivityCallback)activity;

@@ -5,10 +5,10 @@ import android.os.Parcelable;
 
 import com.blackcj.fitdata.Utilities;
 
-import java.io.Serializable;
-
 /**
  * Created by chris.black on 5/1/15.
+ *
+ * Model for the Workout.
  */
 public class Workout implements Comparable<Workout>, Parcelable {
 

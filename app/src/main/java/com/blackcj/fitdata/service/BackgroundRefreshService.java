@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.PowerManager;
-import android.widget.Toast;
 
 import com.blackcj.fitdata.Utilities;
 import com.blackcj.fitdata.database.DataManager;
@@ -24,17 +23,20 @@ import io.fabric.sdk.android.Fabric;
 
 /**
  * Created by chris.black on 6/22/16.
+ *
+ * Service used to refresh data in the background to ensure execution completes. This method is
+ * called both from the main view and from the MyStartServiceReciever
  */
 public class BackgroundRefreshService extends Service implements DataManager.IDataManager {
 
-    IBinder mBinder = new LocalBinder();
-    protected DataManager mDataManager;
+    private IBinder mBinder = new LocalBinder();
+    private DataManager mDataManager;
     private PowerManager.WakeLock mWakeLock;
     private boolean mInProgress = false;
     private boolean mFirstLoad = true;
     private long startTime;
 
-    public class LocalBinder extends Binder {
+    private class LocalBinder extends Binder {
         public BackgroundRefreshService getServerInstance() {
             return BackgroundRefreshService.this;
         }
@@ -50,9 +52,7 @@ public class BackgroundRefreshService extends Service implements DataManager.IDa
         super.onStartCommand(intent, flags, startId);
 
         PowerManager mgr = (PowerManager)getSystemService(Context.POWER_SERVICE);
-        Fabric.with(this.getApplicationContext(), new Crashlytics(), new Answers());
 
-        Toast.makeText(BackgroundRefreshService.this, "Service Started", Toast.LENGTH_SHORT).show();
         /*
         WakeLock is reference counted so we don't want to create multiple WakeLocks. So do a check before initializing and acquiring.
 
@@ -65,6 +65,8 @@ public class BackgroundRefreshService extends Service implements DataManager.IDa
         if (!this.mWakeLock.isHeld()) { //**Added this
             this.mWakeLock.acquire();
         }
+
+        Fabric.with(this, new Crashlytics(), new Answers());
 
         if (mDataManager == null) {
             mDataManager = DataManager.getInstance(this);
@@ -153,14 +155,15 @@ public class BackgroundRefreshService extends Service implements DataManager.IDa
     }
 
     @Override
-    public void onDataChanged(Utilities.TimeFrame timeFrame) {};
+    public void onDataChanged(Utilities.TimeFrame timeFrame) {}
+
     @Override
     public void onDataComplete() {
         Calendar cal = Calendar.getInstance();
         Date now = new Date();
         cal.setTime(now);
         if (mFirstLoad) {
-            Answers.getInstance().logCustom(new CustomEvent("Initial Load Succes")
+            Answers.getInstance().logCustom(new CustomEvent("Initial Load Success")
                     .putCustomAttribute("Time (s)", Math.floor(cal.getTimeInMillis() - startTime) / 1000));
         } else {
             Answers.getInstance().logCustom(new CustomEvent("Background Refresh Success")
@@ -168,5 +171,5 @@ public class BackgroundRefreshService extends Service implements DataManager.IDa
         }
 
         stopSelf();
-    };
+    }
 }

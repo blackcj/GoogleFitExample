@@ -3,8 +3,6 @@ package com.blackcj.fitdata.model;
 import com.blackcj.fitdata.R;
 import com.google.android.gms.fitness.FitnessActivities;
 
-import java.util.ArrayList;
-
 /**
  * Created by chris.black on 5/1/15.
  *
@@ -53,10 +51,6 @@ public enum WorkoutTypes {
                 break;
         }
         return result;
-    }
-
-    public static String getNonActivQuery() {
-        return "";
     }
 
     public static String getActivityTextById(int id) {
@@ -202,6 +196,15 @@ public enum WorkoutTypes {
     public static int getColorById(int id) {
         int result = R.color.other;
         switch (id) {
+            case -2:
+                result = R.color.steps;
+                break;
+            case -1:
+                result = R.color.calendar;
+                break;
+            case 0:
+                result = R.color.driving;
+                break;
             case 1:
                 result = R.color.biking;
                 break;
@@ -213,6 +216,9 @@ public enum WorkoutTypes {
                 break;
             case 32:
                 result = R.color.golfing;
+                break;
+            case 40:
+                result = R.color.paddling;
                 break;
         }
         return result;

@@ -1,16 +1,14 @@
 package com.blackcj.fitdata.activity;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.app.ActionBar;
-import android.support.v7.graphics.Palette;
 import android.transition.Fade;
 import android.transition.Transition;
 import android.view.Menu;
@@ -95,11 +93,13 @@ public class DetailActivity extends BaseActivity implements CacheResultReceiver.
         ImageView image = (ImageView) findViewById(R.id.image);
         ViewCompat.setTransitionName(image, EXTRA_IMAGE);
         image.setImageResource(getIntent().getIntExtra(EXTRA_IMAGE, R.drawable.heart_icon));
-
+        int vibrant = ContextCompat.getColor(this, WorkoutTypes.getColorById(getIntent().getIntExtra(EXTRA_TYPE, -1)));
+        /*
         Bitmap bitmap = ((BitmapDrawable)image.getDrawable()).getBitmap();
         Palette palette = Palette.from(bitmap).generate();
         Palette.Swatch swatch = palette.getLightVibrantSwatch();
 
+        /*
         int vibrant = 0xFF110000;
         if (swatch != null) {
             vibrant = swatch.getRgb();//palette.getVibrantColor(0xFF110000);
@@ -111,6 +111,7 @@ public class DetailActivity extends BaseActivity implements CacheResultReceiver.
                 vibrant = swatch.getRgb();//palette.getVibrantColor(0xFF110000);
             }
         }
+        */
         image.setBackgroundColor(Utilities.lighter(vibrant, 0.4f));
 
         View container = findViewById(R.id.container);

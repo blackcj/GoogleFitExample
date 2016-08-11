@@ -17,7 +17,6 @@ import android.view.View;
 import com.blackcj.fitdata.R;
 import com.blackcj.fitdata.Utilities;
 import com.blackcj.fitdata.database.CacheManager;
-import com.blackcj.fitdata.database.CupboardSQLiteOpenHelper;
 import com.blackcj.fitdata.database.DataManager;
 import com.blackcj.fitdata.database.SimpleDBHelper;
 import com.blackcj.fitdata.fragment.RecentFragment;
@@ -181,8 +180,8 @@ public class RecentActivity extends BaseActivity implements DataManager.IDataMan
                 }
             }
         });
-    };
+    }
+
     @Override
-    public void onDataComplete() {
-    };
+    public void onDataComplete() {}
 }

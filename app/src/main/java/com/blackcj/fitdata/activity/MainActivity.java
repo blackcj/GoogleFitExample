@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.AppBarLayout;
@@ -33,16 +34,17 @@ import com.blackcj.fitdata.fragment.SettingsFragment;
 import com.blackcj.fitdata.model.UserPreferences;
 import com.blackcj.fitdata.model.Workout;
 import com.blackcj.fitdata.service.BackgroundRefreshService;
-import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.SearchEvent;
 import com.getbase.floatingactionbutton.FloatingActionsMenu;
 import com.google.android.gms.fitness.data.DataSet;
 
+import java.util.Calendar;
+import java.util.Date;
+
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import io.fabric.sdk.android.Fabric;
 
 /**
  * This sample demonstrates how to use the History API of the Google Fit platform to insert data,
@@ -78,7 +80,6 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Fabric.with(this.getApplicationContext(), new Crashlytics(), new Answers());
 
         Transition fade = new ChangeBounds();
         fade.excludeTarget(android.R.id.navigationBarBackground, true);
@@ -93,30 +94,34 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
         mAdapter = new TabPagerAdapter(this.getSupportFragmentManager());
 
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabLayout);
-        tabLayout.setTabsFromPagerAdapter(mAdapter);
-        tabLayout.setTabMode(TabLayout.MODE_SCROLLABLE);
-
-        tabLayout.setTabGravity(TabLayout.GRAVITY_CENTER);
-        tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-            @Override
-            public void onTabSelected(TabLayout.Tab tab) {
-                mViewPager.setCurrentItem(tab.getPosition());
-                //animateFab(tab.getPosition());
-            }
-
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
-
-            }
-
-            @Override
-            public void onTabReselected(TabLayout.Tab tab) {
-
-            }
-        });
         mViewPager = (ViewPager) findViewById(R.id.viewPager);
-        mViewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
         mViewPager.setAdapter(mAdapter);
+
+        if (tabLayout != null) {
+            tabLayout.setTabMode(TabLayout.MODE_SCROLLABLE);
+            tabLayout.setupWithViewPager(mViewPager);
+            tabLayout.setTabGravity(TabLayout.GRAVITY_CENTER);
+            tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+                @Override
+                public void onTabSelected(TabLayout.Tab tab) {
+                    mViewPager.setCurrentItem(tab.getPosition());
+                    //animateFab(tab.getPosition());
+                }
+
+                @Override
+                public void onTabUnselected(TabLayout.Tab tab) {
+
+                }
+
+                @Override
+                public void onTabReselected(TabLayout.Tab tab) {
+
+                }
+            });
+        }
+
+        mViewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
+
 
         overlay.setVisibility(View.GONE);
 
@@ -132,10 +137,6 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
 
         Intent intent = new Intent("com.blackcj.fitdata.START_REFRESH");
         sendBroadcast(intent);
-    }
-
-    protected void changeFab(int position) {
-
     }
 
     @Override
@@ -278,12 +279,13 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
                 RecentActivity.launch(MainActivity.this);
                 break;
             case R.id.action_reload_data:
-                long syncStart = Utilities.getTimeFrameStart(Utilities.TimeFrame.BEGINNING_OF_DAY);
-                UserPreferences.setLastSync(this, syncStart);
-                startService(new Intent(this, BackgroundRefreshService.class));
-                return true;
-            case R.id.action_refresh_data:
-                onDataChanged(Utilities.TimeFrame.ALL_TIME);
+                boolean loadComplete = UserPreferences.getBackgroundLoadComplete(this);
+                long lastSync = UserPreferences.getLastSync(this);
+                if (loadComplete) {
+                    long syncStart = lastSync - (1000 * 60 * 24 * 7);
+                    UserPreferences.setLastSync(this, syncStart);
+                    startService(new Intent(this, BackgroundRefreshService.class));
+                }
                 return true;
             case R.id.action_settings:
                 FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
@@ -363,7 +365,17 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
 
     @Override
     public void onConnected() {
+        Calendar cal = Calendar.getInstance();
+        Date now = new Date();
+        cal.setTime(now);
+        final long currentTime = cal.getTimeInMillis();
 
+        Context context = getApplicationContext();
+        long lastSync = UserPreferences.getLastSync(context);
+        long lastStart = UserPreferences.getLastSyncStart(context);
+        if (lastSync == 0 && (currentTime - lastStart) >  1000 * 60 * 20) {
+            startService(new Intent(this, BackgroundRefreshService.class));
+        }
     }
 
     @Override
@@ -394,11 +406,12 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
                 }
             }
         });
-    };
+    }
+
     @Override
     public void onDataComplete() {
 
-    };
+    }
 
     public void setStepCounting(boolean active) {
         if (mDataManager != null && UserPreferences.getCountSteps(this) != active) {

@@ -1,11 +1,13 @@
 package com.blackcj.fitdata.model;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 
 /**
  * Created by chris.black on 5/3/15.
  */
+@SuppressLint("CommitPrefEdits")
 public class UserPreferences {
     public static final String PREFS_NAME = "GoogleFitExample";
 
@@ -65,12 +67,25 @@ public class UserPreferences {
         editor.commit();
     }
 
+    public static long getLastSyncStart(Context context) {
+        SharedPreferences settings = context.getApplicationContext().getSharedPreferences(PREFS_NAME, 0);
+        return settings.getLong("lastSyncStartTime", 0);
+    }
+
+    public static void setLastSyncStart(Context context, long value) {
+        SharedPreferences settings = context.getApplicationContext().getSharedPreferences(PREFS_NAME, 0);
+        SharedPreferences.Editor editor = settings.edit();
+        editor.putLong("lastSyncStartTime", value);
+
+        // Commit the edits!
+        editor.commit();
+    }
     public static boolean getShouldDeleteData(Context context) {
         SharedPreferences settings = context.getApplicationContext().getSharedPreferences(PREFS_NAME, 0);
         return settings.getBoolean("shouldDeleteData", false);
     }
 
-    public static void setLastSync(Context context, boolean value) {
+    public static void setShouldDeleteData(Context context, boolean value) {
         SharedPreferences settings = context.getApplicationContext().getSharedPreferences(PREFS_NAME, 0);
         SharedPreferences.Editor editor = settings.edit();
         editor.putBoolean("shouldDeleteData", value);
