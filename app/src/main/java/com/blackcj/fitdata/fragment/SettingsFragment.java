@@ -62,11 +62,12 @@ public class SettingsFragment extends BaseFragment {
         step_toggle.setChecked(UserPreferences.getCountSteps(getActivity()));
         activity_toggle.setChecked(UserPreferences.getActivityTracking(getActivity()));
         viewLoaded = true;
-
-        Answers.getInstance().logContentView(new ContentViewEvent()
-                .putContentName("Settings view")
-                .putContentType("View")
-                .putContentId("SettingsFragment"));
+        if(Answers.getInstance() != null) {
+            Answers.getInstance().logContentView(new ContentViewEvent()
+                    .putContentName("Settings view")
+                    .putContentType("View")
+                    .putContentId("SettingsFragment"));
+        }
         return view;
     }
 

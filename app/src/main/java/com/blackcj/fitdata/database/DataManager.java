@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.IntentSender;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.ConnectivityManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -97,6 +98,17 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
     }
 
     public boolean hasContext() { return getContext() != null; }
+
+    public boolean isNetworkConnected() {
+        Context context = getApplicationContext();
+        boolean isConnected = false;
+        if (context != null) {
+            ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            isConnected = cm.getActiveNetworkInfo() != null;
+        }
+
+        return isConnected;
+    }
 
     private void notifyListenersDataChanged(Utilities.TimeFrame timeFrame) {
         int i = 0;
@@ -307,7 +319,7 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
                 dumpSubscriptionsList();
                 refreshInProgress = true;
                 UserPreferences.setLastSyncStart(context, currentTime);
-                long syncStart = UserPreferences.getLastSync(context);// - (1000 * 60 * 60 * 8);
+                long syncStart = UserPreferences.getLastSync(context) - (1000 * 60 * 60 * 2);
                 //long syncStart = Utilities.getTimeFrameStart(Utilities.TimeFrame.BEGINNING_OF_DAY);
                 if (context != null) {
                     SQLiteDatabase db = getDatabase();
@@ -484,11 +496,6 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
 
             Workout workout = params[0];
 
-            Answers.getInstance().logCustom(new CustomEvent("Insert Session")
-                    .putCustomAttribute("Type Id", workout.type)
-                    .putCustomAttribute("Details", workout.shortText())
-                    .putCustomAttribute("Step Count", workout.stepCount));
-
             String activityName = WorkoutTypes.getActivityTextById(workout.type);
 
             // Then, invoke the History API to insert the data and await the result, which is
@@ -663,7 +670,6 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
         // Look at some data!!
         if (mClient.isConnected()) {
             connected = true;
-
 
         /*
         Plus.PeopleApi.loadVisible(mClient, null);
@@ -1063,7 +1069,7 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
                 if(startTime <= dayStart && dayStart < endTime) {
                     Log.i(TAG, "Loading today");
                     // Estimated steps and duration by Activity
-                    DataReadRequest activitySegmentRequest = DataQueries.queryActivitySegment(dayStart, endTime);
+                    DataReadRequest activitySegmentRequest = DataQueries.queryActivitySegment(dayStart, endTime, isNetworkConnected());
                     DataReadResult dataReadResult = Fitness.HistoryApi.readData(mClient, activitySegmentRequest).await(10, TimeUnit.MINUTES);
                     wroteDataToCache = writeActivityDataToCache(dataReadResult);
                     endTime = dayStart;
@@ -1078,7 +1084,7 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
                 if(startTime <= weekStart && weekStart < endTime) {
                     Log.i(TAG, "Loading week");
                     // Estimated steps and duration by Activity
-                    DataReadRequest activitySegmentRequest = DataQueries.queryActivitySegment(weekStart, endTime);
+                    DataReadRequest activitySegmentRequest = DataQueries.queryActivitySegment(weekStart, endTime, isNetworkConnected());
                     DataReadResult dataReadResult = Fitness.HistoryApi.readData(mClient, activitySegmentRequest).await(10, TimeUnit.MINUTES);
                     wroteDataToCache = writeActivityDataToCache(dataReadResult);
                     endTime = weekStart;
@@ -1092,7 +1098,7 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
                     Log.i(TAG, "Range Start: " + startTime);
                     Log.i(TAG, "Range End: " + endTime);
                     Log.i(TAG, "Loading rest");
-                    DataReadRequest activitySegmentRequest = DataQueries.queryActivitySegment(startTime, endTime);
+                    DataReadRequest activitySegmentRequest = DataQueries.queryActivitySegment(startTime, endTime, isNetworkConnected());
                     DataReadResult dataReadResult = Fitness.HistoryApi.readData(mClient, activitySegmentRequest).await(15, TimeUnit.MINUTES);
                     wroteDataToCache = writeActivityDataToCache(dataReadResult);
                 }

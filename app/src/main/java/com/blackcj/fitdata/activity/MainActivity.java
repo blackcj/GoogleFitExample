@@ -35,6 +35,7 @@ import com.blackcj.fitdata.model.UserPreferences;
 import com.blackcj.fitdata.model.Workout;
 import com.blackcj.fitdata.service.BackgroundRefreshService;
 import com.crashlytics.android.answers.Answers;
+import com.crashlytics.android.answers.CustomEvent;
 import com.crashlytics.android.answers.SearchEvent;
 import com.getbase.floatingactionbutton.FloatingActionsMenu;
 import com.google.android.gms.fitness.data.DataSet;
@@ -355,6 +356,10 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
 
     @Override
     public void insertData(Workout workout) {
+        Answers.getInstance().logCustom(new CustomEvent("Insert Session")
+                .putCustomAttribute("Type Id", workout.type)
+                .putCustomAttribute("Details", workout.shortText())
+                .putCustomAttribute("Step Count", workout.stepCount));
         mDataManager.insertData(workout);
     }
 

@@ -66,7 +66,7 @@ public class BackgroundRefreshService extends Service implements DataManager.IDa
             this.mWakeLock.acquire();
         }
 
-        Fabric.with(this, new Crashlytics(), new Answers());
+        Fabric.with(this.getApplicationContext(), new Crashlytics(), new Answers());
 
         if (mDataManager == null) {
             mDataManager = DataManager.getInstance(this);
@@ -147,9 +147,10 @@ public class BackgroundRefreshService extends Service implements DataManager.IDa
             Calendar cal = Calendar.getInstance();
             Date now = new Date();
             cal.setTime(now);
-
-            Answers.getInstance().logCustom(new CustomEvent("Background Refresh Failure")
-                    .putCustomAttribute("Time (s)", Math.floor(cal.getTimeInMillis() - startTime) / 1000));
+            if(Answers.getInstance() != null) {
+                Answers.getInstance().logCustom(new CustomEvent("Background Refresh Failure")
+                        .putCustomAttribute("Time (s)", Math.floor(cal.getTimeInMillis() - startTime) / 1000));
+            }
             stopSelf();
         }
     }
@@ -162,12 +163,14 @@ public class BackgroundRefreshService extends Service implements DataManager.IDa
         Calendar cal = Calendar.getInstance();
         Date now = new Date();
         cal.setTime(now);
-        if (mFirstLoad) {
-            Answers.getInstance().logCustom(new CustomEvent("Initial Load Success")
-                    .putCustomAttribute("Time (s)", Math.floor(cal.getTimeInMillis() - startTime) / 1000));
-        } else {
-            Answers.getInstance().logCustom(new CustomEvent("Background Refresh Success")
-                    .putCustomAttribute("Time (s)", Math.floor(cal.getTimeInMillis() - startTime) / 1000));
+        if(Answers.getInstance() != null) {
+            if (mFirstLoad) {
+                Answers.getInstance().logCustom(new CustomEvent("Initial Load Success")
+                        .putCustomAttribute("Time (s)", Math.floor(cal.getTimeInMillis() - startTime) / 1000));
+            } else {
+                Answers.getInstance().logCustom(new CustomEvent("Background Refresh Success")
+                        .putCustomAttribute("Time (s)", Math.floor(cal.getTimeInMillis() - startTime) / 1000));
+            }
         }
 
         stopSelf();

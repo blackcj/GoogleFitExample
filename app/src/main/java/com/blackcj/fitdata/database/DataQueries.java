@@ -29,12 +29,19 @@ public class DataQueries {
      * segment. This allows us to summarize steps and duration per activity.
      *
      */
-    public static DataReadRequest queryActivitySegment(long startTime, long endTime) {
-        return new DataReadRequest.Builder()
-                .read(DataType.TYPE_ACTIVITY_SEGMENT)
-                .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
-                .enableServerQueries() // Used to retrieve data from cloud. TODO: Check reachability.
-                .build();
+    public static DataReadRequest queryActivitySegment(long startTime, long endTime, boolean isNetworkConnected) {
+        if(isNetworkConnected) {
+            return new DataReadRequest.Builder()
+                    .read(DataType.TYPE_ACTIVITY_SEGMENT)
+                    .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+                    .enableServerQueries() // Used to retrieve data from cloud.
+                    .build();
+        }else {
+            return new DataReadRequest.Builder()
+                    .read(DataType.TYPE_ACTIVITY_SEGMENT)
+                    .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+                    .build();
+        }
     }
 
     public static DataReadRequest queryActivitySegmentBucket(long startTime, long endTime) {

@@ -30,7 +30,8 @@ limitations under the License.
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
-        android:supportsRtl="true">
+        android:supportsRtl="true"
+        android:name=".FitDataApplication">
         <activity
             android:name="com.blackcj.fitdata.activity.MainActivity"
             android:label="@string/app_name"

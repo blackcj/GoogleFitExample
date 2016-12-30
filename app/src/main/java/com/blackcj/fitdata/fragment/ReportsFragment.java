@@ -110,13 +110,15 @@ public class ReportsFragment extends BaseFragment {
         }
         reportGraph.setDisplayMetrics(densityDpi);
 
-        // TODO: Crash here - keep an eye out
-        Answers.getInstance().logContentView(new ContentViewEvent()
-                .putContentName("Report graph view")
-                .putContentType("View")
-                .putContentId("ReportsFragment")
-                .putCustomAttribute("Type Id", workoutType)
-                .putCustomAttribute("Type Name", WorkoutTypes.getWorkOutTextById(workoutType)));
+        if(Answers.getInstance() != null) {
+            // TODO: Crash here - keep an eye out
+            Answers.getInstance().logContentView(new ContentViewEvent()
+                    .putContentName("Report graph view")
+                    .putContentType("View")
+                    .putContentId("ReportsFragment")
+                    .putCustomAttribute("Type Id", workoutType)
+                    .putCustomAttribute("Type Name", WorkoutTypes.getWorkOutTextById(workoutType)));
+        }
     }
 
     long currentTimeStamp;

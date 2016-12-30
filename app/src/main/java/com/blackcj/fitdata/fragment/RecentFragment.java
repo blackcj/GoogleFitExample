@@ -58,11 +58,12 @@ public class RecentFragment extends BaseFragment implements WorkoutListViewAdapt
 
         mRecyclerView.setItemAnimator(new ItemAnimator());
         mRecyclerView.setAdapter(adapter);
-
-        Answers.getInstance().logContentView(new ContentViewEvent()
-                .putContentName("Historical activity data")
-                .putContentType("View")
-                .putContentId("RecentFragment"));
+        if(Answers.getInstance() != null) {
+            Answers.getInstance().logContentView(new ContentViewEvent()
+                    .putContentName("Historical activity data")
+                    .putContentType("View")
+                    .putContentId("RecentFragment"));
+        }
 
         return view;
     }

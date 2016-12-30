@@ -138,11 +138,12 @@ public class AddEntryFragment extends Fragment {
             activitySpinner.setSelection(mActivityType);
             updateView();
         }
-
-        Answers.getInstance().logContentView(new ContentViewEvent()
-                .putContentName("Add new entry")
-                .putContentType("View")
-                .putContentId("AddEntryFragment"));
+        if(Answers.getInstance() != null) {
+            Answers.getInstance().logContentView(new ContentViewEvent()
+                    .putContentName("Add new entry")
+                    .putContentType("View")
+                    .putContentId("AddEntryFragment"));
+        }
 
         return view;
     }
