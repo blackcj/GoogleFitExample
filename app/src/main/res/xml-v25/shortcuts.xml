@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android" >
+    <shortcut
+        android:shortcutId="add_activity"
+        android:icon="@drawable/add"
+        android:enabled="true"
+        android:shortcutShortLabel="@string/add_new_activity_short"
+        android:shortcutLongLabel="@string/add_new_activity"
+        >
+        <intent
+            android:action="com.blackcj.fitdata.ADD_ACTIVITY"
+            android:targetPackage="com.blackcj.fitdata"
+            android:targetClass="com.blackcj.fitdata.activity.MainActivity"
+            />
+    </shortcut>
+</shortcuts>

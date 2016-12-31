@@ -60,7 +60,9 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
         IMainActivityCallback, DataManager.IDataManager, FloatingActionsMenu.OnFloatingActionsMenuUpdateListener {
 
     private static final String TAG = "MainActivity";
-    public final static String RECEIVER_TAG = "MainActivityReceiver";
+    public static final  String RECEIVER_TAG = "MainActivityReceiver";
+
+    public static final String ACTION_ADD_ACTIVITY = "com.blackcj.fitdata.ADD_ACTIVITY";
     public static boolean active = false;
     protected DataManager mDataManager;
 
@@ -138,6 +140,11 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
 
         Intent intent = new Intent("com.blackcj.fitdata.START_REFRESH");
         sendBroadcast(intent);
+
+        if (ACTION_ADD_ACTIVITY.equals(getIntent().getAction())) {
+            // Invoked via the manifest shortcut.
+            AddEntryActivity.launch(MainActivity.this, 3);
+        }
     }
 
     @Override
