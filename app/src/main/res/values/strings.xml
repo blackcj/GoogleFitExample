@@ -1,29 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  Copyright 2014 Google, Inc.
-
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-
-      http://www.apache.org/licenses/LICENSE-2.0
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-  -->
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <string name="app_name">Fit Data</string>
     <string name="intro_text">Behold, a data dump from the Fitness API! Check the menu for more actions!</string>
-    <string name="action_load_data">Fetch data</string>
+    <string name="action_search">Search</string>
+    <string name="action_load_data">Reload</string>
+    <string name="action_refresh_data">Refresh</string>
+    <string name="action_delete_steps">Delete steps</string>
     <string name="action_settings">Settings</string>
+    <string name="action_history">History</string>
+    <string name="action_filter">Filter</string>
     <string name="hello_world">Coming soon!</string>
+
+    <!-- Shortcut XML -->
+    <string name="add_new_activity_short">Add New Activity</string>
+    <string name="add_new_activity">Add Activity</string>
+
+
+    <!-- PageFragment -->
+    <string name="active_label">Active:</string>
+    <string name="step_label">steps</string>
+
+    <!-- SettingsFragment -->
+    <string name="step_counter_text">Step counter</string>
+    <string name="activity_recognition_text">Activity recognition</string>
 
     <!-- ReportFragment -->
     <string name="temp_graph_title">GRAPH</string>
     <string name="series_title">Temperature hourly</string>
 
+    <!-- AddEntryFragment -->
+    <string name="activity_prompt">Choose an activity</string>
+    <string name="cancel_button_text" tools:ignore="ButtonCase">CANCEL</string>
+    <string name="save_button_text" tools:ignore="ButtonCase">SAVE</string>
+
+    <!-- Content Descriptions -->
+    <string name="activity_icon_desc">Activity icon</string>
+    <string name="close_icon_desc">Close button</string>
+
+    <string-array name="activity_types">
+        <item>Walking</item>
+        <item>Running</item>
+        <item>Biking</item>
+        <item>Golfing</item>
+        <item>In Vehicle</item>
+        <item>Kayaking</item>
+        <item>Strength Training</item>
+        <item>Sleep</item>
+        <item>Snowboarding</item>
+        <item>Tennis</item>
+        <item>Rock Climbing</item>
+        <item>Gardening</item>
+    </string-array>
+
+    <string-array name="graph_types">
+        <item>Day</item>
+        <item>Week</item>
+    </string-array>
 </resources>

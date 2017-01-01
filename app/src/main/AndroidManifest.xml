@@ -15,34 +15,83 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.google.android.gms.fit.samples.basichistoryapi" >
+    package="com.blackcj.fitdata" >
+
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.USE_CREDENTIALS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme" >
+        android:theme="@style/AppTheme"
+        android:supportsRtl="true"
+        android:name=".FitDataApplication">
         <activity
-            android:name=".activity.MainActivity"
+            android:name="com.blackcj.fitdata.activity.MainActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- App Shortcuts -->
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
         </activity>
         <activity
-            android:name=".activity.DetailActivity"
+            android:name="com.blackcj.fitdata.activity.DetailActivity"
             android:label="@string/app_name"
-            android:parentActivityName=".activity.MainActivity"
+            android:parentActivityName="com.blackcj.fitdata.activity.MainActivity"
             android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activity.MainActivity"/>
+                android:value="com.blackcj.fitdata.activity.MainActivity"/>
         </activity>
+        <activity
+            android:name="com.blackcj.fitdata.activity.AddEntryActivity"
+            android:label="@string/app_name"
+            android:parentActivityName="com.blackcj.fitdata.activity.MainActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.blackcj.fitdata.activity.MainActivity"/>
+        </activity>
+        <activity
+            android:name="com.blackcj.fitdata.activity.RecentActivity"
+            android:label="@string/app_name"
+            android:parentActivityName="com.blackcj.fitdata.activity.MainActivity"
+            android:screenOrientation="portrait">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.blackcj.fitdata.activity.MainActivity"/>
+        </activity>
+
+        <service android:name=".service.ReadCacheIntentService" />
+        <service android:name=".service.SummaryCacheIntentService" />
+        <service android:enabled="true"  android:name=".service.BackgroundRefreshService" />
+        <receiver android:name=".service.MyScheduleReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="com.blackcj.fitdata.START_REFRESH" />
+            </intent-filter>
+        </receiver>
+        <receiver android:process=":remote" android:name=".service.MyStartServiceReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="com.blackcj.fitdata.MyScheduleReceiver" />
+            </intent-filter>
+        </receiver>
         <meta-data android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
+
+        <meta-data
+            android:name="io.fabric.ApiKey"
+            android:value="***REMOVED***" />
     </application>
 
 </manifest>

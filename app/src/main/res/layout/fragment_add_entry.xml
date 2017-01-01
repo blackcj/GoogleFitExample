@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@color/lighterGray"
+    tools:context=".AddEntryActivity">
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:id="@+id/linear_group">
+
+        <Spinner
+            android:paddingTop="25dp"
+            android:textAlignment="viewStart"
+            android:gravity="bottom|start"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
+            android:id="@+id/activitySpinner"
+            android:dropDownVerticalOffset="10dp"
+            android:spinnerMode="dropdown"
+            android:entries="@array/activity_types"
+            android:prompt="@string/activity_prompt"
+            style="@style/form_item"/>
+
+        <View style="@style/form_divider" />
+
+        <TextView
+            android:id="@+id/dateTextView"
+            style="@style/form_item"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
+            android:paddingTop="29dp"
+            android:textAlignment="viewStart"
+            tools:text="June 22nd, 2015" />
+
+        <View style="@style/form_divider" />
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/editInputLayout3"
+            android:layout_width="180dp"
+            style="@style/form_item"
+            android:focusable="true"
+            android:clickable="true"
+            android:orientation="vertical">
+            <EditText
+                android:id="@+id/timeTextView"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:textAlignment="viewStart"
+                tools:text="1:00 PM"
+                android:editable="false"/>
+        </android.support.design.widget.TextInputLayout>
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/editInputLayout2"
+                android:layout_width="180dp"
+                style="@style/form_item"
+                android:orientation="horizontal">
+
+                <EditText
+                    android:id="@+id/editTextSteps"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"
+                    android:textAlignment="viewStart"
+                    android:text="0">
+                    <requestFocus />
+                </EditText>
+
+            </android.support.design.widget.TextInputLayout>
+            <TextView
+                android:id="@+id/labelText2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="steps"
+                android:layout_marginStart="-30dp"
+                android:paddingBottom="12dp"
+                android:textSize="18sp"
+                android:paddingTop="27dp"
+
+                android:layout_toEndOf="@+id/editInputLayout2"
+                android:textColor="@color/semiBlack" />
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/editInputLayout"
+                android:layout_width="180dp"
+                style="@style/form_item"
+                android:layout_below="@+id/editInputLayout2"
+                android:orientation="horizontal">
+
+                <EditText
+                    android:id="@+id/editTextMinutes"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"
+                    android:text="30">
+
+
+
+                </EditText>
+
+            </android.support.design.widget.TextInputLayout>
+            <TextView
+                android:id="@+id/labelText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="min"
+                android:layout_marginStart="-25dp"
+                android:paddingBottom="12dp"
+                android:textSize="18sp"
+                android:paddingTop="27dp"
+                android:layout_below="@+id/editInputLayout2"
+                android:layout_toEndOf="@+id/editInputLayout"
+                android:textColor="@color/semiBlack" />
+
+        </RelativeLayout>
+    </LinearLayout>
+</ScrollView>

@@ -2,21 +2,23 @@
 
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
+
     tools:layout_height="155dp"
     tools:layout_width="150dp"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:foreground="?attr/selectableItemBackground"
-    android:elevation="5dp">
+    android:foreground="?attr/selectableItemBackground">
 
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    <!-- Nested view layout used for animation purposes -->
+    <LinearLayout
+        tools:ignore="AndroidLintUselessParent"
         android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:gravity="center_horizontal"
-        android:background="#C95B5A">
+        tools:background="#C95B5A">
 
         <ImageView
             android:paddingTop="12dp"
@@ -24,7 +26,9 @@
             android:layout_width="match_parent"
             android:layout_height="100dp"
             android:padding="20dp"
-            tools:src="@drawable/heart_icon_red"/>
+            tools:background="#55FFFFFF"
+            tools:src="@drawable/heart_icon_red"
+            android:contentDescription="@string/activity_icon_desc"/>
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -51,7 +55,5 @@
                 android:textSize="12sp"
                 tools:text="20 minutes today" />
         </LinearLayout>
-
-
     </LinearLayout>
 </FrameLayout>
