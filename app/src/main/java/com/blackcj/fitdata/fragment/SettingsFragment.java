@@ -13,8 +13,6 @@ import android.widget.ToggleButton;
 import com.blackcj.fitdata.R;
 import com.blackcj.fitdata.activity.IMainActivityCallback;
 import com.blackcj.fitdata.model.UserPreferences;
-import com.crashlytics.android.answers.Answers;
-import com.crashlytics.android.answers.ContentViewEvent;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -62,12 +60,7 @@ public class SettingsFragment extends BaseFragment {
         step_toggle.setChecked(UserPreferences.getCountSteps(getActivity()));
         activity_toggle.setChecked(UserPreferences.getActivityTracking(getActivity()));
         viewLoaded = true;
-        if(Answers.getInstance() != null) {
-            Answers.getInstance().logContentView(new ContentViewEvent()
-                    .putContentName("Settings view")
-                    .putContentType("View")
-                    .putContentId("SettingsFragment"));
-        }
+
         return view;
     }
 

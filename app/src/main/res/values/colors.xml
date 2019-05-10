@@ -38,7 +38,7 @@
     <color name="walking">#FFA55B</color>
     <color name="golfing">#56AB75</color>
     <color name="paddling">#C8B48F</color>
-    <color name="other">#808080</color>
+    <color name="other">#7ec3af</color>
 
     <color name="running_pressed">#BF5278</color>
     <color name="biking_pressed">#65A9AD</color>

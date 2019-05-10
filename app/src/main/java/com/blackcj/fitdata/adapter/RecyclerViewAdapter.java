@@ -1,6 +1,5 @@
 package com.blackcj.fitdata.adapter;
 
-import android.content.Context;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -33,10 +32,9 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<WorkoutViewHolder>
     private String timeDesc = "Today";
     private boolean filtering = false;
 
-    public RecyclerViewAdapter(List<Workout> items, Context context, final String time) {
+    public RecyclerViewAdapter(List<Workout> items, final String time) {
         this.items = items;
         this.filteredItems = new ArrayList<>();
-        this.context = context;
         this.timeDesc = time;
     }
 
@@ -52,17 +50,12 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<WorkoutViewHolder>
      * @param time
      */
     public void setItems(final List<Workout> newItems, final String time) {
+        // TODO: Look into DiffUtil
         timeDesc = time;
         Log.i(TAG, "1. New item size: " +  newItems.size() + " Old item size: " + items.size() + " Last position: " + lastPosition);
         if(newItems.size() > items.size()) {
             lastPosition = items.size() - 1;
         }
-        /*if (newItems.size() < items.size()) {
-            items.clear();
-            items.addAll(newItems);
-            notifyDataSetChanged();
-
-        } else */
         if (newItems.size() > 0) {
             if (items.size() == 0) {
                 items.add(newItems.get(0));
@@ -148,7 +141,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<WorkoutViewHolder>
 
         // This is just not working as expected. Switching to use hard coded color.
         // TODO: Colorize image to match pre-defined color. Allowing user to select the color at some point.
-        int vibrant = ContextCompat.getColor(context, WorkoutTypes.getColorById(item.type));
+        int vibrant = ContextCompat.getColor(holder.itemView.getContext(), WorkoutTypes.getColorById(item.type));
         /*
         Bitmap bitmap = ((BitmapDrawable)holder.image.getDrawable()).getBitmap();
         Palette palette = Palette.from(bitmap).generate();
@@ -168,10 +161,10 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<WorkoutViewHolder>
         */
 
         if(item.type == WorkoutTypes.TIME.getValue()) {
-            final String label = context.getText(R.string.active_label) + " " + WorkoutReport.getDurationBreakdown(item.duration);
+            final String label = holder.itemView.getContext().getText(R.string.active_label) + " " + WorkoutReport.getDurationBreakdown(item.duration);
             holder.detail.setText(label);
         }else if(item.type == WorkoutTypes.STEP_COUNT.getValue()) {
-            final String label = item.stepCount + " " + context.getText(R.string.step_label);
+            final String label = item.stepCount + " " + holder.itemView.getContext().getText(R.string.step_label);
             holder.detail.setText(label);
         } else {
             holder.detail.setText(WorkoutReport.getDurationBreakdown(item.duration));
@@ -182,7 +175,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<WorkoutViewHolder>
         setAnimation(holder.container, position);
     }
 
-    private Context context;
     private int lastPosition = 0;
 
     /**
@@ -193,7 +185,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<WorkoutViewHolder>
         // If the bound view wasn't previously displayed on screen, it's animated
         if (position > lastPosition && position > 0)
         {
-            Animation animation = AnimationUtils.loadAnimation(context, android.R.anim.slide_in_left);
+            Animation animation = AnimationUtils.loadAnimation(viewToAnimate.getContext(), android.R.anim.slide_in_left);
             animation.setInterpolator(new DecelerateInterpolator());
             if(position < 6) {
                 animation.setStartOffset(150 * (position));

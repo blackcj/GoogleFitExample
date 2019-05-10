@@ -17,8 +17,6 @@ import com.blackcj.fitdata.Utilities;
 import com.blackcj.fitdata.model.UserPreferences;
 import com.blackcj.fitdata.model.Workout;
 import com.blackcj.fitdata.model.WorkoutTypes;
-import com.crashlytics.android.answers.Answers;
-import com.crashlytics.android.answers.CustomEvent;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.Scopes;
@@ -611,7 +609,6 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
             Log.i(TAG, "Creating the Google API Client with context: " + context.getClass().getName());
             // Create the Google API Client
             mClient = new GoogleApiClient.Builder(context)
-                    .addApiIfAvailable(Plus.API)
                     .addApiIfAvailable(Fitness.SENSORS_API)
                     .addApi(Fitness.SESSIONS_API)
                     .addApi(Fitness.HISTORY_API)
@@ -954,7 +951,7 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
                 cal.set(Calendar.MILLISECOND, 0);
                 startTime = cal.getTimeInMillis();
 
-                int numberOfDays = 30;
+                int numberOfDays = 3;
                 if (lastSync > 0) {
                     lastSync -=  (1000 * 60 * 60 * 2);
                     if (lastSync < startTime) {
@@ -1053,7 +1050,7 @@ public class DataManager implements GoogleApiClient.ConnectionCallbacks, GoogleA
                 } else {
                     Log.i(TAG, "Slow data read");
                     cal.setTime(now);
-                    cal.add(Calendar.DAY_OF_YEAR, -90);
+                    cal.add(Calendar.DAY_OF_YEAR, -180);
                     startTime = cal.getTimeInMillis();
                 }
 

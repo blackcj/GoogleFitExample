@@ -5,7 +5,7 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:background="@color/lighterGray"
-    tools:context=".AddEntryActivity">
+    tools:context=".activity.AddEntryActivity">
 
     <LinearLayout
         android:layout_width="fill_parent"
@@ -79,10 +79,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="steps"
-                android:layout_marginStart="-30dp"
+                android:layout_marginStart="-40dp"
                 android:paddingBottom="12dp"
                 android:textSize="18sp"
-                android:paddingTop="27dp"
+                android:paddingTop="22dp"
 
                 android:layout_toEndOf="@+id/editInputLayout2"
                 android:textColor="@color/semiBlack" />
@@ -110,10 +110,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="min"
-                android:layout_marginStart="-25dp"
+                android:layout_marginStart="-30dp"
                 android:paddingBottom="12dp"
                 android:textSize="18sp"
-                android:paddingTop="27dp"
+                android:paddingTop="22dp"
                 android:layout_below="@+id/editInputLayout2"
                 android:layout_toEndOf="@+id/editInputLayout"
                 android:textColor="@color/semiBlack" />

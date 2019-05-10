@@ -76,7 +76,7 @@ public class PageFragment extends BaseFragment implements RecyclerViewAdapter.On
 
         List<Workout> items = new ArrayList<>();
 
-        adapter = new RecyclerViewAdapter(items, this.getActivity(), Utilities.getTimeFrameText(Utilities.TimeFrame.values()[mPage - 1]));
+        adapter = new RecyclerViewAdapter(items, Utilities.getTimeFrameText(Utilities.TimeFrame.values()[mPage - 1]));
         adapter.setOnItemClickListener(this);
         filter();
         mRecyclerView.setItemAnimator(new ItemAnimator());

@@ -11,15 +11,9 @@ import com.blackcj.fitdata.Utilities;
 import com.blackcj.fitdata.database.DataManager;
 import com.blackcj.fitdata.model.UserPreferences;
 import com.blackcj.fitdata.model.Workout;
-import com.crashlytics.android.Crashlytics;
-import com.crashlytics.android.answers.Answers;
-import com.crashlytics.android.answers.CustomEvent;
 
 import java.util.Calendar;
 import java.util.Date;
-
-import io.fabric.sdk.android.Fabric;
-
 
 /**
  * Created by chris.black on 6/22/16.
@@ -65,8 +59,6 @@ public class BackgroundRefreshService extends Service implements DataManager.IDa
         if (!this.mWakeLock.isHeld()) { //**Added this
             this.mWakeLock.acquire();
         }
-
-        Fabric.with(this.getApplicationContext(), new Crashlytics(), new Answers());
 
         if (mDataManager == null) {
             mDataManager = DataManager.getInstance(this);
@@ -147,10 +139,7 @@ public class BackgroundRefreshService extends Service implements DataManager.IDa
             Calendar cal = Calendar.getInstance();
             Date now = new Date();
             cal.setTime(now);
-            if(Answers.getInstance() != null) {
-                Answers.getInstance().logCustom(new CustomEvent("Background Refresh Failure")
-                        .putCustomAttribute("Time (s)", Math.floor(cal.getTimeInMillis() - startTime) / 1000));
-            }
+
             stopSelf();
         }
     }
@@ -163,15 +152,6 @@ public class BackgroundRefreshService extends Service implements DataManager.IDa
         Calendar cal = Calendar.getInstance();
         Date now = new Date();
         cal.setTime(now);
-        if(Answers.getInstance() != null) {
-            if (mFirstLoad) {
-                Answers.getInstance().logCustom(new CustomEvent("Initial Load Success")
-                        .putCustomAttribute("Time (s)", Math.floor(cal.getTimeInMillis() - startTime) / 1000));
-            } else {
-                Answers.getInstance().logCustom(new CustomEvent("Background Refresh Success")
-                        .putCustomAttribute("Time (s)", Math.floor(cal.getTimeInMillis() - startTime) / 1000));
-            }
-        }
 
         stopSelf();
     }

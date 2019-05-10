@@ -24,4 +24,6 @@ public class WorkoutViewHolder extends RecyclerView.ViewHolder {
         detail = (TextView) itemView.findViewById(R.id.summary_text);
         container = (LinearLayout) itemView.findViewById(R.id.container);
     }
+
+    // TODO: Add setItem function here.
 }

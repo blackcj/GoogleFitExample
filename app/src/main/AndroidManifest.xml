@@ -19,6 +19,8 @@ limitations under the License.
 
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
@@ -41,7 +43,7 @@ limitations under the License.
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             <!-- App Shortcuts -->
-            <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
+            <!--<meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />-->
         </activity>
         <activity
             android:name="com.blackcj.fitdata.activity.DetailActivity"
@@ -91,7 +93,7 @@ limitations under the License.
 
         <meta-data
             android:name="io.fabric.ApiKey"
-            android:value="***REMOVED***" />
+            android:value="a9ba7cf22d20fe87fcd6b40f1e20de93b1df255f" />
     </application>
 
 </manifest>

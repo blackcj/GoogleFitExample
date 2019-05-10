@@ -6,13 +6,17 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.view.ViewPager;
@@ -25,6 +29,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 
+import com.blackcj.fitdata.Manifest;
 import com.blackcj.fitdata.Utilities;
 import com.blackcj.fitdata.adapter.TabPagerAdapter;
 import com.blackcj.fitdata.R;
@@ -34,12 +39,13 @@ import com.blackcj.fitdata.fragment.SettingsFragment;
 import com.blackcj.fitdata.model.UserPreferences;
 import com.blackcj.fitdata.model.Workout;
 import com.blackcj.fitdata.service.BackgroundRefreshService;
-import com.crashlytics.android.answers.Answers;
-import com.crashlytics.android.answers.CustomEvent;
-import com.crashlytics.android.answers.SearchEvent;
 import com.getbase.floatingactionbutton.FloatingActionsMenu;
 import com.google.android.gms.fitness.data.DataSet;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.nio.channels.FileChannel;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -282,15 +288,15 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
+        boolean loadComplete = UserPreferences.getBackgroundLoadComplete(this);
+        long lastSync = UserPreferences.getLastSync(this);
         switch (id) {
             case R.id.action_history:
                 RecentActivity.launch(MainActivity.this);
                 break;
             case R.id.action_reload_data:
-                boolean loadComplete = UserPreferences.getBackgroundLoadComplete(this);
-                long lastSync = UserPreferences.getLastSync(this);
                 if (loadComplete) {
-                    long syncStart = lastSync - (1000 * 60 * 24 * 7);
+                    long syncStart = lastSync - (1000 * 60 * 60 * 24 * 7);
                     UserPreferences.setLastSync(this, syncStart);
                     startService(new Intent(this, BackgroundRefreshService.class));
                 }
@@ -305,8 +311,59 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
             case android.R.id.home:
                 getSupportFragmentManager().popBackStack();
                 return true;
+            case R.id.action_import:
+                if (loadComplete) {
+                    restoreDatabase();
+                    //long syncStart = lastSync - (1000 * 60 * 60 * 24 * 4);
+                    //UserPreferences.setLastSync(this, syncStart);
+                    //startService(new Intent(this, BackgroundRefreshService.class));
+
+                }
+                return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private static final int REQUEST_WRITE_STORAGE = 112;
+
+    /**
+     * Used for debugging to restore some meaningful data
+     */
+    public void restoreDatabase() {
+        boolean hasPermission = (ContextCompat.checkSelfPermission(this,
+                android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
+        if (!hasPermission) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    REQUEST_WRITE_STORAGE);
+        }
+        Log.d("MainActivity", "Restoring database.");
+        try {
+            File sd = Environment.getExternalStorageDirectory();
+            File data = Environment.getDataDirectory();
+
+            if (sd.canWrite()) {
+                String backupDBPath = "//data//com.blackcj.fitdata//databases//googlefitexample.db";
+                String currentDBPath = "sdcard/backup.db";
+                File currentDB = new File(currentDBPath);
+                File backupDB = new File(data, backupDBPath);
+
+                if (currentDB.exists()) {
+                    FileChannel src = new FileInputStream(currentDB).getChannel();
+                    FileChannel dst = new FileOutputStream(backupDB).getChannel();
+                    dst.transferFrom(src, 0, src.size());
+                    src.close();
+                    dst.close();
+                    Log.d("MainActivity", "Database restored.");
+                } else {
+                    Log.d("MainActivity", "Database doesn't exist.");
+                }
+            }else {
+                Log.d("MainActivity", "Unable to write file.");
+            }
+        } catch (Exception e) {
+            Log.d("MainActivity", "Exception restoring database");
+        }
     }
 
     ///////////////////////////////////////
@@ -330,8 +387,6 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
         if (mAdapter.getFragment(mViewPager.getCurrentItem() - 1) != null) {
             mAdapter.getFragment(mViewPager.getCurrentItem() - 1).setFilterText(newText);
         }
-        Answers.getInstance().logSearch(new SearchEvent()
-                .putQuery(newText));
         Log.d("MainActivity", "Query text: " + newText);
         return false;
     }
@@ -363,10 +418,6 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
 
     @Override
     public void insertData(Workout workout) {
-        Answers.getInstance().logCustom(new CustomEvent("Insert Session")
-                .putCustomAttribute("Type Id", workout.type)
-                .putCustomAttribute("Details", workout.shortText())
-                .putCustomAttribute("Step Count", workout.stepCount));
         mDataManager.insertData(workout);
     }
 
@@ -444,7 +495,7 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
 
     @Override
     public void launch(View transitionView, Workout workout) {
-        DetailActivity.launch(MainActivity.this, transitionView, workout);
+        // DetailActivity.launch(MainActivity.this, transitionView, workout);
     }
 
     ///////////////////////////////////////

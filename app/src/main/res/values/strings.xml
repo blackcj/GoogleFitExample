@@ -9,6 +9,7 @@
     <string name="action_delete_steps">Delete steps</string>
     <string name="action_settings">Settings</string>
     <string name="action_history">History</string>
+    <string name="action_import">Import</string>
     <string name="action_filter">Filter</string>
     <string name="hello_world">Coming soon!</string>
 
@@ -48,6 +49,7 @@
         <item>Strength Training</item>
         <item>Sleep</item>
         <item>Snowboarding</item>
+        <item>Cross-country Skiing</item>
         <item>Tennis</item>
         <item>Rock Climbing</item>
         <item>Gardening</item>

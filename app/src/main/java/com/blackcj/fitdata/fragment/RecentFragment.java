@@ -15,8 +15,6 @@ import com.blackcj.fitdata.animation.ItemAnimator;
 import com.blackcj.fitdata.database.CacheManager;
 import com.blackcj.fitdata.database.DataManager;
 import com.blackcj.fitdata.model.Workout;
-import com.crashlytics.android.answers.Answers;
-import com.crashlytics.android.answers.ContentViewEvent;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -58,12 +56,6 @@ public class RecentFragment extends BaseFragment implements WorkoutListViewAdapt
 
         mRecyclerView.setItemAnimator(new ItemAnimator());
         mRecyclerView.setAdapter(adapter);
-        if(Answers.getInstance() != null) {
-            Answers.getInstance().logContentView(new ContentViewEvent()
-                    .putContentName("Historical activity data")
-                    .putContentType("View")
-                    .putContentId("RecentFragment"));
-        }
 
         return view;
     }

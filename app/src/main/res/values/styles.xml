@@ -21,6 +21,8 @@
         <item name="android:lineSpacingMultiplier">1.1</item>
     </style>
 
+
+
     <style name="spinnerItemStyle">
         <item name="android:padding">0dp</item>
         <item name="android:textSize">18sp</item>

@@ -23,8 +23,6 @@ import com.blackcj.fitdata.Utilities;
 import com.blackcj.fitdata.database.DataManager;
 import com.blackcj.fitdata.model.Workout;
 import com.blackcj.fitdata.model.WorkoutTypes;
-import com.crashlytics.android.answers.Answers;
-import com.crashlytics.android.answers.ContentViewEvent;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -138,12 +136,6 @@ public class AddEntryFragment extends Fragment {
             activitySpinner.setSelection(mActivityType);
             updateView();
         }
-        if(Answers.getInstance() != null) {
-            Answers.getInstance().logContentView(new ContentViewEvent()
-                    .putContentName("Add new entry")
-                    .putContentType("View")
-                    .putContentId("AddEntryFragment"));
-        }
 
         return view;
     }
@@ -157,6 +149,7 @@ public class AddEntryFragment extends Fragment {
             case 6:
             case 8:
             case 9:
+            case 10:
                 editInputLayout2.setVisibility(View.VISIBLE);
                 labelText2.setVisibility(View.VISIBLE);
                 break;
@@ -164,8 +157,8 @@ public class AddEntryFragment extends Fragment {
             case 4:
             case 5:
             case 7:
-            case 10:
             case 11:
+            case 12:
                 editInputLayout2.setVisibility(View.GONE);
                 labelText2.setVisibility(View.GONE);
                 break;
@@ -285,12 +278,15 @@ public class AddEntryFragment extends Fragment {
                 workout.type = WorkoutTypes.SNOWBOARDING.getValue();
                 break;
             case 9:
-                workout.type = WorkoutTypes.TENNIS.getValue();
+                workout.type = WorkoutTypes.CROSS_COUNTRY_SKIING.getValue();
                 break;
             case 10:
-                workout.type = WorkoutTypes.ROCK_CLIMBING.getValue();
+                workout.type = WorkoutTypes.TENNIS.getValue();
                 break;
             case 11:
+                workout.type = WorkoutTypes.ROCK_CLIMBING.getValue();
+                break;
+            case 12:
                 workout.type = WorkoutTypes.GARDENING.getValue();
                 break;
 

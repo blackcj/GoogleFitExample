@@ -27,4 +27,9 @@
         android:orderInCategory="100"
         android:icon="@drawable/ic_history_white"
         app:showAsAction="never" />
+
+    <item android:id="@+id/action_import"
+        android:title="@string/action_import"
+        android:orderInCategory="100"
+        app:showAsAction="never" />
 </menu>
