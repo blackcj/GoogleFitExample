@@ -29,7 +29,6 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 
-import com.blackcj.fitdata.Manifest;
 import com.blackcj.fitdata.Utilities;
 import com.blackcj.fitdata.adapter.TabPagerAdapter;
 import com.blackcj.fitdata.R;
@@ -495,7 +494,8 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
 
     @Override
     public void launch(View transitionView, Workout workout) {
-        // DetailActivity.launch(MainActivity.this, transitionView, workout);
+        getWindow().setExitTransition(null);
+        DetailActivity.launch(MainActivity.this, transitionView, workout);
     }
 
     ///////////////////////////////////////
